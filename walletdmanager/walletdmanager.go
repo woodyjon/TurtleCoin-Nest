@@ -851,15 +851,16 @@ func RequestConnectionInfo() (syncing string, blockCountString string, knownBloc
 		WalletdSynced = false
 		syncing = "Getting block count..." + stringWait
 
-	} else if blockCount >= knownBlockCount-1 {
-
-		WalletdSynced = true
-		syncing = "Wallet synced"
-
-	} else {
+	} else if blockCount < knownBlockCount-1 || blockCount > knownBlockCount+10 {
+		// second condition handles cases when knownBlockCount is off and smaller than the blockCount
 
 		WalletdSynced = false
 		syncing = "Wallet syncing..." + stringWait
+
+	} else {
+
+		WalletdSynced = true
+		syncing = "Wallet synced"
 
 	}
 
