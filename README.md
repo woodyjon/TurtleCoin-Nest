@@ -2,7 +2,7 @@
 
 The universal GUI wallet for TurtleCoin
 
-[Logo](/turtlecoinnestlogo.png)
+![Logo](/turtlecoinnestlogo.png)
 
 Installation:
 
