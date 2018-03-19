@@ -39,3 +39,4 @@ moc.go
 moc.h
 *plugin_import.cpp
 *windows_amd64.go
+walletd
