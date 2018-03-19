@@ -844,7 +844,7 @@ func RequestConnectionInfo() (syncing string, blockCountString string, knownBloc
 
 	}
 
-	stringWait := " (Wait for being allowed to make a transfer)"
+	stringWait := " (No transfers allowed until synced)"
 
 	if knownBlockCount == 0 {
 
