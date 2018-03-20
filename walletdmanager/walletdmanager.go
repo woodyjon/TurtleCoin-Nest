@@ -351,7 +351,7 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 
 	}
 
-	var transferFee float64 = 2 // transferFee is expressed in TRTL
+	var transferFee float64 = 1 // transferFee is expressed in TRTL
 	transferMixin := 4
 
 	transferAmount, err := strconv.ParseFloat(transferAmountString, 64) // transferAmount is expressed in TRTL
@@ -757,8 +757,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	}
 
-	// setup all sessions log file (logs are added at the end of this file only after walletd has stopped)
-	// walletdLogFile, err := os.Open(walletdLogFileFilename)
+	// setup all sessions log file
 	walletdLogFile, err := os.OpenFile(walletdLogFileFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal(err)

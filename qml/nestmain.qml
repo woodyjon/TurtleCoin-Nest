@@ -496,7 +496,7 @@ ApplicationWindow {
             Text {
                 id: textTransferFeeDescr
                 color: "#999999"
-                text: qsTr("The fee is currently fixed and set to 2 TRTL.")
+                text: qsTr("The fee is currently fixed and set to 1 TRTL.")
                 anchors.top: textTransferPaymentIDDescr.bottom
                 anchors.topMargin: 45
                 anchors.left: textTransferAddrDescr.left
