@@ -17,3 +17,7 @@ Install this binding: https://github.com/therecipe/qt and run `qtdeploy build de
 ![Main Screen](/Screenshots/MainScreen.png)
 
 ![Open Wallet](/Screenshots/OpenWallet.png)
+
+## Donations
+
+TRTLv3jzutiQwqHL3qFwsu5EVLWesxZr1AFQ4AuMR3SD56n3rkHDkwj79eKwvaiU1nYQWGydKoXM6fXyiiGKsPDnVCNXzNdusxx
