@@ -623,8 +623,6 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 		pathToWallet = strings.Replace(pathToWallet, "file:", "", 1)
 	}
 
-	log.Info("pathToWallet: ", pathToWallet)
-
 	// setup current session log file (logs are added real time in this file)
 	walletdCurrentSessionLogFile, err := os.Create(pathToLogWalletdCurrentSession)
 	if err != nil {
@@ -672,9 +670,11 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 			break
 		}
 
-		if strings.Contains(line, " ERROR  ") {
+		identifierErrorMessage := " ERROR  "
+		if strings.Contains(line, identifierErrorMessage) {
 
-			listWalletdErrors = append(listWalletdErrors, line)
+			splitLine := strings.Split(line, identifierErrorMessage)
+			listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
 
 		}
 
@@ -821,9 +821,21 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 			break
 		}
 
-		if strings.Contains(line, " ERROR  ") || strings.Contains(line, "error: ") {
+		identifierErrorMessage := " ERROR  "
+		if strings.Contains(line, identifierErrorMessage) {
 
-			listWalletdErrors = append(listWalletdErrors, line)
+			splitLine := strings.Split(line, identifierErrorMessage)
+			listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
+
+		} else {
+
+			identifierErrorMessage = "error: "
+			if strings.Contains(line, identifierErrorMessage) {
+
+				splitLine := strings.Split(line, identifierErrorMessage)
+				listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
+
+			}
 
 		}
 
