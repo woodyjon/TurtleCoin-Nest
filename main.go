@@ -87,12 +87,16 @@ type QmlBridge struct {
 
 func main() {
 
-	currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal("error finding current directory. Error: ", err)
+	pathToLogFile := logFileFilename
+
+	if isPlatformDarwin {
+		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Fatal("error finding current directory. Error: ", err)
+		}
+		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+		pathToLogFile = pathToAppFolder + "/" + logFileFilename
 	}
-	pathToLogFile := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
-	pathToLogFile = pathToLogFile + "/" + logFileFilename
 
 	logFile, err := os.OpenFile(pathToLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 
