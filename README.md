@@ -33,10 +33,6 @@ Notes:
 
 Coming very soon...
 
-## Build
-
-Install this binding: https://github.com/therecipe/qt and run `qtdeploy build desktop`
-
 ## Donations
 
 TRTLv3jzutiQwqHL3qFwsu5EVLWesxZr1AFQ4AuMR3SD56n3rkHDkwj79eKwvaiU1nYQWGydKoXM6fXyiiGKsPDnVCNXzNdusxx
@@ -46,3 +42,9 @@ TRTLv3jzutiQwqHL3qFwsu5EVLWesxZr1AFQ4AuMR3SD56n3rkHDkwj79eKwvaiU1nYQWGydKoXM6fXy
 ![Main Screen](/Screenshots/MainScreen.png)
 
 ![Open Wallet](/Screenshots/OpenWallet.png)
+
+## Build
+
+(for developers only)
+
+Install this binding: https://github.com/therecipe/qt and run `qtdeploy build desktop`
