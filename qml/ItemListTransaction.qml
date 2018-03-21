@@ -93,42 +93,48 @@ Item {
         verticalAlignment: Text.AlignVCenter
     }
 
-    Button {
+    Rectangle {
         id: buttonCopyTxID
         width: 13
         height: 14
-        hoverEnabled: true
         anchors.verticalCenter: transactionID.verticalCenter
         anchors.left: transactionID.right
         anchors.leftMargin: 10
+        color: "transparent"
         Image {
             id: imageButtonCopyTxID
-            sourceSize.height: 13
-            sourceSize.width: 14
+            anchors.fill: parent
             fillMode: Image.PreserveAspectFit
             source: "images/copy_white.png"
         }
-        onClicked: {
-            QmlBridge.clickedButtonCopyTx(transactionIDValue);
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                QmlBridge.clickedButtonCopyTx(transactionIDValue);
             popupText.show("Copied!")
+            }
         }
     }
 
-    Button {
+    Rectangle {
         id: buttonExplorerTxID
         width: 13
         height: 14
-        hoverEnabled: true
         anchors.verticalCenter: buttonCopyTxID.verticalCenter
         anchors.left: buttonCopyTxID.right
         anchors.leftMargin: 10
+        color: "transparent"
         Image {
             id: imageButtonExplorerTxID
-            sourceSize.height: 13
-            sourceSize.width: 14
+            anchors.fill: parent
             fillMode: Image.PreserveAspectFit
             source: "images/search_white.png"
         }
-        onClicked: QmlBridge.clickedButtonExplorer(transactionIDValue)
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                mlBridge.clickedButtonExplorer(transactionIDValue)
+            }
+        }
     }
 }
