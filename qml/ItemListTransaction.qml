@@ -111,7 +111,7 @@ Item {
             anchors.fill: parent
             onClicked: {
                 QmlBridge.clickedButtonCopyTx(transactionIDValue);
-            popupText.show("Copied!")
+                popupText.show("Copied!")
             }
         }
     }
@@ -133,7 +133,7 @@ Item {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                mlBridge.clickedButtonExplorer(transactionIDValue)
+                QmlBridge.clickedButtonExplorer(transactionIDValue)
             }
         }
     }
