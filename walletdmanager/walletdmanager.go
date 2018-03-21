@@ -835,7 +835,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 		return err
 	}
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	reader := bufio.NewReader(walletdCurrentSessionLogFile)
 
