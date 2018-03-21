@@ -111,6 +111,12 @@ func main() {
 
 	log.Info("Application started")
 
+	platform := "linux"
+	if isPlatformDarwin {
+		platform = "darwin"
+	}
+	walletdmanager.Setup(platform)
+
 	gui.NewQGuiApplication(len(os.Args), os.Args)
 
 	// Enable high DPI scaling

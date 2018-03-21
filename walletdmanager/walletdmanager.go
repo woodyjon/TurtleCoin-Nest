@@ -71,7 +71,28 @@ var (
 
 	// WalletdSynced is true when wallet is synced and transfer is allowed
 	WalletdSynced = false
+
+	isPlatformDarwin = false
+	isPlatformLinux  = true
 )
+
+// Setup sets up some settings. It must be called at least once at the beginning of your program.
+// platform should be set based on your platform. The choices are "linux", "darwin", "windows"
+func Setup(platform string) {
+
+	isPlatformDarwin = false
+	isPlatformLinux = false
+
+	switch platform {
+	case "darwin":
+		isPlatformDarwin = true
+	case "linux":
+		isPlatformLinux = true
+	default:
+		isPlatformLinux = true
+	}
+
+}
 
 // RequestBalance provides the available and locked balances of the current wallet
 func RequestBalance() (availableBalance float64, lockedBalance float64, totalBalance float64) {
@@ -603,24 +624,31 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	}
 
-	currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal("error finding current directory. Error: ", err)
-	}
-	pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
-
-	pathToLogWalletdAllSessions := pathToAppFolder + "/" + logWalletdAllSessionsFilename
-	pathToLogWalletdCurrentSession := pathToAppFolder + "/" + logWalletdCurrentSessionFilename
-	pathToWalletd := pathToAppFolder + "/walletd"
+	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
+	pathToLogWalletdAllSessions := logWalletdAllSessionsFilename
+	walletdCommandName := "walletd"
+	pathToWalletd := "./" + walletdCommandName
 
 	WalletFilename = filepath.Base(walletPath)
-
 	pathToWallet := filepath.Clean(walletPath)
-	if pathToWallet == WalletFilename {
-		// if comes from createWallet, so it is not a full path, just a filename
-		pathToWallet = pathToAppFolder + "/" + pathToWallet
-	} else {
-		pathToWallet = strings.Replace(pathToWallet, "file:", "", 1)
+	pathToWallet = strings.Replace(pathToWallet, "file:", "", 1)
+
+	if isPlatformDarwin {
+
+		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Fatal("error finding current directory. Error: ", err)
+		}
+		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+
+		pathToLogWalletdCurrentSession = pathToAppFolder + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppFolder + "/" + logWalletdAllSessionsFilename
+		pathToWalletd = pathToAppFolder + "/" + walletdCommandName
+
+		if pathToWallet == WalletFilename {
+			// if comes from createWallet, so it is not a full path, just a filename
+			pathToWallet = pathToAppFolder + "/" + pathToWallet
+		}
 	}
 
 	// setup current session log file (logs are added real time in this file)
@@ -753,16 +781,25 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	}
 
-	currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
-	if err != nil {
-		log.Fatal("error finding current directory. Error: ", err)
-	}
-	pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
+	pathToLogWalletdAllSessions := logWalletdAllSessionsFilename
+	walletdCommandName := "walletd"
+	pathToWalletd := "./" + walletdCommandName
+	pathToWallet := walletFilename
 
-	pathToLogWalletdAllSessions := pathToAppFolder + "/" + logWalletdAllSessionsFilename
-	pathToLogWalletdCurrentSession := pathToAppFolder + "/" + logWalletdCurrentSessionFilename
-	pathToWalletd := pathToAppFolder + "/walletd"
-	pathToWallet := pathToAppFolder + "/" + walletFilename
+	if isPlatformDarwin {
+
+		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Fatal("error finding current directory. Error: ", err)
+		}
+		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+
+		pathToLogWalletdCurrentSession = pathToAppFolder + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppFolder + "/" + logWalletdAllSessionsFilename
+		pathToWalletd = pathToAppFolder + "/" + walletdCommandName
+		pathToWallet = pathToAppFolder + "/" + walletFilename
+	}
 
 	// setup current session log file (logs are added real time in this file)
 	walletdCurrentSessionLogFile, err := os.Create(pathToLogWalletdCurrentSession)
