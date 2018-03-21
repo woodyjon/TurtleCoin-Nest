@@ -3,6 +3,7 @@ package main
 import (
 	"TurtleCoin-Nest/walletdmanager"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
@@ -86,13 +87,21 @@ type QmlBridge struct {
 
 func main() {
 
-	f, err := os.OpenFile(logFileFilename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		log.Fatal("error opening file: ", err)
+		log.Fatal("error finding current directory. Error: ", err)
 	}
-	defer f.Close()
+	pathToLogFile := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+	pathToLogFile = pathToLogFile + "/" + logFileFilename
 
-	log.SetOutput(f)
+	logFile, err := os.OpenFile(pathToLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+	if err != nil {
+		log.Fatal("error opening log file: ", err)
+	}
+	defer logFile.Close()
+
+	log.SetOutput(logFile)
 
 	log.SetLevel(log.DebugLevel)
 
