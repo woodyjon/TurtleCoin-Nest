@@ -116,7 +116,8 @@ func RequestBalance() (availableBalance float64, lockedBalance float64, totalBal
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return 0, 0, 0
 	}
 	defer resp.Body.Close()
 
@@ -174,7 +175,8 @@ func RequestAddress() string {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return "error requesting the address"
 	}
 	defer resp.Body.Close()
 
@@ -206,7 +208,7 @@ func RequestAddress() string {
 
 	}
 
-	return "error displaying the address"
+	return "error requesting the address"
 
 }
 
@@ -217,7 +219,8 @@ func RequestListTransactions() (transfers []Transfer) {
 
 	walletBlockCount, _, _, err := requestStatus()
 	if err != nil {
-		log.Fatal("error getting block count: ", err)
+		log.Error("error getting block count: ", err)
+		return nil
 	}
 
 	args["blockCount"] = walletBlockCount
@@ -244,7 +247,8 @@ func RequestListTransactions() (transfers []Transfer) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return nil
 	}
 	defer resp.Body.Close()
 
@@ -434,7 +438,8 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
@@ -496,7 +501,8 @@ func getPrivateViewKey() (privateViewKey string, err error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
@@ -554,7 +560,8 @@ func getPrivateSpendKey() (privateSpendKey string, err error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
