@@ -858,6 +858,7 @@ ApplicationWindow {
             id: dialogPrivateKeys
             title: "Private Keys"
             standardButtons: StandardButton.Ok
+            width: 900
 
             Text {
                 id: textDescriptionPrivateKeys
@@ -998,8 +999,8 @@ ApplicationWindow {
         id: dialogInfo
         title: "Info"
         standardButtons: StandardButton.Ok
-        width: 600
-        height: 100
+        width: 800
+        height: 150
         modality: Qt.WindowModal
 
         Text {
