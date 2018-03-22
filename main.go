@@ -116,6 +116,8 @@ func main() {
 	platform := "linux"
 	if isPlatformDarwin {
 		platform = "darwin"
+	} else isPlatformWindows {
+		platform = "windows"
 	}
 	walletdmanager.Setup(platform)
 

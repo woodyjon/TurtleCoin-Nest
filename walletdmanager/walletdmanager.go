@@ -72,8 +72,9 @@ var (
 	// WalletdSynced is true when wallet is synced and transfer is allowed
 	WalletdSynced = false
 
-	isPlatformDarwin = false
-	isPlatformLinux  = true
+	isPlatformDarwin  = false
+	isPlatformLinux   = true
+	isPlatformWindows = false
 )
 
 // Setup sets up some settings. It must be called at least once at the beginning of your program.
@@ -82,10 +83,13 @@ func Setup(platform string) {
 
 	isPlatformDarwin = false
 	isPlatformLinux = false
+	isPlatformWindows = false
 
 	switch platform {
 	case "darwin":
 		isPlatformDarwin = true
+	case "windows":
+		isPlatformWindows = true
 	case "linux":
 		isPlatformLinux = true
 	default:
