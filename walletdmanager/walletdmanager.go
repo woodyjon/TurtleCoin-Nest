@@ -635,7 +635,16 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	WalletFilename = filepath.Base(walletPath)
 	pathToWallet := filepath.Clean(walletPath)
-	pathToWallet = strings.Replace(pathToWallet, "file:", "", 1)
+
+	if isPlatformWindows {
+
+		pathToWallet = strings.Replace(pathToWallet, "file:\\", "", 1)
+
+	} else {
+
+		pathToWallet = strings.Replace(pathToWallet, "file:", "", 1)
+
+	}
 
 	if isPlatformDarwin {
 
@@ -653,6 +662,7 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 			// if comes from createWallet, so it is not a full path, just a filename
 			pathToWallet = pathToAppFolder + "/" + pathToWallet
 		}
+
 	}
 
 	// setup current session log file (logs are added real time in this file)
