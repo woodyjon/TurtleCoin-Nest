@@ -3,6 +3,7 @@ package main
 import (
 	"TurtleCoin-Nest/walletdmanager"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
@@ -29,6 +30,8 @@ var (
 	tickerRefreshWalletData *time.Ticker
 
 	logFileFilename = "turtlecoin-nest-logs.log"
+
+	urlBlockExplorer = "https://blocks.turtle.link/"
 )
 
 // QmlBridge is the bridge between qml and go
@@ -86,17 +89,35 @@ type QmlBridge struct {
 
 func main() {
 
-	f, err := os.OpenFile(logFileFilename, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatal("error opening file: ", err)
-	}
-	defer f.Close()
+	pathToLogFile := logFileFilename
 
-	log.SetOutput(f)
+	if isPlatformDarwin {
+		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Fatal("error finding current directory. Error: ", err)
+		}
+		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+		pathToLogFile = pathToAppFolder + "/" + logFileFilename
+	}
+
+	logFile, err := os.OpenFile(pathToLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+
+	if err != nil {
+		log.Fatal("error opening log file: ", err)
+	}
+	defer logFile.Close()
+
+	log.SetOutput(logFile)
 
 	log.SetLevel(log.DebugLevel)
 
 	log.Info("Application started")
+
+	platform := "linux"
+	if isPlatformDarwin {
+		platform = "darwin"
+	}
+	walletdmanager.Setup(platform)
 
 	gui.NewQGuiApplication(len(os.Args), os.Args)
 
@@ -135,7 +156,7 @@ func main() {
 
 	qmlBridge.ConnectClickedButtonExplorer(func(transactionID string) {
 
-		url := "https://turtle-coin.com/?hash=" + transactionID + "#blockchain_transaction"
+		url := urlBlockExplorer + "?hash=" + transactionID + "#blockchain_transaction"
 		successOpenBrowser := openBrowser(url)
 
 		if !successOpenBrowser {

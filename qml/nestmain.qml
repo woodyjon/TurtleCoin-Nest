@@ -59,23 +59,25 @@ ApplicationWindow {
             anchors.left: parent.left
             anchors.leftMargin: 0
 
-            Button {
+            Rectangle {
                 id: buttonCopy
                 width: 39
                 height: 42
-                hoverEnabled: true
                 anchors.verticalCenter: textAddress.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 30
+                color: "transparent"
                 Image {
                     id: image_copy
-                    sourceSize.height: 42
-                    sourceSize.width: 39
+                    anchors.fill: parent
                     fillMode: Image.PreserveAspectFit
                     source: "images/copy_white.png"
                 }
-                onClicked: {
-                    QmlBridge.clickedButtonCopyAddress();
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        QmlBridge.clickedButtonCopyAddress();
+                    }
                 }
             }
 
@@ -858,6 +860,7 @@ ApplicationWindow {
             id: dialogPrivateKeys
             title: "Private Keys"
             standardButtons: StandardButton.Ok
+            width: 900
 
             Text {
                 id: textDescriptionPrivateKeys
@@ -998,8 +1001,8 @@ ApplicationWindow {
         id: dialogInfo
         title: "Info"
         standardButtons: StandardButton.Ok
-        width: 600
-        height: 100
+        width: 800
+        height: 150
         modality: Qt.WindowModal
 
         Text {

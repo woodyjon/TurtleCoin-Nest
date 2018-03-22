@@ -44,8 +44,8 @@ type Transfer struct {
 var (
 	rpcURL = "http://127.0.0.1:8070/json_rpc"
 
-	walletdCurrentSessionLogFileFilename = "walletdCurrentSession.log"
-	walletdLogFileFilename               = "walletd.log"
+	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
+	logWalletdAllSessionsFilename    = "walletd.log"
 
 	walletTotalBalance float64
 	// WalletAvailableBalance is the available balance
@@ -71,7 +71,28 @@ var (
 
 	// WalletdSynced is true when wallet is synced and transfer is allowed
 	WalletdSynced = false
+
+	isPlatformDarwin = false
+	isPlatformLinux  = true
 )
+
+// Setup sets up some settings. It must be called at least once at the beginning of your program.
+// platform should be set based on your platform. The choices are "linux", "darwin", "windows"
+func Setup(platform string) {
+
+	isPlatformDarwin = false
+	isPlatformLinux = false
+
+	switch platform {
+	case "darwin":
+		isPlatformDarwin = true
+	case "linux":
+		isPlatformLinux = true
+	default:
+		isPlatformLinux = true
+	}
+
+}
 
 // RequestBalance provides the available and locked balances of the current wallet
 func RequestBalance() (availableBalance float64, lockedBalance float64, totalBalance float64) {
@@ -95,11 +116,11 @@ func RequestBalance() (availableBalance float64, lockedBalance float64, totalBal
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return 0, 0, 0
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getBalance:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -153,11 +174,11 @@ func RequestAddress() string {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return "error requesting the address"
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getAddresses:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -185,7 +206,7 @@ func RequestAddress() string {
 
 	}
 
-	return "error displaying the address"
+	return "error requesting the address"
 
 }
 
@@ -196,7 +217,8 @@ func RequestListTransactions() (transfers []Transfer) {
 
 	walletBlockCount, _, _, err := requestStatus()
 	if err != nil {
-		log.Fatal("error getting block count: ", err)
+		log.Error("error getting block count: ", err)
+		return nil
 	}
 
 	args["blockCount"] = walletBlockCount
@@ -223,11 +245,11 @@ func RequestListTransactions() (transfers []Transfer) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return nil
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getTransactions:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -308,7 +330,6 @@ func requestStatus() (blockCount int, knownBlockCount int, peerCount int, err er
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getStatus:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -413,11 +434,11 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status sendTransaction:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -475,11 +496,11 @@ func getPrivateViewKey() (privateViewKey string, err error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getViewKey:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -533,11 +554,11 @@ func getPrivateSpendKey() (privateSpendKey string, err error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal("error http request: ", err)
+		log.Error("error http request: ", err)
+		return "", err
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getSpendKey:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -603,14 +624,35 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	}
 
+	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
+	pathToLogWalletdAllSessions := logWalletdAllSessionsFilename
+	walletdCommandName := "walletd"
+	pathToWalletd := "./" + walletdCommandName
+
 	WalletFilename = filepath.Base(walletPath)
+	pathToWallet := filepath.Clean(walletPath)
+	pathToWallet = strings.Replace(pathToWallet, "file:", "", 1)
 
-	walletFilePath := filepath.Clean(walletPath)
+	if isPlatformDarwin {
 
-	walletFilePath = strings.Replace(walletFilePath, "file:", "", 1)
+		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Fatal("error finding current directory. Error: ", err)
+		}
+		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+
+		pathToLogWalletdCurrentSession = pathToAppFolder + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppFolder + "/" + logWalletdAllSessionsFilename
+		pathToWalletd = pathToAppFolder + "/" + walletdCommandName
+
+		if pathToWallet == WalletFilename {
+			// if comes from createWallet, so it is not a full path, just a filename
+			pathToWallet = pathToAppFolder + "/" + pathToWallet
+		}
+	}
 
 	// setup current session log file (logs are added real time in this file)
-	walletdCurrentSessionLogFile, err := os.Create(walletdCurrentSessionLogFileFilename)
+	walletdCurrentSessionLogFile, err := os.Create(pathToLogWalletdCurrentSession)
 	if err != nil {
 		log.Error(err)
 	}
@@ -618,16 +660,15 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	rpcPassword = randStringBytesMaskImprSrc(20)
 
-	cmdWalletd = exec.Command("./walletd", "-w", walletFilePath, "-p", walletPassword, "-l", walletdCurrentSessionLogFileFilename, "--local", "--rpc-password", rpcPassword)
+	cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--rpc-password", rpcPassword)
 
 	// setup all sessions log file (logs are added at the end of this file only after walletd has stopped)
-	// walletdLogFile, err := os.Open(walletdLogFileFilename)
-	walletdLogFile, err := os.OpenFile(walletdLogFileFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmdWalletd.Stdout = walletdLogFile
-	defer walletdLogFile.Close()
+	cmdWalletd.Stdout = walletdAllSessionsLogFile
+	defer walletdAllSessionsLogFile.Close()
 
 	err = cmdWalletd.Start()
 
@@ -657,15 +698,17 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 			break
 		}
 
-		if strings.Contains(line, " ERROR  ") {
+		identifierErrorMessage := " ERROR  "
+		if strings.Contains(line, identifierErrorMessage) {
 
-			listWalletdErrors = append(listWalletdErrors, line)
+			splitLine := strings.Split(line, identifierErrorMessage)
+			listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
 
 		}
 
 	}
 
-	errorMessage := "Error opening the daemon walletd. Could be a problem with your wallet file, your password or walletd. More info in the file " + walletdLogFileFilename + "\n"
+	errorMessage := "Error opening the daemon walletd. Could be a problem with your wallet file, your password or walletd. More info in the file " + logWalletdAllSessionsFilename + "\n"
 
 	if len(listWalletdErrors) > 0 {
 
@@ -738,8 +781,28 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	}
 
+	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
+	pathToLogWalletdAllSessions := logWalletdAllSessionsFilename
+	walletdCommandName := "walletd"
+	pathToWalletd := "./" + walletdCommandName
+	pathToWallet := walletFilename
+
+	if isPlatformDarwin {
+
+		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			log.Fatal("error finding current directory. Error: ", err)
+		}
+		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+
+		pathToLogWalletdCurrentSession = pathToAppFolder + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppFolder + "/" + logWalletdAllSessionsFilename
+		pathToWalletd = pathToAppFolder + "/" + walletdCommandName
+		pathToWallet = pathToAppFolder + "/" + walletFilename
+	}
+
 	// setup current session log file (logs are added real time in this file)
-	walletdCurrentSessionLogFile, err := os.Create(walletdCurrentSessionLogFileFilename)
+	walletdCurrentSessionLogFile, err := os.Create(pathToLogWalletdCurrentSession)
 	if err != nil {
 		log.Error(err)
 	}
@@ -748,22 +811,22 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 	if privateViewKey == "" && privateSpendKey == "" {
 
 		// generate new wallet
-		cmdWalletd = exec.Command("./walletd", "-w", walletFilename, "-p", walletPassword, "-l", walletdCurrentSessionLogFileFilename, "-g")
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "-g")
 
 	} else {
 
 		// import wallet from private view and spend keys
-		cmdWalletd = exec.Command("./walletd", "-w", walletFilename, "-p", walletPassword, "--view-key", privateViewKey, "--spend-key", privateSpendKey, "-l", walletdCurrentSessionLogFileFilename, "-g")
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--view-key", privateViewKey, "--spend-key", privateSpendKey, "-l", pathToLogWalletdCurrentSession, "-g")
 
 	}
 
-	// setup all sessions log file
-	walletdLogFile, err := os.OpenFile(walletdLogFileFilename, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
+	// setup all sessions log file (logs are added at the end of this file only after walletd has stopped)
+	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmdWalletd.Stdout = walletdLogFile
-	defer walletdLogFile.Close()
+	cmdWalletd.Stdout = walletdAllSessionsLogFile
+	defer walletdAllSessionsLogFile.Close()
 
 	err = cmdWalletd.Start()
 
@@ -795,9 +858,21 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 			break
 		}
 
-		if strings.Contains(line, " ERROR  ") || strings.Contains(line, "error: ") {
+		identifierErrorMessage := " ERROR  "
+		if strings.Contains(line, identifierErrorMessage) {
 
-			listWalletdErrors = append(listWalletdErrors, line)
+			splitLine := strings.Split(line, identifierErrorMessage)
+			listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
+
+		} else {
+
+			identifierErrorMessage = "error: "
+			if strings.Contains(line, identifierErrorMessage) {
+
+				splitLine := strings.Split(line, identifierErrorMessage)
+				listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
+
+			}
 
 		}
 
@@ -811,7 +886,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	}
 
-	errorMessage := "Error opening walletd and/or creating a wallet. More info in the file " + walletdLogFileFilename + "\n"
+	errorMessage := "Error opening walletd and/or creating a wallet. More info in the file " + logWalletdAllSessionsFilename + "\n"
 
 	if !successCreatingWallet {
 
@@ -830,6 +905,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 	}
 
 	return nil
+
 }
 
 // RequestConnectionInfo provides the blockchain sync status and the number of connected peers
