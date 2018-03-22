@@ -13,9 +13,10 @@ The universal GUI wallet for TurtleCoin
 1. Go [here](https://github.com/woodyjon/TurtleCoin-Nest/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Mac.zip**
 2. Unzip the folder and launch **TurtleCoin-Nest**. (Make sure you leave everything as is in the folder. The file *walletd* should remain in the same folder as *TurtleCoin-Nest*)
 
-Notes:
+Important notes:
 
 * Make sure *Walletd* or *Turtlecoind* are not running before you start *TurtleCoin-Nest*
+* If you encounter crashes, open the activity monitor (in your app > utilities), and force quit *walletd* (if it is running) before opening a wallet. (this bug is being fixed)
 
 ### Linux
 
@@ -24,10 +25,11 @@ Notes:
 `$ tar xvzf TurtleCoin-Nest-x.xx-Linux.tar.gz`
 3. run **TurtleCoin-Nest.sh**. (Make sure you leave everything as is in the folder)
 
-Notes:
+Important notes:
 
 * Make sure *Walletd* or *Turtlecoind* are not running before you start *TurtleCoin-Nest*
 * If you want the *copy address to clipboard* button to work, install *xclip* or *xsel* (on Debian/Ubuntu: `$ sudo apt install xclip`).
+* If you encounter crashes, open the activity monitor (in your app > utilities), and force quit *walletd* (if it is running) before opening a wallet. (this bug is being fixed)
 
 ### Windows
 
