@@ -706,7 +706,7 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--rpc-password", rpcPassword)
 
-	// setup all sessions log file (on windows and mac, logs are added at the end of this file only after walletd has stopped)
+	// setup all sessions log file
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal(err)
@@ -880,7 +880,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	}
 
-	// setup all sessions log file (logs are added at the end of this file only after walletd has stopped)
+	// setup all sessions log file
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal(err)
