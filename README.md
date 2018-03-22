@@ -29,7 +29,7 @@ Important notes:
 
 * Make sure *Walletd* or *Turtlecoind* are not running before you start *TurtleCoin-Nest*
 * If you want the *copy address to clipboard* button to work, install *xclip* or *xsel* (on Debian/Ubuntu: `$ sudo apt install xclip`).
-* If you encounter crashes, open the activity monitor (in your app > utilities), and force quit *walletd* (if it is running) before opening a wallet. (this bug is being fixed)
+* If you encounter crashes, open the activity monitor (e.g. `$ htop`), and quit *walletd* (if it is running) before opening a wallet. (this bug is being fixed)
 
 ### Windows
 
