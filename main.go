@@ -438,7 +438,11 @@ func openAnotherWallet() {
 
 	tickerRefreshWalletData.Stop()
 
-	walletdmanager.StopWalletd()
+	go func() {
+
+		walletdmanager.StopWalletd()
+
+	}()
 
 	qmlBridge.DisplayOpenWalletScreen()
 

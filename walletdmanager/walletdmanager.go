@@ -615,6 +615,36 @@ func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey stri
 
 }
 
+func requestSaveWallet() (err error) {
+
+	args := make(map[string]interface{})
+
+	payload := rpcPayload{
+		JSONRPC:  "2.0",
+		Method:   "save",
+		Params:   &args,
+		Password: rpcPassword,
+		ID:       8}
+
+	payloadjson, err := json.Marshal(payload)
+	if err != nil {
+		log.Error("error json marshal: ", err)
+		return errors.New("error json marshal: " + err.Error())
+	}
+
+	req, err := http.NewRequest("POST", rpcURL, bytes.NewBuffer(payloadjson))
+
+	client := &http.Client{}
+	_, err = client.Do(req)
+	if err != nil {
+		log.Error("error http request: ", err)
+		return errors.New("error http request: " + err.Error())
+	}
+
+	return nil
+
+}
+
 // StartWalletd starts the walletd daemon with the set wallet info
 // walletPath is the full path to the wallet
 // walletPassword is the wallet password
@@ -676,7 +706,7 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--rpc-password", rpcPassword)
 
-	// setup all sessions log file (logs are added at the end of this file only after walletd has stopped)
+	// setup all sessions log file (on windows and mac, logs are added at the end of this file only after walletd has stopped)
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal(err)
@@ -753,7 +783,23 @@ func StopWalletd() {
 
 	if WalletdOpenAndRunning && cmdWalletd != nil {
 
-		if err := cmdWalletd.Process.Signal(syscall.SIGTERM); err != nil {
+		requestSaveWallet()
+
+		time.Sleep(3 * time.Second)
+
+		var err error
+
+		if isPlatformWindows {
+
+			err = cmdWalletd.Process.Kill()
+
+		} else {
+
+			err = cmdWalletd.Process.Signal(syscall.SIGTERM)
+
+		}
+
+		if err != nil {
 
 			log.Error("failed to kill: ", err)
 
