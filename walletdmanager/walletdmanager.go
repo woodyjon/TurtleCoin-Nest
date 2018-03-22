@@ -121,7 +121,6 @@ func RequestBalance() (availableBalance float64, lockedBalance float64, totalBal
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getBalance:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -180,7 +179,6 @@ func RequestAddress() string {
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getAddresses:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -252,7 +250,6 @@ func RequestListTransactions() (transfers []Transfer) {
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getTransactions:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -333,7 +330,6 @@ func requestStatus() (blockCount int, knownBlockCount int, peerCount int, err er
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getStatus:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -443,7 +439,6 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status sendTransaction:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -506,7 +501,6 @@ func getPrivateViewKey() (privateViewKey string, err error) {
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getViewKey:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -565,7 +559,6 @@ func getPrivateSpendKey() (privateSpendKey string, err error) {
 	}
 	defer resp.Body.Close()
 
-	log.Info("response Status getSpendKey:", resp.Status)
 	responseBody, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
@@ -842,7 +835,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 		return err
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	reader := bufio.NewReader(walletdCurrentSessionLogFile)
 
