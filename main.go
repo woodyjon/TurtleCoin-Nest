@@ -30,6 +30,8 @@ var (
 	tickerRefreshWalletData *time.Ticker
 
 	logFileFilename = "turtlecoin-nest-logs.log"
+
+	urlBlockExplorer = "https://blocks.turtle.link/"
 )
 
 // QmlBridge is the bridge between qml and go
@@ -154,7 +156,7 @@ func main() {
 
 	qmlBridge.ConnectClickedButtonExplorer(func(transactionID string) {
 
-		url := "https://turtle-coin.com/?hash=" + transactionID + "#blockchain_transaction"
+		url := urlBlockExplorer + "?hash=" + transactionID + "#blockchain_transaction"
 		successOpenBrowser := openBrowser(url)
 
 		if !successOpenBrowser {
