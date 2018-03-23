@@ -783,29 +783,42 @@ func StopWalletd() {
 
 	if WalletdOpenAndRunning && cmdWalletd != nil {
 
-		requestSaveWallet()
-
-		time.Sleep(3 * time.Second)
-
 		var err error
 
 		if isPlatformWindows {
 
+			requestSaveWallet()
+
+			time.Sleep(3 * time.Second)
+
 			err = cmdWalletd.Process.Kill()
 
-		} else {
-
-			err = cmdWalletd.Process.Signal(syscall.SIGTERM)
-
-		}
-
-		if err != nil {
-
-			log.Error("failed to kill: ", err)
+			if err != nil {
+				log.Error("failed to kill walletd: " + err.Error())
+			} else {
+				log.Info("walletd killed without error")
+			}
 
 		} else {
 
-			log.Info("walletd killed without error")
+			_ = cmdWalletd.Process.Signal(syscall.SIGTERM)
+
+			done := make(chan error, 1)
+			go func() {
+				done <- cmdWalletd.Wait()
+			}()
+			select {
+			case <-time.After(5 * time.Second):
+				if err := cmdWalletd.Process.Kill(); err != nil {
+					log.Warning("failed to kill walletd: " + err.Error())
+				}
+				log.Info("Walletd killed as stopping process timed out")
+			case err := <-done:
+				if err != nil {
+					log.Warning("Walletd finished with error: " + err.Error())
+				}
+				log.Info("Walletd killed without error")
+			}
 
 		}
 
