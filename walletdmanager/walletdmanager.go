@@ -19,6 +19,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/mitchellh/go-ps"
 )
 
 type rpcPayload struct {
@@ -46,6 +48,9 @@ var (
 
 	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
 	logWalletdAllSessionsFilename    = "walletd.log"
+
+	walletdCommandName     = "walletd"
+	turtlecoindCommandName = "TurtleCoind"
 
 	walletTotalBalance float64
 	// WalletAvailableBalance is the available balance
@@ -658,9 +663,25 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	}
 
+	if isWalletdRunning() {
+
+		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
+
+		if isPlatformWindows {
+			errorMessage += "the task manager"
+		} else if isPlatformDarwin {
+			errorMessage += "the activity monitor"
+		} else if isPlatformLinux {
+			errorMessage += "a system monitor app"
+		}
+		errorMessage += "."
+
+		return errors.New(errorMessage)
+
+	}
+
 	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
 	pathToLogWalletdAllSessions := logWalletdAllSessionsFilename
-	walletdCommandName := "walletd"
 	pathToWalletd := "./" + walletdCommandName
 
 	WalletFilename = filepath.Base(walletPath)
@@ -835,6 +856,40 @@ func StopWalletd() {
 
 }
 
+// StopWalletd stops the walletd daemon
+func stopWalletdAfterCreatingAWallet() {
+
+	if cmdWalletd != nil {
+
+		if isPlatformWindows {
+
+			cmdWalletd.Process.Kill()
+
+		} else {
+
+			done := make(chan error, 1)
+			go func() {
+				done <- cmdWalletd.Wait()
+			}()
+			select {
+			case <-time.After(500 * time.Millisecond):
+				if err := cmdWalletd.Process.Kill(); err != nil {
+					log.Warning("failed to kill walletd: " + err.Error())
+				}
+				log.Info("Walletd killed as stopping process timed out")
+			case err := <-done:
+				if err != nil {
+					log.Warning("Walletd finished with error: " + err.Error())
+				}
+				log.Info("Walletd killed without error")
+			}
+
+		}
+
+	}
+
+}
+
 // CreateWallet calls walletd to create a new wallet. If privateViewKey and privateSpendKey are empty strings, a new wallet will be generated. If they are not empty, a wallet will be generated from those keys (import)
 // walletFilename is the filename chosen by the user. The created wallet file will be located in the same folder as walletd.
 // walletPassword is the password of the new wallet.
@@ -854,9 +909,25 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	}
 
+	if isWalletdRunning() {
+
+		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
+
+		if isPlatformWindows {
+			errorMessage += "the task manager"
+		} else if isPlatformDarwin {
+			errorMessage += "the activity monitor"
+		} else if isPlatformLinux {
+			errorMessage += "a system monitor app"
+		}
+		errorMessage += "."
+
+		return errors.New(errorMessage)
+
+	}
+
 	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
 	pathToLogWalletdAllSessions := logWalletdAllSessionsFilename
-	walletdCommandName := "walletd"
 	pathToWalletd := "./" + walletdCommandName
 	pathToWallet := walletFilename
 
@@ -957,6 +1028,10 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 		}
 
+		stopWalletdAfterCreatingAWallet()
+
+		time.Sleep(1 * time.Second)
+
 	}
 
 	errorMessage := "Error opening walletd and/or creating a wallet. More info in the file " + logWalletdAllSessionsFilename + "\n"
@@ -1040,4 +1115,31 @@ func randStringBytesMaskImprSrc(n int) string {
 	}
 
 	return string(b)
+}
+
+// find process in the running processes of the system (github.com/mitchellh/go-ps)
+func findProcess(key string) (int, string, error) {
+	pname := ""
+	pid := 0
+	err := errors.New("not found")
+	ps, _ := ps.Processes()
+
+	for i := range ps {
+		if ps[i].Executable() == key {
+			pid = ps[i].Pid()
+			pname = ps[i].Executable()
+			err = nil
+			break
+		}
+	}
+	return pid, pname, err
+}
+
+func isWalletdRunning() bool {
+	if _, _, err := findProcess(walletdCommandName); err == nil {
+		return true
+	} else if _, _, err = findProcess(turtlecoindCommandName); err == nil {
+		return true
+	}
+	return false
 }
