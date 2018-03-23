@@ -40,4 +40,5 @@ moc.h
 *plugin_import.cpp
 *windows_amd64.go
 *darwin_amd64.go
+*windows_386.go
 walletd
