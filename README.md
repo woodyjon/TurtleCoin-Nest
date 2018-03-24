@@ -31,7 +31,7 @@ Notes:
 
 ### Windows
 
-Coming very soon...
+It's here
 
 ## Screenshots
 
