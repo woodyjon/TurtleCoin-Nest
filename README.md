@@ -41,6 +41,10 @@ Important notes:
 * If you want the *copy address to clipboard* button to work, install *xclip* or *xsel* (on Debian/Ubuntu: `$ sudo apt install xclip`).
 * If you encounter crashes, open an activity monitor (e.g. `$ htop`), and quit *walletd* (if it is running) before opening a wallet. (this bug is being worked on)
 
+## Upgrade
+
+Just download the new release and follow the same steps as [Installation](#installation). Just make sure you don't delete your wallet files in the old folder (.wallet files) and you copy them or move them to the new folder.
+
 ## Screenshots
 
 ![Main Screen](/Screenshots/MainScreen.png)
