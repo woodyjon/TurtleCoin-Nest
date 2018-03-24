@@ -1136,10 +1136,22 @@ func findProcess(key string) (int, string, error) {
 }
 
 func isWalletdRunning() bool {
+
 	if _, _, err := findProcess(walletdCommandName); err == nil {
 		return true
-	} else if _, _, err = findProcess(turtlecoindCommandName); err == nil {
+	}
+	if _, _, err := findProcess(turtlecoindCommandName); err == nil {
 		return true
 	}
+
+	if isPlatformWindows {
+		if _, _, err := findProcess(walletdCommandName + ".exe"); err == nil {
+			return true
+		}
+		if _, _, err := findProcess(turtlecoindCommandName + ".exe"); err == nil {
+			return true
+		}
+	}
+
 	return false
 }
