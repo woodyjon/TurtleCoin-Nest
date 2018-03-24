@@ -19,6 +19,8 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+
+	"github.com/mitchellh/go-ps"
 )
 
 type rpcPayload struct {
@@ -47,6 +49,9 @@ var (
 	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
 	logWalletdAllSessionsFilename    = "walletd.log"
 
+	walletdCommandName     = "walletd"
+	turtlecoindCommandName = "TurtleCoind"
+
 	walletTotalBalance float64
 	// WalletAvailableBalance is the available balance
 	WalletAvailableBalance float64
@@ -72,8 +77,9 @@ var (
 	// WalletdSynced is true when wallet is synced and transfer is allowed
 	WalletdSynced = false
 
-	isPlatformDarwin = false
-	isPlatformLinux  = true
+	isPlatformDarwin  = false
+	isPlatformLinux   = true
+	isPlatformWindows = false
 )
 
 // Setup sets up some settings. It must be called at least once at the beginning of your program.
@@ -82,10 +88,13 @@ func Setup(platform string) {
 
 	isPlatformDarwin = false
 	isPlatformLinux = false
+	isPlatformWindows = false
 
 	switch platform {
 	case "darwin":
 		isPlatformDarwin = true
+	case "windows":
+		isPlatformWindows = true
 	case "linux":
 		isPlatformLinux = true
 	default:
@@ -611,6 +620,36 @@ func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey stri
 
 }
 
+func requestSaveWallet() (err error) {
+
+	args := make(map[string]interface{})
+
+	payload := rpcPayload{
+		JSONRPC:  "2.0",
+		Method:   "save",
+		Params:   &args,
+		Password: rpcPassword,
+		ID:       8}
+
+	payloadjson, err := json.Marshal(payload)
+	if err != nil {
+		log.Error("error json marshal: ", err)
+		return errors.New("error json marshal: " + err.Error())
+	}
+
+	req, err := http.NewRequest("POST", rpcURL, bytes.NewBuffer(payloadjson))
+
+	client := &http.Client{}
+	_, err = client.Do(req)
+	if err != nil {
+		log.Error("error http request: ", err)
+		return errors.New("error http request: " + err.Error())
+	}
+
+	return nil
+
+}
+
 // StartWalletd starts the walletd daemon with the set wallet info
 // walletPath is the full path to the wallet
 // walletPassword is the wallet password
@@ -624,14 +663,39 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	}
 
+	if isWalletdRunning() {
+
+		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
+
+		if isPlatformWindows {
+			errorMessage += "the task manager"
+		} else if isPlatformDarwin {
+			errorMessage += "the activity monitor"
+		} else if isPlatformLinux {
+			errorMessage += "a system monitor app"
+		}
+		errorMessage += "."
+
+		return errors.New(errorMessage)
+
+	}
+
 	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
 	pathToLogWalletdAllSessions := logWalletdAllSessionsFilename
-	walletdCommandName := "walletd"
 	pathToWalletd := "./" + walletdCommandName
 
 	WalletFilename = filepath.Base(walletPath)
 	pathToWallet := filepath.Clean(walletPath)
-	pathToWallet = strings.Replace(pathToWallet, "file:", "", 1)
+
+	if isPlatformWindows {
+
+		pathToWallet = strings.Replace(pathToWallet, "file:\\", "", 1)
+
+	} else {
+
+		pathToWallet = strings.Replace(pathToWallet, "file:", "", 1)
+
+	}
 
 	if isPlatformDarwin {
 
@@ -649,6 +713,7 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 			// if comes from createWallet, so it is not a full path, just a filename
 			pathToWallet = pathToAppFolder + "/" + pathToWallet
 		}
+
 	}
 
 	// setup current session log file (logs are added real time in this file)
@@ -662,7 +727,7 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--rpc-password", rpcPassword)
 
-	// setup all sessions log file (logs are added at the end of this file only after walletd has stopped)
+	// setup all sessions log file
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal(err)
@@ -739,13 +804,43 @@ func StopWalletd() {
 
 	if WalletdOpenAndRunning && cmdWalletd != nil {
 
-		if err := cmdWalletd.Process.Signal(syscall.SIGTERM); err != nil {
+		var err error
 
-			log.Error("failed to kill: ", err)
+		if isPlatformWindows {
+			// because syscall.SIGTERM does not work in windows. We have to manually save the wallet, as we kill walletd.
+
+			requestSaveWallet()
+
+			time.Sleep(3 * time.Second)
+
+			err = cmdWalletd.Process.Kill()
+
+			if err != nil {
+				log.Error("failed to kill walletd: " + err.Error())
+			} else {
+				log.Info("walletd killed without error")
+			}
 
 		} else {
 
-			log.Info("walletd killed without error")
+			_ = cmdWalletd.Process.Signal(syscall.SIGTERM)
+
+			done := make(chan error, 1)
+			go func() {
+				done <- cmdWalletd.Wait()
+			}()
+			select {
+			case <-time.After(5 * time.Second):
+				if err := cmdWalletd.Process.Kill(); err != nil {
+					log.Warning("failed to kill walletd: " + err.Error())
+				}
+				log.Info("Walletd killed as stopping process timed out")
+			case err := <-done:
+				if err != nil {
+					log.Warning("Walletd finished with error: " + err.Error())
+				}
+				log.Info("Walletd killed without error")
+			}
 
 		}
 
@@ -759,6 +854,40 @@ func StopWalletd() {
 	Transfers = nil
 	cmdWalletd = nil
 	WalletdOpenAndRunning = false
+
+}
+
+// to make sure that after creating a wallet, there is no walletd process remaining at all
+func stopWalletdAfterCreatingAWallet() {
+
+	if cmdWalletd != nil {
+
+		if isPlatformWindows {
+
+			cmdWalletd.Process.Kill()
+
+		} else {
+
+			done := make(chan error, 1)
+			go func() {
+				done <- cmdWalletd.Wait()
+			}()
+			select {
+			case <-time.After(500 * time.Millisecond):
+				if err := cmdWalletd.Process.Kill(); err != nil {
+					log.Warning("failed to kill walletd: " + err.Error())
+				}
+				log.Info("Walletd killed as stopping process timed out")
+			case err := <-done:
+				if err != nil {
+					log.Warning("Walletd finished with error: " + err.Error())
+				}
+				log.Info("Walletd killed without error")
+			}
+
+		}
+
+	}
 
 }
 
@@ -781,9 +910,25 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	}
 
+	if isWalletdRunning() {
+
+		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
+
+		if isPlatformWindows {
+			errorMessage += "the task manager"
+		} else if isPlatformDarwin {
+			errorMessage += "the activity monitor"
+		} else if isPlatformLinux {
+			errorMessage += "a system monitor app"
+		}
+		errorMessage += "."
+
+		return errors.New(errorMessage)
+
+	}
+
 	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
 	pathToLogWalletdAllSessions := logWalletdAllSessionsFilename
-	walletdCommandName := "walletd"
 	pathToWalletd := "./" + walletdCommandName
 	pathToWallet := walletFilename
 
@@ -820,7 +965,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	}
 
-	// setup all sessions log file (logs are added at the end of this file only after walletd has stopped)
+	// setup all sessions log file
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal(err)
@@ -883,6 +1028,10 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 			break
 
 		}
+
+		stopWalletdAfterCreatingAWallet()
+
+		time.Sleep(1 * time.Second)
 
 	}
 
@@ -967,4 +1116,43 @@ func randStringBytesMaskImprSrc(n int) string {
 	}
 
 	return string(b)
+}
+
+// find process in the running processes of the system (github.com/mitchellh/go-ps)
+func findProcess(key string) (int, string, error) {
+	pname := ""
+	pid := 0
+	err := errors.New("not found")
+	ps, _ := ps.Processes()
+
+	for i := range ps {
+		if ps[i].Executable() == key {
+			pid = ps[i].Pid()
+			pname = ps[i].Executable()
+			err = nil
+			break
+		}
+	}
+	return pid, pname, err
+}
+
+func isWalletdRunning() bool {
+
+	if _, _, err := findProcess(walletdCommandName); err == nil {
+		return true
+	}
+	if _, _, err := findProcess(turtlecoindCommandName); err == nil {
+		return true
+	}
+
+	if isPlatformWindows {
+		if _, _, err := findProcess(walletdCommandName + ".exe"); err == nil {
+			return true
+		}
+		if _, _, err := findProcess(turtlecoindCommandName + ".exe"); err == nil {
+			return true
+		}
+	}
+
+	return false
 }

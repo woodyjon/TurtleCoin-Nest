@@ -116,6 +116,8 @@ func main() {
 	platform := "linux"
 	if isPlatformDarwin {
 		platform = "darwin"
+	} else if isPlatformWindows {
+		platform = "windows"
 	}
 	walletdmanager.Setup(platform)
 
@@ -436,7 +438,11 @@ func openAnotherWallet() {
 
 	tickerRefreshWalletData.Stop()
 
-	walletdmanager.StopWalletd()
+	go func() {
+
+		walletdmanager.StopWalletd()
+
+	}()
 
 	qmlBridge.DisplayOpenWalletScreen()
 
