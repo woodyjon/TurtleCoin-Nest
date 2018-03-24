@@ -807,6 +807,7 @@ func StopWalletd() {
 		var err error
 
 		if isPlatformWindows {
+			// because syscall.SIGTERM does not work in windows. We have to manually save the wallet, as we kill walletd.
 
 			requestSaveWallet()
 
@@ -856,7 +857,7 @@ func StopWalletd() {
 
 }
 
-// StopWalletd stops the walletd daemon
+// to make sure that after creating a wallet, there is no walletd process remaining at all
 func stopWalletdAfterCreatingAWallet() {
 
 	if cmdWalletd != nil {
