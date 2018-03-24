@@ -301,7 +301,7 @@ Rectangle {
         Text {
             id: textCreateWalletExtensionDescr
             color: "#999999"
-            text: qsTr("Do not include any extension, a \".walet\" will be added automatically. \nAvoid spaces and most special characters in the filename.")
+            text: qsTr("Do not include any extension, a \".wallet\" will be added automatically. \nAvoid spaces and most special characters in the filename.")
             anchors.top: rectangleTextInputCreateWalletFilename.bottom
             anchors.topMargin: 12
             anchors.left: rectangleTextInputCreateWalletFilename.left
@@ -503,7 +503,7 @@ Rectangle {
         Text {
             id: textImportWalletExtensionDescr
             color: "#999999"
-            text: qsTr("Do not include any extension, a \".walet\" will be added automatically. \nAvoid spaces and most special characters in the filename.")
+            text: qsTr("Do not include any extension, a \".wallet\" will be added automatically. \nAvoid spaces and most special characters in the filename.")
             anchors.top: rectangleTextInputImportWalletFilename.bottom
             anchors.topMargin: 12
             anchors.left: rectangleTextInputImportWalletFilename.left
