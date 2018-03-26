@@ -2,6 +2,8 @@ package main
 
 import (
 	"TurtleCoin-Nest/walletdmanager"
+
+	"database/sql"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -19,6 +21,8 @@ import (
 	"github.com/therecipe/qt/quickcontrols2"
 
 	log "github.com/sirupsen/logrus"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
@@ -32,6 +36,10 @@ var (
 	logFileFilename = "turtlecoin-nest-logs.log"
 
 	urlBlockExplorer = "https://blocks.turtle.link/"
+
+	db *sql.DB
+
+	dbFilename = "settings.db"
 )
 
 // QmlBridge is the bridge between qml and go
@@ -60,10 +68,11 @@ type QmlBridge struct {
 		privateViewKey string,
 		privateSpendKey string,
 		walletAddress string) `signal:"displayPrivateKeys"`
-	_ func() `signal:"displayOpenWalletScreen"`
-	_ func() `signal:"displayMainWalletScreen"`
-	_ func() `signal:"finishedLoadingWalletd"`
-	_ func() `signal:"finishedCreatingWallet"`
+	_ func()                            `signal:"displayOpenWalletScreen"`
+	_ func()                            `signal:"displayMainWalletScreen"`
+	_ func()                            `signal:"finishedLoadingWalletd"`
+	_ func()                            `signal:"finishedCreatingWallet"`
+	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
 
 	_ func(msg string)           `slot:"log"`
 	_ func(transactionID string) `slot:"clickedButtonExplorer"`
@@ -91,6 +100,8 @@ func main() {
 
 	pathToLogFile := logFileFilename
 
+	pathToDB := dbFilename
+
 	if isPlatformDarwin {
 		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
@@ -98,6 +109,7 @@ func main() {
 		}
 		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
 		pathToLogFile = pathToAppFolder + "/" + logFileFilename
+		pathToDB = pathToAppFolder + "/" + pathToDB
 	}
 
 	logFile, err := os.OpenFile(pathToLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -110,6 +122,8 @@ func main() {
 	log.SetOutput(logFile)
 
 	log.SetLevel(log.DebugLevel)
+
+	setupDB(pathToDB)
 
 	log.Info("Application started")
 
@@ -183,6 +197,7 @@ func main() {
 
 		go func() {
 
+			recordPathWalletToDB(pathToWallet)
 			startWalletWithWalletInfo(pathToWallet, passwordWallet)
 
 		}()
@@ -217,11 +232,13 @@ func main() {
 
 	engine.RootContext().SetContextProperty("QmlBridge", qmlBridge)
 
+	getAndDisplayPathWalletFromDB()
+
 	gui.QGuiApplication_Exec()
 
 	log.Info("Application closed")
 
-	walletdmanager.StopWalletd()
+	walletdmanager.GracefullyQuitWalletd()
 
 }
 
@@ -440,7 +457,7 @@ func openAnotherWallet() {
 
 	go func() {
 
-		walletdmanager.StopWalletd()
+		walletdmanager.GracefullyQuitWalletd()
 
 	}()
 
@@ -460,6 +477,62 @@ func showWalletPrivateInfo() {
 
 		qmlBridge.DisplayPrivateKeys(walletdmanager.WalletFilename, privateViewKey, privateSpendKey, walletdmanager.WalletAddress)
 
+	}
+
+}
+
+func setupDB(pathToDB string) {
+
+	var err error
+	db, err = sql.Open("sqlite3", pathToDB)
+	if err != nil {
+		log.Fatal("error opening db file. err: ", err)
+	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS pathWallet (id INTEGER PRIMARY KEY AUTOINCREMENT,path VARCHAR(64) NULL)")
+	if err != nil {
+		log.Fatal("error creating table pathWallet. err: ", err)
+	}
+
+}
+
+func getAndDisplayPathWalletFromDB() {
+
+	qmlBridge.DisplayPathToPreviousWallet(getPathWalletFromDB())
+
+}
+
+func getPathWalletFromDB() string {
+
+	pathToPreviousWallet := ""
+
+	rows, err := db.Query("SELECT path FROM pathWallet ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		log.Fatal("error reading path from pathwallet table. err: ", err)
+	}
+
+	for rows.Next() {
+		path := ""
+		err = rows.Scan(&path)
+		if err != nil {
+			log.Fatal("error reading item from pathWallet table. err: ", err)
+		}
+		pathToPreviousWallet = path
+	}
+
+	return pathToPreviousWallet
+
+}
+
+func recordPathWalletToDB(path string) {
+
+	stmt, err := db.Prepare(`INSERT INTO pathWallet(path) VALUES(?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert pathWallet into db. err: ", err)
+	}
+	_, err = stmt.Exec(path)
+	if err != nil {
+		log.Fatal("error inserting pathWallet into db. err: ", err)
 	}
 
 }
