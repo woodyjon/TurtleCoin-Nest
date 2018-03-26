@@ -790,6 +790,8 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	if err != nil {
 
+		killWalletd()
+
 		return errors.New(errorMessage)
 
 	}
@@ -799,8 +801,8 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 	return nil
 }
 
-// StopWalletd stops the walletd daemon
-func StopWalletd() {
+// GracefullyQuitWalletd stops the walletd daemon
+func GracefullyQuitWalletd() {
 
 	if WalletdOpenAndRunning && cmdWalletd != nil {
 
@@ -858,7 +860,7 @@ func StopWalletd() {
 }
 
 // to make sure that after creating a wallet, there is no walletd process remaining at all
-func stopWalletdAfterCreatingAWallet() {
+func killWalletd() {
 
 	if cmdWalletd != nil {
 
@@ -1029,7 +1031,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 		}
 
-		stopWalletdAfterCreatingAWallet()
+		killWalletd()
 
 		time.Sleep(1 * time.Second)
 
@@ -1048,6 +1050,8 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 			}
 
 		}
+
+		killWalletd()
 
 		return errors.New(errorMessage)
 
