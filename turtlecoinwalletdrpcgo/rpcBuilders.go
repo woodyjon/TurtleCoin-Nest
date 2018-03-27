@@ -9,7 +9,7 @@ type rpcPayload struct {
 	ID       int                     `json:"id"`
 }
 
-func buildRPC(
+func buildRPCPayload(
 	method string,
 	id int,
 	rpcPassword string,
@@ -23,252 +23,252 @@ func buildRPC(
 		Params:   &params}
 }
 
-func reset(
+func rpcPayloadReset(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"reset",
 		id,
 		rpcPassword,
 		params)
 }
 
-func save(
+func rpcPayloadSave(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"save",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getViewKey(
+func rpcPayloadGetViewKey(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getViewKey",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getSpendKeys(
+func rpcPayloadGetSpendKeys(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getSpendKeys",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getStatus(
+func rpcPayloadGetStatus(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getStatus",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getAddresses(
+func rpcPayloadGetAddresses(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getAddresses",
 		id,
 		rpcPassword,
 		params)
 }
 
-func createAddress(
+func rpcPayloadCreateAddress(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"createAddress",
 		id,
 		rpcPassword,
 		params)
 }
 
-func deleteAddress(
+func rpcPayloadDeleteAddress(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"deleteAddress",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getBalance(
+func rpcPayloadGetBalance(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getBalance",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getBlockHashes(
+func rpcPayloadGetBlockHashes(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getBlockHashes",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getTransactionHashes(
+func rpcPayloadGetTransactionHashes(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getTransactionHashes",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getTransactions(
+func rpcPayloadGetTransactions(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
-		"getTransactionHashes",
+	return buildRPCPayload(
+		"getTransactions",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getUnconfirmedTransactionHashes(
+func rpcPayloadGetUnconfirmedTransactionHashes(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getUnconfirmedTransactionHashes",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getTransaction(
+func rpcPayloadGetTransaction(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getTransaction",
 		id,
 		rpcPassword,
 		params)
 }
 
-func sendTransaction(
+func rpcPayloadSendTransaction(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"sendTransaction",
 		id,
 		rpcPassword,
 		params)
 }
 
-func createDelayedTransaction(
+func rpcPayloadCreateDelayedTransaction(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"createDelayedTransaction",
 		id,
 		rpcPassword,
 		params)
 }
 
-func getDelayedTransactionHashes(
+func rpcPayloadGetDelayedTransactionHashes(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"getDelayedTransactionHashes",
 		id,
 		rpcPassword,
 		params)
 }
 
-func deleteDelayedTransaction(
+func rpcPayloadDeleteDelayedTransaction(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"deleteDelayedTransaction",
 		id,
 		rpcPassword,
 		params)
 }
 
-func sendDelayedTransaction(
+func rpcPayloadSendDelayedTransaction(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"sendDelayedTransaction",
 		id,
 		rpcPassword,
 		params)
 }
 
-func sendFusionTransaction(
+func rpcPayloadSendFusionTransaction(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"sendFusionTransaction",
 		id,
 		rpcPassword,
 		params)
 }
 
-func estimateFusion(
+func rpcPayloadEstimateFusion(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
-	return buildRPC(
+	return buildRPCPayload(
 		"estimateFusion",
 		id,
 		rpcPassword,

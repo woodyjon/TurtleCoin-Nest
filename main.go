@@ -1,9 +1,11 @@
 package main
 
 import (
+	"TurtleCoin-Nest/turtlecoinwalletdrpcgo"
 	"TurtleCoin-Nest/walletdmanager"
-
 	"database/sql"
+	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -11,25 +13,20 @@ import (
 	"strconv"
 	"time"
 
-	"os"
-
 	"github.com/atotto/clipboard"
-
+	_ "github.com/mattn/go-sqlite3"
+	log "github.com/sirupsen/logrus"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/qml"
 	"github.com/therecipe/qt/quickcontrols2"
-
-	log "github.com/sirupsen/logrus"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 var (
 	// qmlObjects = make(map[string]*core.QObject)
 	qmlBridge *QmlBridge
 
-	transfers []walletdmanager.Transfer
+	transfers []turtlecoinwalletdrpcgo.Transfer
 
 	tickerRefreshWalletData *time.Ticker
 
@@ -113,13 +110,14 @@ func main() {
 	}
 
 	logFile, err := os.OpenFile(pathToLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-
 	if err != nil {
 		log.Fatal("error opening log file: ", err)
 	}
 	defer logFile.Close()
 
-	log.SetOutput(logFile)
+	// log to file and console
+	mw := io.MultiWriter(os.Stdout, logFile)
+	log.SetOutput(mw)
 
 	log.SetLevel(log.DebugLevel)
 
@@ -272,20 +270,21 @@ func startDisplayWalletInfo() {
 
 func getAndDisplayBalances() {
 
-	walletAvailableBalance, walletLockedBalance, walletTotalBalance := walletdmanager.RequestBalance()
-
-	qmlBridge.DisplayAvailableBalance(strconv.FormatFloat(walletAvailableBalance, 'f', -1, 64))
-	qmlBridge.DisplayLockedBalance(strconv.FormatFloat(walletLockedBalance, 'f', -1, 64))
-	qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64))
+	walletAvailableBalance, walletLockedBalance, walletTotalBalance, err := walletdmanager.RequestBalance()
+	if err == nil {
+		qmlBridge.DisplayAvailableBalance(strconv.FormatFloat(walletAvailableBalance, 'f', -1, 64))
+		qmlBridge.DisplayLockedBalance(strconv.FormatFloat(walletLockedBalance, 'f', -1, 64))
+		qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64))
+	}
 
 }
 
 func getAndDisplayAddress() {
 
-	walletAddress := walletdmanager.RequestAddress()
-
-	qmlBridge.DisplayAddress(walletAddress)
-
+	walletAddress, err := walletdmanager.RequestAddress()
+	if err == nil {
+		qmlBridge.DisplayAddress(walletAddress)
+	}
 }
 
 func getAndDisplayConnectionInfo() {
@@ -304,45 +303,46 @@ func getAndDisplayConnectionInfo() {
 
 func getAndDisplayListTransactions() {
 
-	newTransfers := walletdmanager.RequestListTransactions()
+	newTransfers, err := walletdmanager.RequestListTransactions()
 
-	if len(newTransfers) != len(transfers) {
+	if err == nil {
 
-		transfers = newTransfers
+		if len(newTransfers) != len(transfers) {
 
-		// sort starting by the most recent transaction
-		sort.Slice(transfers, func(i, j int) bool { return transfers[i].Timestamp.After(transfers[j].Timestamp) })
+			transfers = newTransfers
 
-		transactionNumber := len(transfers)
+			// sort starting by the most recent transaction
+			sort.Slice(transfers, func(i, j int) bool { return transfers[i].Timestamp.After(transfers[j].Timestamp) })
 
-		qmlBridge.ClearListTransactions()
+			transactionNumber := len(transfers)
 
-		for _, transfer := range transfers {
+			qmlBridge.ClearListTransactions()
 
-			amount := transfer.Amount
-			amountString := ""
-			if amount >= 0 {
-				amountString += "+ "
-				amountString += strconv.FormatFloat(amount, 'f', -1, 64)
-			} else {
-				amountString += "- "
-				amountString += strconv.FormatFloat(-amount, 'f', -1, 64)
+			for _, transfer := range transfers {
+
+				amount := transfer.Amount
+				amountString := ""
+				if amount >= 0 {
+					amountString += "+ "
+					amountString += strconv.FormatFloat(amount, 'f', -1, 64)
+				} else {
+					amountString += "- "
+					amountString += strconv.FormatFloat(-amount, 'f', -1, 64)
+				}
+				amountString += " TRTL (fee: " + strconv.FormatFloat(transfer.Fee, 'f', 2, 64) + ")"
+
+				confirmationsString := "(" + strconv.Itoa(transfer.Confirmations) + " conf.)"
+
+				timeString := transfer.Timestamp.Format("2006-01-02 15:04:05")
+
+				transactionNumberString := strconv.Itoa(transactionNumber) + ")"
+				transactionNumber--
+
+				qmlBridge.AddTransactionToList(transfer.PaymentID, transfer.TxID, amountString, confirmationsString, timeString, transactionNumberString)
+
 			}
-			amountString += " TRTL (fee: " + strconv.FormatFloat(transfer.Fee, 'f', 2, 64) + ")"
-
-			confirmationsString := "(" + strconv.Itoa(transfer.Confirmations) + " conf.)"
-
-			timeString := transfer.Timestamp.Format("2006-01-02 15:04:05")
-
-			transactionNumberString := strconv.Itoa(transactionNumber) + ")"
-			transactionNumber--
-
-			qmlBridge.AddTransactionToList(transfer.PaymentID, transfer.TxID, amountString, confirmationsString, timeString, transactionNumberString)
-
 		}
-
 	}
-
 }
 
 func transfer(transferAddress string, transferAmount string, transferPaymentID string) bool {
@@ -468,17 +468,11 @@ func openAnotherWallet() {
 func showWalletPrivateInfo() {
 
 	privateViewKey, privateSpendKey, err := walletdmanager.GetPrivateViewKeyAndSpendKey()
-
 	if err != nil {
-
 		log.Error("Error getting view and spend key: ", err)
-
 	} else {
-
 		qmlBridge.DisplayPrivateKeys(walletdmanager.WalletFilename, privateViewKey, privateSpendKey, walletdmanager.WalletAddress)
-
 	}
-
 }
 
 func setupDB(pathToDB string) {
