@@ -20,17 +20,7 @@ import (
 	"github.com/mitchellh/go-ps"
 )
 
-type rpcPayload struct {
-	JSONRPC  string                  `json:"jsonrpc"`
-	Method   string                  `json:"method"`
-	Params   *map[string]interface{} `json:"params,omitempty"`
-	Password string                  `json:"password"`
-	ID       int                     `json:"id"`
-}
-
 var (
-	rpcURL = "http://127.0.0.1:8070/json_rpc"
-
 	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
 	logWalletdAllSessionsFilename    = "walletd.log"
 
