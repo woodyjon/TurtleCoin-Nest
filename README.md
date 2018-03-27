@@ -16,7 +16,7 @@ The universal GUI wallet for TurtleCoin
 Important notes:
 
 * Make sure *Walletd.exe* or *Turtlecoind.exe* are not running before you start *TurtleCoin-Nest*
-* When you open a wallet in TurtleCoin Nest, you will see a black empty walletd window. You must keep it open. It will close automatically when you close your wallet. If it does not close automatically a few seconds after you close your wallet, you can close it manually.
+* When you open a wallet in TurtleCoin Nest, you will see a black empty *walletd* window. You must keep it open. It will close automatically when you close your wallet. If it does not close automatically a few seconds after you close your wallet, you can close it manually.
 
 ### Mac
 
@@ -43,7 +43,7 @@ Important notes:
 
 ## Upgrade
 
-Just download the new release and follow the same steps as [Installation](#installation). Just make sure you don't delete your wallet files in the old folder (.wallet files) and you copy them or move them to the new folder.
+Just download the new release and follow the same steps as [Installation](#installation). Just make sure you don't delete your wallet files in the old folder (.wallet files) and you copy them or move them to a new folder.
 
 ## Screenshots
 
