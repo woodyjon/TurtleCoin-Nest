@@ -1,7 +1,11 @@
 package main
 
 import (
+	"TurtleCoin-Nest/turtlecoinwalletdrpcgo"
 	"TurtleCoin-Nest/walletdmanager"
+	"database/sql"
+	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
@@ -9,29 +13,30 @@ import (
 	"strconv"
 	"time"
 
-	"os"
-
 	"github.com/atotto/clipboard"
-
+	_ "github.com/mattn/go-sqlite3"
+	log "github.com/sirupsen/logrus"
 	"github.com/therecipe/qt/core"
 	"github.com/therecipe/qt/gui"
 	"github.com/therecipe/qt/qml"
 	"github.com/therecipe/qt/quickcontrols2"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var (
 	// qmlObjects = make(map[string]*core.QObject)
 	qmlBridge *QmlBridge
 
-	transfers []walletdmanager.Transfer
+	transfers []turtlecoinwalletdrpcgo.Transfer
 
 	tickerRefreshWalletData *time.Ticker
 
 	logFileFilename = "turtlecoin-nest-logs.log"
 
 	urlBlockExplorer = "https://blocks.turtle.link/"
+
+	db *sql.DB
+
+	dbFilename = "settings.db"
 )
 
 // QmlBridge is the bridge between qml and go
@@ -60,10 +65,11 @@ type QmlBridge struct {
 		privateViewKey string,
 		privateSpendKey string,
 		walletAddress string) `signal:"displayPrivateKeys"`
-	_ func() `signal:"displayOpenWalletScreen"`
-	_ func() `signal:"displayMainWalletScreen"`
-	_ func() `signal:"finishedLoadingWalletd"`
-	_ func() `signal:"finishedCreatingWallet"`
+	_ func()                            `signal:"displayOpenWalletScreen"`
+	_ func()                            `signal:"displayMainWalletScreen"`
+	_ func()                            `signal:"finishedLoadingWalletd"`
+	_ func()                            `signal:"finishedCreatingWallet"`
+	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
 
 	_ func(msg string)           `slot:"log"`
 	_ func(transactionID string) `slot:"clickedButtonExplorer"`
@@ -91,6 +97,8 @@ func main() {
 
 	pathToLogFile := logFileFilename
 
+	pathToDB := dbFilename
+
 	if isPlatformDarwin {
 		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
@@ -98,18 +106,22 @@ func main() {
 		}
 		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
 		pathToLogFile = pathToAppFolder + "/" + logFileFilename
+		pathToDB = pathToAppFolder + "/" + pathToDB
 	}
 
 	logFile, err := os.OpenFile(pathToLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-
 	if err != nil {
 		log.Fatal("error opening log file: ", err)
 	}
 	defer logFile.Close()
 
-	log.SetOutput(logFile)
+	// log to file and console
+	mw := io.MultiWriter(os.Stdout, logFile)
+	log.SetOutput(mw)
 
 	log.SetLevel(log.DebugLevel)
+
+	setupDB(pathToDB)
 
 	log.Info("Application started")
 
@@ -183,6 +195,7 @@ func main() {
 
 		go func() {
 
+			recordPathWalletToDB(pathToWallet)
 			startWalletWithWalletInfo(pathToWallet, passwordWallet)
 
 		}()
@@ -217,11 +230,13 @@ func main() {
 
 	engine.RootContext().SetContextProperty("QmlBridge", qmlBridge)
 
+	getAndDisplayPathWalletFromDB()
+
 	gui.QGuiApplication_Exec()
 
 	log.Info("Application closed")
 
-	walletdmanager.StopWalletd()
+	walletdmanager.GracefullyQuitWalletd()
 
 }
 
@@ -255,20 +270,21 @@ func startDisplayWalletInfo() {
 
 func getAndDisplayBalances() {
 
-	walletAvailableBalance, walletLockedBalance, walletTotalBalance := walletdmanager.RequestBalance()
-
-	qmlBridge.DisplayAvailableBalance(strconv.FormatFloat(walletAvailableBalance, 'f', -1, 64))
-	qmlBridge.DisplayLockedBalance(strconv.FormatFloat(walletLockedBalance, 'f', -1, 64))
-	qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64))
+	walletAvailableBalance, walletLockedBalance, walletTotalBalance, err := walletdmanager.RequestBalance()
+	if err == nil {
+		qmlBridge.DisplayAvailableBalance(strconv.FormatFloat(walletAvailableBalance, 'f', -1, 64))
+		qmlBridge.DisplayLockedBalance(strconv.FormatFloat(walletLockedBalance, 'f', -1, 64))
+		qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64))
+	}
 
 }
 
 func getAndDisplayAddress() {
 
-	walletAddress := walletdmanager.RequestAddress()
-
-	qmlBridge.DisplayAddress(walletAddress)
-
+	walletAddress, err := walletdmanager.RequestAddress()
+	if err == nil {
+		qmlBridge.DisplayAddress(walletAddress)
+	}
 }
 
 func getAndDisplayConnectionInfo() {
@@ -287,45 +303,46 @@ func getAndDisplayConnectionInfo() {
 
 func getAndDisplayListTransactions() {
 
-	newTransfers := walletdmanager.RequestListTransactions()
+	newTransfers, err := walletdmanager.RequestListTransactions()
 
-	if len(newTransfers) != len(transfers) {
+	if err == nil {
 
-		transfers = newTransfers
+		if len(newTransfers) != len(transfers) {
 
-		// sort starting by the most recent transaction
-		sort.Slice(transfers, func(i, j int) bool { return transfers[i].Timestamp.After(transfers[j].Timestamp) })
+			transfers = newTransfers
 
-		transactionNumber := len(transfers)
+			// sort starting by the most recent transaction
+			sort.Slice(transfers, func(i, j int) bool { return transfers[i].Timestamp.After(transfers[j].Timestamp) })
 
-		qmlBridge.ClearListTransactions()
+			transactionNumber := len(transfers)
 
-		for _, transfer := range transfers {
+			qmlBridge.ClearListTransactions()
 
-			amount := transfer.Amount
-			amountString := ""
-			if amount >= 0 {
-				amountString += "+ "
-				amountString += strconv.FormatFloat(amount, 'f', -1, 64)
-			} else {
-				amountString += "- "
-				amountString += strconv.FormatFloat(-amount, 'f', -1, 64)
+			for _, transfer := range transfers {
+
+				amount := transfer.Amount
+				amountString := ""
+				if amount >= 0 {
+					amountString += "+ "
+					amountString += strconv.FormatFloat(amount, 'f', -1, 64)
+				} else {
+					amountString += "- "
+					amountString += strconv.FormatFloat(-amount, 'f', -1, 64)
+				}
+				amountString += " TRTL (fee: " + strconv.FormatFloat(transfer.Fee, 'f', 2, 64) + ")"
+
+				confirmationsString := "(" + strconv.Itoa(transfer.Confirmations) + " conf.)"
+
+				timeString := transfer.Timestamp.Format("2006-01-02 15:04:05")
+
+				transactionNumberString := strconv.Itoa(transactionNumber) + ")"
+				transactionNumber--
+
+				qmlBridge.AddTransactionToList(transfer.PaymentID, transfer.TxID, amountString, confirmationsString, timeString, transactionNumberString)
+
 			}
-			amountString += " TRTL (fee: " + strconv.FormatFloat(transfer.Fee, 'f', 2, 64) + ")"
-
-			confirmationsString := "(" + strconv.Itoa(transfer.Confirmations) + " conf.)"
-
-			timeString := transfer.Timestamp.Format("2006-01-02 15:04:05")
-
-			transactionNumberString := strconv.Itoa(transactionNumber) + ")"
-			transactionNumber--
-
-			qmlBridge.AddTransactionToList(transfer.PaymentID, transfer.TxID, amountString, confirmationsString, timeString, transactionNumberString)
-
 		}
-
 	}
-
 }
 
 func transfer(transferAddress string, transferAmount string, transferPaymentID string) bool {
@@ -440,7 +457,7 @@ func openAnotherWallet() {
 
 	go func() {
 
-		walletdmanager.StopWalletd()
+		walletdmanager.GracefullyQuitWalletd()
 
 	}()
 
@@ -451,15 +468,65 @@ func openAnotherWallet() {
 func showWalletPrivateInfo() {
 
 	privateViewKey, privateSpendKey, err := walletdmanager.GetPrivateViewKeyAndSpendKey()
-
 	if err != nil {
-
 		log.Error("Error getting view and spend key: ", err)
-
 	} else {
-
 		qmlBridge.DisplayPrivateKeys(walletdmanager.WalletFilename, privateViewKey, privateSpendKey, walletdmanager.WalletAddress)
+	}
+}
 
+func setupDB(pathToDB string) {
+
+	var err error
+	db, err = sql.Open("sqlite3", pathToDB)
+	if err != nil {
+		log.Fatal("error opening db file. err: ", err)
+	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS pathWallet (id INTEGER PRIMARY KEY AUTOINCREMENT,path VARCHAR(64) NULL)")
+	if err != nil {
+		log.Fatal("error creating table pathWallet. err: ", err)
+	}
+
+}
+
+func getAndDisplayPathWalletFromDB() {
+
+	qmlBridge.DisplayPathToPreviousWallet(getPathWalletFromDB())
+
+}
+
+func getPathWalletFromDB() string {
+
+	pathToPreviousWallet := ""
+
+	rows, err := db.Query("SELECT path FROM pathWallet ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		log.Fatal("error reading path from pathwallet table. err: ", err)
+	}
+
+	for rows.Next() {
+		path := ""
+		err = rows.Scan(&path)
+		if err != nil {
+			log.Fatal("error reading item from pathWallet table. err: ", err)
+		}
+		pathToPreviousWallet = path
+	}
+
+	return pathToPreviousWallet
+
+}
+
+func recordPathWalletToDB(path string) {
+
+	stmt, err := db.Prepare(`INSERT INTO pathWallet(path) VALUES(?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert pathWallet into db. err: ", err)
+	}
+	_, err = stmt.Exec(path)
+	if err != nil {
+		log.Fatal("error inserting pathWallet into db. err: ", err)
 	}
 
 }

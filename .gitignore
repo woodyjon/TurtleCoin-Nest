@@ -44,3 +44,4 @@ moc.h
 *darwin_amd64.go
 *windows_386.go
 walletd
+settings.db

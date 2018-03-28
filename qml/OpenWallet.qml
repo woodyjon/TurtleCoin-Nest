@@ -734,6 +734,11 @@ Rectangle {
             busyIndicator.running = false
         }
 
+        onDisplayPathToPreviousWallet:
+        {
+            textInputExistingWalletPath.text = pathToPreviousWallet
+        }
+
     }
 
     function clearData() {
