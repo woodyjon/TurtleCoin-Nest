@@ -1,6 +1,7 @@
 import QtQuick.Window 2.2
 import QtQuick 2.7
 import QtQuick.Controls 2.3
+import QtQuick.Controls 1.4 as OldControls
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
@@ -13,7 +14,7 @@ Rectangle {
     Text {
         id: textOpenWalletDescr
         color: "#ffffff"
-        text: qsTr("Welcome to your TurtleCoin wallet. Choose one of the options below. If you are new to TurtleCoin, create a new wallet.")
+        text: qsTr("If you are new to TurtleCoin, choose \"Create a new wallet\".")
         anchors.right: parent.right
         anchors.rightMargin: 15
         anchors.left: parent.left
@@ -25,6 +26,48 @@ Rectangle {
         font.family: "Arial"
         font.bold: true
         horizontalAlignment: Text.AlignLeft
+    }
+
+    Rectangle {
+        id: rectangleRadioButtonRemote
+        anchors.right: parent.right
+        anchors.rightMargin: 30
+        anchors.top: parent.top
+        anchors.topMargin: 20
+        width: 300
+
+        ColumnLayout {
+            OldControls.ExclusiveGroup { id: tabPositionGroup }
+            OldControls.RadioButton {
+                id: radioButtonUseLocal
+                text: "Local blockchain"
+                exclusiveGroup: tabPositionGroup
+                style: radioButtonStyle
+                onClicked: QmlBridge.choseRemote(false)
+            }
+            OldControls.RadioButton {
+                id: radioButtonUseRemoteNode
+                text: "Remote node (europe.turtlenode.io)"
+                checked: true
+                exclusiveGroup: tabPositionGroup
+                style: radioButtonStyle
+                onClicked: QmlBridge.choseRemote(true)
+            }
+        }
+    }
+
+    Component {
+        id: radioButtonStyle
+        RadioButtonStyle {
+            label: Text {
+                color: "#ffffff"
+                font.pixelSize: 14
+                font.family: "Arial"
+                text: control.text
+                leftPadding: 10
+                font.bold: control.checked
+            }
+        }
     }
 
     // section open existing wallet
@@ -773,6 +816,12 @@ Rectangle {
         {
             textCreateWalletLocation.text = walletLocation;
             textImportWalletLocation.text = walletLocation;
+        }
+
+        onDisplayUseRemoteNode:
+        {
+            radioButtonUseLocal.checked = !useRemote;
+            radioButtonUseRemoteNode.checked = useRemote;
         }
     }
 
