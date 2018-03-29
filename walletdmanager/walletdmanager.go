@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -222,17 +223,23 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 		if err != nil {
 			log.Fatal("error finding current directory. Error: ", err)
 		}
-		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+		pathToAppContents := filepath.Dir(currentDirectory)
+		pathToWalletd = pathToAppContents + "/" + walletdCommandName
 
-		pathToLogWalletdCurrentSession = pathToAppFolder + "/" + logWalletdCurrentSessionFilename
-		pathToLogWalletdAllSessions = pathToAppFolder + "/" + logWalletdAllSessionsFilename
-		pathToWalletd = pathToAppFolder + "/" + walletdCommandName
+		usr, err := user.Current()
+		if err != nil {
+			log.Fatal("error finding home directory. Error: ", err)
+		}
+		pathToHomeDir := usr.HomeDir
+		pathToAppLibDir := pathToHomeDir + "/Library/Application Support/TurtleCoin-Nest"
+
+		pathToLogWalletdCurrentSession = pathToAppLibDir + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppLibDir + "/" + logWalletdAllSessionsFilename
 
 		if pathToWallet == WalletFilename {
 			// if comes from createWallet, so it is not a full path, just a filename
-			pathToWallet = pathToAppFolder + "/" + pathToWallet
+			pathToWallet = pathToHomeDir + "/" + pathToWallet
 		}
-
 	}
 
 	// setup current session log file (logs are added real time in this file)
@@ -442,12 +449,19 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 		if err != nil {
 			log.Fatal("error finding current directory. Error: ", err)
 		}
-		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+		pathToAppContents := filepath.Dir(currentDirectory)
+		pathToWalletd = pathToAppContents + "/" + walletdCommandName
 
-		pathToLogWalletdCurrentSession = pathToAppFolder + "/" + logWalletdCurrentSessionFilename
-		pathToLogWalletdAllSessions = pathToAppFolder + "/" + logWalletdAllSessionsFilename
-		pathToWalletd = pathToAppFolder + "/" + walletdCommandName
-		pathToWallet = pathToAppFolder + "/" + walletFilename
+		usr, err := user.Current()
+		if err != nil {
+			log.Fatal("error finding home directory. Error: ", err)
+		}
+		pathToHomeDir := usr.HomeDir
+		pathToAppLibDir := pathToHomeDir + "/Library/Application Support/TurtleCoin-Nest"
+
+		pathToLogWalletdCurrentSession = pathToAppLibDir + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppLibDir + "/" + logWalletdAllSessionsFilename
+		pathToWallet = pathToHomeDir + "/" + walletFilename
 	}
 
 	// setup current session log file (logs are added real time in this file)

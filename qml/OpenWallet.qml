@@ -19,7 +19,7 @@ Rectangle {
         anchors.left: parent.left
         anchors.leftMargin: 40
         anchors.top: parent.top
-        anchors.topMargin: 40
+        anchors.topMargin: 20
         font.pixelSize: 14
         verticalAlignment: Text.AlignBottom
         font.family: "Arial"
@@ -36,7 +36,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.rightMargin: 10
         anchors.top: textOpenWalletDescr.bottom
-        anchors.topMargin: 50
+        anchors.topMargin: 25
         height: 120
         radius: 7
 
@@ -301,10 +301,25 @@ Rectangle {
         Text {
             id: textCreateWalletExtensionDescr
             color: "#999999"
-            text: qsTr("Do not include any extension, a \".wallet\" will be added automatically. \nAvoid spaces and most special characters in the filename.")
+            text: qsTr("Do not include any extension. Avoid spaces.")
             anchors.top: rectangleTextInputCreateWalletFilename.bottom
-            anchors.topMargin: 12
+            anchors.topMargin: 8
             anchors.left: rectangleTextInputCreateWalletFilename.left
+            anchors.leftMargin: 0
+            font.pixelSize: 13
+            verticalAlignment: Text.AlignBottom
+            font.family: "Arial"
+            font.bold: false
+            horizontalAlignment: Text.AlignLeft
+        }
+
+        Text {
+            id: textCreateWalletLocation
+            color: "#999999"
+            text: ""
+            anchors.top: textCreateWalletExtensionDescr.bottom
+            anchors.topMargin: 2
+            anchors.left: textCreateWalletExtensionDescr.left
             anchors.leftMargin: 0
             font.pixelSize: 13
             verticalAlignment: Text.AlignBottom
@@ -503,10 +518,25 @@ Rectangle {
         Text {
             id: textImportWalletExtensionDescr
             color: "#999999"
-            text: qsTr("Do not include any extension, a \".wallet\" will be added automatically. \nAvoid spaces and most special characters in the filename.")
+            text: qsTr("Do not include any extension. Avoid spaces.")
             anchors.top: rectangleTextInputImportWalletFilename.bottom
-            anchors.topMargin: 12
+            anchors.topMargin: 8
             anchors.left: rectangleTextInputImportWalletFilename.left
+            anchors.leftMargin: 0
+            font.pixelSize: 13
+            verticalAlignment: Text.AlignBottom
+            font.family: "Arial"
+            font.bold: false
+            horizontalAlignment: Text.AlignLeft
+        }
+
+        Text {
+            id: textImportWalletLocation
+            color: "#999999"
+            text: ""
+            anchors.top: textImportWalletExtensionDescr.bottom
+            anchors.topMargin: 2
+            anchors.left: textImportWalletExtensionDescr.left
             anchors.leftMargin: 0
             font.pixelSize: 13
             verticalAlignment: Text.AlignBottom
@@ -572,7 +602,7 @@ Rectangle {
             font.pixelSize: 14
             font.family: "Arial"
             anchors.top: textImportWalletExtensionDescr.bottom
-            anchors.topMargin: 20
+            anchors.topMargin: 30
             anchors.left: textImportWalletExtensionDescr.left
             anchors.leftMargin: 0
         }
@@ -664,8 +694,8 @@ Rectangle {
             text: qsTr("IMPORT")
             anchors.right: parent.right
             anchors.rightMargin: 60
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 15
+            anchors.bottom: rectangleTextInputImportWalletPrivateSpendKey.bottom
+            anchors.bottomMargin: 0
             enabled: false
 
             contentItem: Text {
@@ -739,12 +769,17 @@ Rectangle {
             textInputExistingWalletPath.text = pathToPreviousWallet
         }
 
+        onDisplayWalletCreationLocation:
+        {
+            textCreateWalletLocation.text = walletLocation;
+            textImportWalletLocation.text = walletLocation;
+        }
     }
 
     function clearData() {
 
-        textInputImportWalletPrivateViewKey.text = ""
-        textInputImportWalletPrivateSpendKey.text = ""
+        textInputImportWalletPrivateViewKey.text = "";
+        textInputImportWalletPrivateSpendKey.text = "";
 
     }
 

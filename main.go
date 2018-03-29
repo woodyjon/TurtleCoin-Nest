@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
+	"os/user"
 	"runtime"
 	"sort"
 	"strconv"
@@ -70,6 +70,7 @@ type QmlBridge struct {
 	_ func()                            `signal:"finishedLoadingWalletd"`
 	_ func()                            `signal:"finishedCreatingWallet"`
 	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
+	_ func(walletLocation string)       `signal:"displayWalletCreationLocation"`
 
 	_ func(msg string)           `slot:"log"`
 	_ func(transactionID string) `slot:"clickedButtonExplorer"`
@@ -96,15 +97,17 @@ type QmlBridge struct {
 func main() {
 
 	pathToLogFile := logFileFilename
-
 	pathToDB := dbFilename
+	pathToHomeDir := ""
 
 	if isPlatformDarwin {
-		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		usr, err := user.Current()
 		if err != nil {
-			log.Fatal("error finding current directory. Error: ", err)
+			log.Fatal(err)
 		}
-		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+		pathToHomeDir = usr.HomeDir
+		pathToAppFolder := pathToHomeDir + "/Library/Application Support/TurtleCoin-Nest"
+		os.Mkdir(pathToAppFolder, os.ModePerm)
 		pathToLogFile = pathToAppFolder + "/" + logFileFilename
 		pathToDB = pathToAppFolder + "/" + pathToDB
 	}
@@ -229,6 +232,11 @@ func main() {
 	})
 
 	engine.RootContext().SetContextProperty("QmlBridge", qmlBridge)
+
+	if isPlatformDarwin {
+		textLocation := "Your wallet will be saved in your home directory: " + pathToHomeDir + "/"
+		qmlBridge.DisplayWalletCreationLocation(textLocation)
+	}
 
 	getAndDisplayPathWalletFromDB()
 
