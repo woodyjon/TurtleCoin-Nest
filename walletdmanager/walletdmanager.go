@@ -254,7 +254,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) 
 	rpcPassword = randStringBytesMaskImprSrc(20)
 
 	if useRemoteNode {
-		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--daemon-address", "europe.turtlenode.io", "--daemon-port", "11898", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--daemon-address", "public.turtlenode.io", "--daemon-port", "11898", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
 	} else {
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
 	}

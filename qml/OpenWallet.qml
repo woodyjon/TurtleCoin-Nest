@@ -47,7 +47,7 @@ Rectangle {
             }
             OldControls.RadioButton {
                 id: radioButtonUseRemoteNode
-                text: "Remote node (europe.turtlenode.io)"
+                text: "Remote node (public.turtlenode.io)"
                 checked: true
                 exclusiveGroup: tabPositionGroup
                 style: radioButtonStyle
