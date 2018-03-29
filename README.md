@@ -20,8 +20,8 @@ Important notes:
 
 ### Mac
 
-1. Go [here](https://github.com/woodyjon/TurtleCoin-Nest/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Mac.dmg**.
-2. Double click the .dmg and drag the application **TurtleCoin-Nest** into /Applications or any other folder.
+1. Go [here](https://github.com/woodyjon/TurtleCoin-Nest/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Mac.zip**.
+2. Unzip it and move the folder wherever you want or drag the application **TurtleCoin-Nest** into /Applications or any other folder.
 3. Launch the application. (If your mac complains that the app comes from an unindentified developer and does not want to open it, just right-click (or ctrl-click) on the app, and choose open > open)
 
 Important notes:
