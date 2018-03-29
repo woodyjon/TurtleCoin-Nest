@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
+	"os/user"
 	"runtime"
 	"sort"
 	"strconv"
@@ -37,6 +37,8 @@ var (
 	db *sql.DB
 
 	dbFilename = "settings.db"
+
+	useRemoteNode = true
 )
 
 // QmlBridge is the bridge between qml and go
@@ -70,6 +72,8 @@ type QmlBridge struct {
 	_ func()                            `signal:"finishedLoadingWalletd"`
 	_ func()                            `signal:"finishedCreatingWallet"`
 	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
+	_ func(walletLocation string)       `signal:"displayWalletCreationLocation"`
+	_ func(useRemote bool)              `signal:"displayUseRemoteNode"`
 
 	_ func(msg string)           `slot:"log"`
 	_ func(transactionID string) `slot:"clickedButtonExplorer"`
@@ -88,6 +92,7 @@ type QmlBridge struct {
 		passwordWallet string,
 		privateViewKey string,
 		privateSpendKey string) `slot:"clickedButtonImport"`
+	_ func(remote bool) `slot:"choseRemote"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -96,15 +101,17 @@ type QmlBridge struct {
 func main() {
 
 	pathToLogFile := logFileFilename
-
 	pathToDB := dbFilename
+	pathToHomeDir := ""
 
 	if isPlatformDarwin {
-		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		usr, err := user.Current()
 		if err != nil {
-			log.Fatal("error finding current directory. Error: ", err)
+			log.Fatal(err)
 		}
-		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+		pathToHomeDir = usr.HomeDir
+		pathToAppFolder := pathToHomeDir + "/Library/Application Support/TurtleCoin-Nest"
+		os.Mkdir(pathToAppFolder, os.ModePerm)
 		pathToLogFile = pathToAppFolder + "/" + logFileFilename
 		pathToDB = pathToAppFolder + "/" + pathToDB
 	}
@@ -228,9 +235,22 @@ func main() {
 
 	})
 
+	qmlBridge.ConnectChoseRemote(func(remote bool) {
+
+		useRemoteNode = remote
+		recordUseRemoteToDB(useRemoteNode)
+
+	})
+
 	engine.RootContext().SetContextProperty("QmlBridge", qmlBridge)
 
+	if isPlatformDarwin {
+		textLocation := "Your wallet will be saved in your home directory: " + pathToHomeDir + "/"
+		qmlBridge.DisplayWalletCreationLocation(textLocation)
+	}
+
 	getAndDisplayPathWalletFromDB()
+	getAndDisplayUseRemoteFromDB()
 
 	gui.QGuiApplication_Exec()
 
@@ -375,7 +395,7 @@ func transfer(transferAddress string, transferAmount string, transferPaymentID s
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {
 
-	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet)
+	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode)
 
 	if err != nil {
 
@@ -488,6 +508,11 @@ func setupDB(pathToDB string) {
 		log.Fatal("error creating table pathWallet. err: ", err)
 	}
 
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNode (id INTEGER PRIMARY KEY AUTOINCREMENT,useRemote BOOL NOT NULL DEFAULT '1', address VARCHAR(64),port INT)")
+	if err != nil {
+		log.Fatal("error creating table remoteNode. err: ", err)
+	}
+
 }
 
 func getAndDisplayPathWalletFromDB() {
@@ -527,6 +552,45 @@ func recordPathWalletToDB(path string) {
 	_, err = stmt.Exec(path)
 	if err != nil {
 		log.Fatal("error inserting pathWallet into db. err: ", err)
+	}
+
+}
+
+func getAndDisplayUseRemoteFromDB() {
+
+	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
+
+}
+
+func getUseRemoteFromDB() bool {
+
+	rows, err := db.Query("SELECT useRemote FROM remoteNode ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		log.Fatal("error reading path from remoteNode table. err: ", err)
+	}
+
+	for rows.Next() {
+		useRemote := true
+		err = rows.Scan(&useRemote)
+		if err != nil {
+			log.Fatal("error reading item from remoteNode table. err: ", err)
+		}
+		useRemoteNode = useRemote
+	}
+
+	return useRemoteNode
+
+}
+
+func recordUseRemoteToDB(useRemote bool) {
+
+	stmt, err := db.Prepare(`INSERT INTO remoteNode(useRemote) VALUES(?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert useRemoteNode into db. err: ", err)
+	}
+	_, err = stmt.Exec(useRemote)
+	if err != nil {
+		log.Fatal("error inserting useRemoteNode into db. err: ", err)
 	}
 
 }

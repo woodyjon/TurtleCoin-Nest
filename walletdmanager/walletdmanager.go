@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -23,6 +24,7 @@ import (
 var (
 	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
 	logWalletdAllSessionsFilename    = "walletd.log"
+	walletdLogLevel                  = "1"
 
 	walletdCommandName     = "walletd"
 	turtlecoindCommandName = "TurtleCoind"
@@ -172,7 +174,8 @@ func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey stri
 // StartWalletd starts the walletd daemon with the set wallet info
 // walletPath is the full path to the wallet
 // walletPassword is the wallet password
-func StartWalletd(walletPath string, walletPassword string) (err error) {
+// useRemoteNode is true if remote node, false if local
+func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) (err error) {
 
 	fileExtension := filepath.Ext(walletPath)
 
@@ -222,17 +225,23 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 		if err != nil {
 			log.Fatal("error finding current directory. Error: ", err)
 		}
-		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+		pathToAppContents := filepath.Dir(currentDirectory)
+		pathToWalletd = pathToAppContents + "/" + walletdCommandName
 
-		pathToLogWalletdCurrentSession = pathToAppFolder + "/" + logWalletdCurrentSessionFilename
-		pathToLogWalletdAllSessions = pathToAppFolder + "/" + logWalletdAllSessionsFilename
-		pathToWalletd = pathToAppFolder + "/" + walletdCommandName
+		usr, err := user.Current()
+		if err != nil {
+			log.Fatal("error finding home directory. Error: ", err)
+		}
+		pathToHomeDir := usr.HomeDir
+		pathToAppLibDir := pathToHomeDir + "/Library/Application Support/TurtleCoin-Nest"
+
+		pathToLogWalletdCurrentSession = pathToAppLibDir + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppLibDir + "/" + logWalletdAllSessionsFilename
 
 		if pathToWallet == WalletFilename {
 			// if comes from createWallet, so it is not a full path, just a filename
-			pathToWallet = pathToAppFolder + "/" + pathToWallet
+			pathToWallet = pathToHomeDir + "/" + pathToWallet
 		}
-
 	}
 
 	// setup current session log file (logs are added real time in this file)
@@ -244,7 +253,11 @@ func StartWalletd(walletPath string, walletPassword string) (err error) {
 
 	rpcPassword = randStringBytesMaskImprSrc(20)
 
-	cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--rpc-password", rpcPassword)
+	if useRemoteNode {
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--daemon-address", "public.turtlenode.io", "--daemon-port", "11898", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
+	} else {
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
+	}
 
 	// setup all sessions log file
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -442,12 +455,19 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 		if err != nil {
 			log.Fatal("error finding current directory. Error: ", err)
 		}
-		pathToAppFolder := filepath.Dir(filepath.Dir(filepath.Dir(currentDirectory)))
+		pathToAppContents := filepath.Dir(currentDirectory)
+		pathToWalletd = pathToAppContents + "/" + walletdCommandName
 
-		pathToLogWalletdCurrentSession = pathToAppFolder + "/" + logWalletdCurrentSessionFilename
-		pathToLogWalletdAllSessions = pathToAppFolder + "/" + logWalletdAllSessionsFilename
-		pathToWalletd = pathToAppFolder + "/" + walletdCommandName
-		pathToWallet = pathToAppFolder + "/" + walletFilename
+		usr, err := user.Current()
+		if err != nil {
+			log.Fatal("error finding home directory. Error: ", err)
+		}
+		pathToHomeDir := usr.HomeDir
+		pathToAppLibDir := pathToHomeDir + "/Library/Application Support/TurtleCoin-Nest"
+
+		pathToLogWalletdCurrentSession = pathToAppLibDir + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppLibDir + "/" + logWalletdAllSessionsFilename
+		pathToWallet = pathToHomeDir + "/" + walletFilename
 	}
 
 	// setup current session log file (logs are added real time in this file)
@@ -459,10 +479,10 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	if privateViewKey == "" && privateSpendKey == "" {
 		// generate new wallet
-		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "-g")
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
 	} else {
 		// import wallet from private view and spend keys
-		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--view-key", privateViewKey, "--spend-key", privateSpendKey, "-l", pathToLogWalletdCurrentSession, "-g")
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--view-key", privateViewKey, "--spend-key", privateSpendKey, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
 	}
 
 	// setup all sessions log file
