@@ -20,13 +20,16 @@ Important notes:
 
 ### Mac
 
-1. Go [here](https://github.com/woodyjon/TurtleCoin-Nest/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Mac.zip**
-2. Unzip the folder and launch **TurtleCoin-Nest**. (Make sure you leave everything as is in the folder. The file *walletd* should remain in the same folder as *TurtleCoin-Nest*)
+1. Go [here](https://github.com/woodyjon/TurtleCoin-Nest/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Mac.dmg**.
+2. Double click the .dmg and drag the application **TurtleCoin-Nest** into /Applications or any other folder.
+3. Launch the application.
 
 Important notes:
 
-* Make sure *Walletd* or *Turtlecoind* are not running before you start *TurtleCoin-Nest*
-* If you encounter crashes, open the activity monitor (in your app > utilities), and force quit *walletd* (if it is running) before opening a wallet. (this bug is being worked on)
+* The wallets you create or generate will be saved to your home folder. You can keep them there or move them wherever you want.
+* Make sure *Walletd* or *Turtlecoind* are not running before you start *TurtleCoin-Nest*.
+* If you encounter crashes, open the activity monitor (in your app > utilities), and force quit *walletd* (if it is running) before opening a wallet. (this bug is being worked on).
+* The log files will be saved in ~/Library/Application Support/TurtleCoin-Nest/.
 
 ### Linux
 
