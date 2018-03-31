@@ -24,7 +24,7 @@ import (
 var (
 	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
 	logWalletdAllSessionsFilename    = "walletd.log"
-	walletdLogLevel                  = "1"
+	walletdLogLevel                  = "3"
 
 	walletdCommandName     = "walletd"
 	turtlecoindCommandName = "TurtleCoind"
