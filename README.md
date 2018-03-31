@@ -10,7 +10,7 @@ The universal GUI wallet for TurtleCoin
 
 ### Windows
 
-1. Go [here](https://github.com/woodyjon/TurtleCoin-Nest/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Windows.zip**
+1. Go [here](https://github.com/turtlecoin/turtle-wallet-go/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Windows.zip**
 2. Unzip the folder and launch **TurtleCoin-Nest.exe**. (Make sure you leave everything as is in the folder)
 
 Important notes:
@@ -20,7 +20,7 @@ Important notes:
 
 ### Mac
 
-1. Go [here](https://github.com/woodyjon/TurtleCoin-Nest/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Mac.zip**.
+1. Go [here](https://github.com/turtlecoin/turtle-wallet-go/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Mac.zip**.
 2. Unzip it and move the folder wherever you want or drag the application **TurtleCoin-Nest** into /Applications or any other folder.
 3. Launch the application. (If your mac complains that the app comes from an unindentified developer and does not want to open it, just right-click (or ctrl-click) on the app, and choose open > open)
 
@@ -33,7 +33,7 @@ Important notes:
 
 ### Linux
 
-1. Go [here](https://github.com/woodyjon/TurtleCoin-Nest/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Linux.tar.gz**
+1. Go [here](https://github.com/turtlecoin/turtle-wallet-go/releases) and download the latest release called **TurtleCoin-Nest-x.xx-Linux.tar.gz**
 2. extract it
 `$ tar xvzf TurtleCoin-Nest-x.xx-Linux.tar.gz`
 3. run **TurtleCoin-Nest.sh**. (Make sure you leave everything as is in the folder)
