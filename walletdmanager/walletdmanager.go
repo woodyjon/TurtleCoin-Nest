@@ -24,7 +24,7 @@ import (
 var (
 	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
 	logWalletdAllSessionsFilename    = "walletd.log"
-	walletdLogLevel                  = "3"
+	walletdLogLevel                  = "3" // should be at least 3 as I use some logs messages to confirm creation of wallet
 
 	walletdCommandName     = "walletd"
 	turtlecoindCommandName = "TurtleCoind"
@@ -305,7 +305,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) 
 
 	}
 
-	errorMessage := "Error opening the daemon walletd. Could be a problem with your wallet file, your password or walletd. More info in the file " + logWalletdAllSessionsFilename + "\n"
+	errorMessage := "Error opening the daemon walletd. Could be a problem with your wallet file, your password or walletd. More info in the file " + logWalletdCurrentSessionFilename + "\n"
 
 	if len(listWalletdErrors) > 0 {
 
@@ -555,7 +555,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 
 	}
 
-	errorMessage := "Error opening walletd and/or creating a wallet. More info in the file " + logWalletdAllSessionsFilename + "\n"
+	errorMessage := "Error opening walletd and/or creating a wallet. More info in the file " + logWalletdCurrentSessionFilename + "\n"
 
 	if !successCreatingWallet {
 
