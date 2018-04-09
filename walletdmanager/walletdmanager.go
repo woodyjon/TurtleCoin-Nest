@@ -305,7 +305,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) 
 
 	}
 
-	errorMessage := "Error opening the daemon walletd. Could be a problem with your wallet file, your password or walletd. More info in the file " + logWalletdCurrentSessionFilename + "\n"
+	errorMessage := "Error opening the daemon walletd or communicating with it.\n"
 
 	if len(listWalletdErrors) > 0 {
 
