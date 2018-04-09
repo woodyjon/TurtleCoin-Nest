@@ -24,27 +24,21 @@ import (
 
 var (
 	// qmlObjects = make(map[string]*core.QObject)
-	qmlBridge *QmlBridge
-
-	transfers []turtlecoinwalletdrpcgo.Transfer
-
+	qmlBridge               *QmlBridge
+	transfers               []turtlecoinwalletdrpcgo.Transfer
 	tickerRefreshWalletData *time.Ticker
-
-	logFileFilename = "turtlecoin-nest-logs.log"
-
-	urlBlockExplorer = "https://blocks.turtle.link/"
-
-	db *sql.DB
-
-	dbFilename = "settings.db"
-
-	useRemoteNode = true
+	logFileFilename         = "turtlecoin-nest-logs.log"
+	urlBlockExplorer        = "https://blocks.turtle.link/"
+	db                      *sql.DB
+	dbFilename              = "settings.db"
+	useRemoteNode           = true
 )
 
 // QmlBridge is the bridge between qml and go
 type QmlBridge struct {
 	core.QObject
 
+	// go to qml
 	_ func(data string) `signal:"displayTotalBalance"`
 	_ func(data string) `signal:"displayAvailableBalance"`
 	_ func(data string) `signal:"displayLockedBalance"`
@@ -55,14 +49,11 @@ type QmlBridge struct {
 		confirmations string,
 		time string,
 		number string) `signal:"addTransactionToList"`
-	_ func(text string,
-		time int) `signal:"displayPopup"`
-	_ func(syncing string,
-		blocks string,
-		peers string) `signal:"displaySyncingInfo"`
-	_ func(errorMessage string) `signal:"displayErrorDialog"`
-	_ func()                    `signal:"clearTransferAmount"`
-	_ func()                    `signal:"clearListTransactions"`
+	_ func(text string, time int)                       `signal:"displayPopup"`
+	_ func(syncing string, blocks string, peers string) `signal:"displaySyncingInfo"`
+	_ func(errorMessage string)                         `signal:"displayErrorDialog"`
+	_ func()                                            `signal:"clearTransferAmount"`
+	_ func()                                            `signal:"clearListTransactions"`
 	_ func(filename string,
 		privateViewKey string,
 		privateSpendKey string,
@@ -75,6 +66,7 @@ type QmlBridge struct {
 	_ func(walletLocation string)       `signal:"displayWalletCreationLocation"`
 	_ func(useRemote bool)              `signal:"displayUseRemoteNode"`
 
+	// qml to go
 	_ func(msg string)           `slot:"log"`
 	_ func(transactionID string) `slot:"clickedButtonExplorer"`
 	_ func(transactionID string) `slot:"clickedButtonCopyTx"`
@@ -82,12 +74,10 @@ type QmlBridge struct {
 	_ func(transferAddress string,
 		transferAmount string,
 		transferPaymentID string) `slot:"clickedButtonSend"`
-	_ func() `slot:"clickedButtonBackupWallet"`
-	_ func() `slot:"clickedOpenAnotherWallet"`
-	_ func(pathToWallet string,
-		passwordWallet string) `slot:"clickedButtonOpen"`
-	_ func(filenameWallet string,
-		passwordWallet string) `slot:"clickedButtonCreate"`
+	_ func()                                             `slot:"clickedButtonBackupWallet"`
+	_ func()                                             `slot:"clickedOpenAnotherWallet"`
+	_ func(pathToWallet string, passwordWallet string)   `slot:"clickedButtonOpen"`
+	_ func(filenameWallet string, passwordWallet string) `slot:"clickedButtonCreate"`
 	_ func(filenameWallet string,
 		passwordWallet string,
 		privateViewKey string,
@@ -125,7 +115,6 @@ func main() {
 	// log to file and console
 	mw := io.MultiWriter(os.Stdout, logFile)
 	log.SetOutput(mw)
-
 	log.SetLevel(log.DebugLevel)
 
 	setupDB(pathToDB)
@@ -153,94 +142,7 @@ func main() {
 
 	qmlBridge = NewQmlBridge(nil)
 
-	qmlBridge.ConnectLog(func(msg string) {
-
-		log.Info("QML: ", msg)
-
-	})
-
-	qmlBridge.ConnectClickedButtonCopyAddress(func() {
-
-		clipboard.WriteAll(walletdmanager.WalletAddress)
-
-		qmlBridge.DisplayPopup("Copied!", 1500)
-
-	})
-
-	qmlBridge.ConnectClickedButtonCopyTx(func(transactionID string) {
-
-		clipboard.WriteAll(transactionID)
-
-		qmlBridge.DisplayPopup("Copied!", 1500)
-
-	})
-
-	qmlBridge.ConnectClickedButtonExplorer(func(transactionID string) {
-
-		url := urlBlockExplorer + "?hash=" + transactionID + "#blockchain_transaction"
-		successOpenBrowser := openBrowser(url)
-
-		if !successOpenBrowser {
-			log.Error("failure opening browser, url: " + url)
-		}
-
-	})
-
-	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string) {
-
-		transfer(transferAddress, transferAmount, transferPaymentID)
-
-	})
-
-	qmlBridge.ConnectClickedButtonBackupWallet(func() {
-
-		showWalletPrivateInfo()
-
-	})
-
-	qmlBridge.ConnectClickedButtonOpen(func(pathToWallet string, passwordWallet string) {
-
-		go func() {
-
-			recordPathWalletToDB(pathToWallet)
-			startWalletWithWalletInfo(pathToWallet, passwordWallet)
-
-		}()
-
-	})
-
-	qmlBridge.ConnectClickedButtonCreate(func(filenameWallet string, passwordWallet string) {
-
-		go func() {
-
-			createWalletWithWalletInfo(filenameWallet, passwordWallet)
-
-		}()
-
-	})
-
-	qmlBridge.ConnectClickedButtonImport(func(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string) {
-
-		go func() {
-
-			importWalletWithWalletInfo(filenameWallet, passwordWallet, privateViewKey, privateSpendKey)
-
-		}()
-
-	})
-
-	qmlBridge.ConnectClickedOpenAnotherWallet(func() {
-
-		openAnotherWallet()
-
-	})
-
-	qmlBridge.ConnectChoseRemote(func(remote bool) {
-
-		useRemoteNode = remote
-		recordUseRemoteToDB(useRemoteNode)
-
-	})
+	connectQMLToGOFunctions()
 
 	engine.RootContext().SetContextProperty("QmlBridge", qmlBridge)
 
@@ -257,35 +159,84 @@ func main() {
 	log.Info("Application closed")
 
 	walletdmanager.GracefullyQuitWalletd()
+}
 
+func connectQMLToGOFunctions() {
+
+	qmlBridge.ConnectLog(func(msg string) {
+		log.Info("QML: ", msg)
+	})
+
+	qmlBridge.ConnectClickedButtonCopyAddress(func() {
+		clipboard.WriteAll(walletdmanager.WalletAddress)
+		qmlBridge.DisplayPopup("Copied!", 1500)
+	})
+
+	qmlBridge.ConnectClickedButtonCopyTx(func(transactionID string) {
+		clipboard.WriteAll(transactionID)
+		qmlBridge.DisplayPopup("Copied!", 1500)
+	})
+
+	qmlBridge.ConnectClickedButtonExplorer(func(transactionID string) {
+		url := urlBlockExplorer + "?hash=" + transactionID + "#blockchain_transaction"
+		successOpenBrowser := openBrowser(url)
+		if !successOpenBrowser {
+			log.Error("failure opening browser, url: " + url)
+		}
+	})
+
+	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string) {
+		transfer(transferAddress, transferAmount, transferPaymentID)
+	})
+
+	qmlBridge.ConnectClickedButtonBackupWallet(func() {
+		showWalletPrivateInfo()
+	})
+
+	qmlBridge.ConnectClickedButtonOpen(func(pathToWallet string, passwordWallet string) {
+		go func() {
+			recordPathWalletToDB(pathToWallet)
+			startWalletWithWalletInfo(pathToWallet, passwordWallet)
+		}()
+	})
+
+	qmlBridge.ConnectClickedButtonCreate(func(filenameWallet string, passwordWallet string) {
+		go func() {
+			createWalletWithWalletInfo(filenameWallet, passwordWallet)
+		}()
+	})
+
+	qmlBridge.ConnectClickedButtonImport(func(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string) {
+		go func() {
+			importWalletWithWalletInfo(filenameWallet, passwordWallet, privateViewKey, privateSpendKey)
+		}()
+	})
+
+	qmlBridge.ConnectClickedOpenAnotherWallet(func() {
+		openAnotherWallet()
+	})
+
+	qmlBridge.ConnectChoseRemote(func(remote bool) {
+		useRemoteNode = remote
+		recordUseRemoteToDB(useRemoteNode)
+	})
 }
 
 func startDisplayWalletInfo() {
 
 	getAndDisplayBalances()
-
 	getAndDisplayAddress()
-
 	getAndDisplayListTransactions()
-
 	getAndDisplayConnectionInfo()
 
 	go func() {
-
 		tickerRefreshWalletData = time.NewTicker(time.Second * 15)
-
 		for range tickerRefreshWalletData.C {
-
 			getAndDisplayBalances()
-
 			getAndDisplayListTransactions()
-
 			getAndDisplayConnectionInfo()
-
 		}
-
 	}()
-
 }
 
 func getAndDisplayBalances() {
@@ -296,7 +247,6 @@ func getAndDisplayBalances() {
 		qmlBridge.DisplayLockedBalance(strconv.FormatFloat(walletLockedBalance, 'f', -1, 64))
 		qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64))
 	}
-
 }
 
 func getAndDisplayAddress() {
@@ -310,36 +260,25 @@ func getAndDisplayAddress() {
 func getAndDisplayConnectionInfo() {
 
 	syncing, blockCount, knownBlockCount, peers, err := walletdmanager.RequestConnectionInfo()
-
 	if err == nil {
-
 		blocks := blockCount + " / " + knownBlockCount
-
 		qmlBridge.DisplaySyncingInfo(syncing, blocks, peers)
-
 	}
-
 }
 
 func getAndDisplayListTransactions() {
 
 	newTransfers, err := walletdmanager.RequestListTransactions()
-
 	if err == nil {
-
 		if len(newTransfers) != len(transfers) {
-
 			transfers = newTransfers
-
 			// sort starting by the most recent transaction
 			sort.Slice(transfers, func(i, j int) bool { return transfers[i].Timestamp.After(transfers[j].Timestamp) })
-
 			transactionNumber := len(transfers)
 
 			qmlBridge.ClearListTransactions()
 
 			for _, transfer := range transfers {
-
 				amount := transfer.Amount
 				amountString := ""
 				if amount >= 0 {
@@ -350,16 +289,12 @@ func getAndDisplayListTransactions() {
 					amountString += strconv.FormatFloat(-amount, 'f', -1, 64)
 				}
 				amountString += " TRTL (fee: " + strconv.FormatFloat(transfer.Fee, 'f', 2, 64) + ")"
-
 				confirmationsString := "(" + strconv.Itoa(transfer.Confirmations) + " conf.)"
-
 				timeString := transfer.Timestamp.Format("2006-01-02 15:04:05")
-
 				transactionNumberString := strconv.Itoa(transactionNumber) + ")"
 				transactionNumber--
 
 				qmlBridge.AddTransactionToList(transfer.PaymentID, transfer.TxID, amountString, confirmationsString, timeString, transactionNumberString)
-
 			}
 		}
 	}
@@ -370,97 +305,66 @@ func transfer(transferAddress string, transferAmount string, transferPaymentID s
 	log.Info("SEND: ", transferAddress, transferAmount, transferPaymentID)
 
 	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID)
-
 	if err != nil {
-
 		log.Warn("error transfer: ", err)
-
 		qmlBridge.DisplayErrorDialog(err.Error())
-
 		return false
-
 	}
 
 	log.Info("succes transfer: ", transactionID)
 
 	getAndDisplayBalances()
-
 	qmlBridge.ClearTransferAmount()
-
 	qmlBridge.DisplayPopup("TRTLs sent successfully", 4000)
 
 	return true
-
 }
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {
 
 	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode)
-
 	if err != nil {
-
 		log.Warn("error starting walletd with provided wallet info. error: ", err)
-
 		qmlBridge.FinishedLoadingWalletd()
-
 		qmlBridge.DisplayErrorDialog(err.Error())
-
 		return false
-
 	}
 
 	log.Info("success starting walletd")
 
 	qmlBridge.FinishedLoadingWalletd()
-
 	startDisplayWalletInfo()
-
 	qmlBridge.DisplayMainWalletScreen()
 
 	return true
-
 }
 
 func createWalletWithWalletInfo(filenameWallet string, passwordWallet string) bool {
 
 	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, "", "")
-
 	if err != nil {
-
 		log.Warn("error creating wallet. error: ", err)
-
 		qmlBridge.FinishedCreatingWallet()
-
 		qmlBridge.DisplayErrorDialog(err.Error())
-
 		return false
-
 	}
 
 	log.Info("success creating wallet")
 
 	startWalletWithWalletInfo(filenameWallet, passwordWallet)
-
 	showWalletPrivateInfo()
 
 	return true
-
 }
 
 func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string) bool {
 
 	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, privateViewKey, privateSpendKey)
-
 	if err != nil {
-
 		log.Warn("error importing wallet. error: ", err)
-
 		qmlBridge.FinishedCreatingWallet()
-
 		qmlBridge.DisplayErrorDialog(err.Error())
-
 		return false
-
 	}
 
 	log.Info("success importing wallet")
@@ -468,7 +372,6 @@ func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, pr
 	startWalletWithWalletInfo(filenameWallet, passwordWallet)
 
 	return true
-
 }
 
 func openAnotherWallet() {
@@ -476,13 +379,10 @@ func openAnotherWallet() {
 	tickerRefreshWalletData.Stop()
 
 	go func() {
-
 		walletdmanager.GracefullyQuitWalletd()
-
 	}()
 
 	qmlBridge.DisplayOpenWalletScreen()
-
 }
 
 func showWalletPrivateInfo() {
@@ -512,13 +412,11 @@ func setupDB(pathToDB string) {
 	if err != nil {
 		log.Fatal("error creating table remoteNode. err: ", err)
 	}
-
 }
 
 func getAndDisplayPathWalletFromDB() {
 
 	qmlBridge.DisplayPathToPreviousWallet(getPathWalletFromDB())
-
 }
 
 func getPathWalletFromDB() string {
@@ -540,7 +438,6 @@ func getPathWalletFromDB() string {
 	}
 
 	return pathToPreviousWallet
-
 }
 
 func recordPathWalletToDB(path string) {
@@ -553,13 +450,11 @@ func recordPathWalletToDB(path string) {
 	if err != nil {
 		log.Fatal("error inserting pathWallet into db. err: ", err)
 	}
-
 }
 
 func getAndDisplayUseRemoteFromDB() {
 
 	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
-
 }
 
 func getUseRemoteFromDB() bool {
@@ -579,7 +474,6 @@ func getUseRemoteFromDB() bool {
 	}
 
 	return useRemoteNode
-
 }
 
 func recordUseRemoteToDB(useRemote bool) {
@@ -592,7 +486,6 @@ func recordUseRemoteToDB(useRemote bool) {
 	if err != nil {
 		log.Fatal("error inserting useRemoteNode into db. err: ", err)
 	}
-
 }
 
 func openBrowser(url string) bool {
