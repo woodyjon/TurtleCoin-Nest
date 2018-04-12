@@ -840,7 +840,7 @@ ApplicationWindow {
 
             Text {
                 id: textDialogWarningCloseWallet
-                text: "This action will cose the current wallet"
+                text: "This action will close the current wallet"
                 font.family: "Arial"
             }
 

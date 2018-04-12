@@ -72,7 +72,6 @@ func Setup(platform string) {
 	default:
 		isPlatformLinux = true
 	}
-
 }
 
 // RequestBalance provides the available and locked balances of the current wallet
@@ -150,7 +149,6 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		log.Error("error sending transaction. err: ", err)
 	}
 	return transactionHash, err
-
 }
 
 // GetPrivateViewKeyAndSpendKey provides the private view and spend keys of the current wallet
@@ -178,15 +176,11 @@ func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey stri
 func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) (err error) {
 
 	fileExtension := filepath.Ext(walletPath)
-
 	if fileExtension != ".wallet" {
-
 		return errors.New("filename should end with .wallet")
-
 	}
 
 	if isWalletdRunning() {
-
 		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
 
 		if isPlatformWindows {
@@ -199,7 +193,6 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) 
 		errorMessage += "."
 
 		return errors.New(errorMessage)
-
 	}
 
 	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
@@ -210,17 +203,12 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) 
 	pathToWallet := filepath.Clean(walletPath)
 
 	if isPlatformWindows {
-
 		pathToWallet = strings.Replace(pathToWallet, "file:\\", "", 1)
-
 	} else {
-
 		pathToWallet = strings.Replace(pathToWallet, "file:", "", 1)
-
 	}
 
 	if isPlatformDarwin {
-
 		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
 			log.Fatal("error finding current directory. Error: ", err)
@@ -281,51 +269,34 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) 
 	var listWalletdErrors []string
 
 	for {
-
 		line, err := reader.ReadString('\n')
-
 		if err != nil {
-
 			if err != io.EOF {
-
 				log.Error("Failed reading log file line by line: ", err)
-
 			}
-
 			break
 		}
 
 		identifierErrorMessage := " ERROR  "
 		if strings.Contains(line, identifierErrorMessage) {
-
 			splitLine := strings.Split(line, identifierErrorMessage)
 			listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
-
 		}
-
 	}
 
-	errorMessage := "Error opening the daemon walletd. Could be a problem with your wallet file, your password or walletd. More info in the file " + logWalletdCurrentSessionFilename + "\n"
+	errorMessage := "Error opening the daemon walletd or communicating with it.\n"
 
 	if len(listWalletdErrors) > 0 {
-
 		for _, line := range listWalletdErrors {
-
 			errorMessage = errorMessage + line
-
 		}
-
 	}
 
 	// check rpc connection with walletd
 	_, _, _, err = turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
-
 	if err != nil {
-
 		killWalletd()
-
 		return errors.New(errorMessage)
-
 	}
 
 	WalletdOpenAndRunning = true
@@ -337,7 +308,6 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) 
 func GracefullyQuitWalletd() {
 
 	if WalletdOpenAndRunning && cmdWalletd != nil {
-
 		var err error
 
 		if isPlatformWindows {
@@ -377,20 +347,15 @@ func GracefullyQuitWalletd() {
 	WalletFilename = ""
 	cmdWalletd = nil
 	WalletdOpenAndRunning = false
-
 }
 
 // to make sure that after creating a wallet, there is no walletd process remaining at all
 func killWalletd() {
 
 	if cmdWalletd != nil {
-
 		if isPlatformWindows {
-
 			cmdWalletd.Process.Kill()
-
 		} else {
-
 			done := make(chan error, 1)
 			go func() {
 				done <- cmdWalletd.Wait()
@@ -407,11 +372,8 @@ func killWalletd() {
 				}
 				log.Info("Walletd killed without error")
 			}
-
 		}
-
 	}
-
 }
 
 // CreateWallet calls walletd to create a new wallet. If privateViewKey and privateSpendKey are empty strings, a new wallet will be generated. If they are not empty, a wallet will be generated from those keys (import)
@@ -450,7 +412,6 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 	pathToWallet := walletFilename
 
 	if isPlatformDarwin {
-
 		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
 		if err != nil {
 			log.Fatal("error finding current directory. Error: ", err)
@@ -509,74 +470,48 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 	successCreatingWallet := false
 
 	for {
-
 		line, err := reader.ReadString('\n')
-
 		if err != nil {
-
 			if err != io.EOF {
-
 				log.Error("Failed reading log file line by line: ", err)
-
 			}
-
 			break
 		}
 
 		identifierErrorMessage := " ERROR  "
 		if strings.Contains(line, identifierErrorMessage) {
-
 			splitLine := strings.Split(line, identifierErrorMessage)
 			listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
-
 		} else {
-
 			identifierErrorMessage = "error: "
 			if strings.Contains(line, identifierErrorMessage) {
-
 				splitLine := strings.Split(line, identifierErrorMessage)
 				listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
-
 			}
-
 		}
 
 		if strings.Contains(line, "New wallet is generated. Address:") || strings.Contains(line, "New wallet added") {
-
 			successCreatingWallet = true
-
 			break
-
 		}
 
 		killWalletd()
-
 		time.Sleep(1 * time.Second)
-
 	}
 
 	errorMessage := "Error opening walletd and/or creating a wallet. More info in the file " + logWalletdCurrentSessionFilename + "\n"
 
 	if !successCreatingWallet {
-
 		if len(listWalletdErrors) > 0 {
-
 			for _, line := range listWalletdErrors {
-
 				errorMessage = errorMessage + line
-
 			}
-
 		}
-
 		killWalletd()
-
 		return errors.New(errorMessage)
-
 	}
 
 	return nil
-
 }
 
 // RequestConnectionInfo provides the blockchain sync status and the number of connected peers
@@ -644,6 +579,7 @@ func findProcess(key string) (int, string, error) {
 			break
 		}
 	}
+
 	return pid, pname, err
 }
 
