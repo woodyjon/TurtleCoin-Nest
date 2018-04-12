@@ -106,15 +106,20 @@ func main() {
 		pathToDB = pathToAppFolder + "/" + pathToDB
 	}
 
-	logFile, err := os.OpenFile(pathToLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	logFile, err := os.OpenFile(pathToLogFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
 		log.Fatal("error opening log file: ", err)
 	}
 	defer logFile.Close()
 
-	// log to file and console
-	mw := io.MultiWriter(os.Stdout, logFile)
-	log.SetOutput(mw)
+	if isPlatformLinux {
+		// log to file and console
+		mw := io.MultiWriter(os.Stdout, logFile)
+		log.SetOutput(mw)
+	} else {
+		log.SetOutput(logFile)
+	}
+
 	log.SetLevel(log.DebugLevel)
 
 	setupDB(pathToDB)
