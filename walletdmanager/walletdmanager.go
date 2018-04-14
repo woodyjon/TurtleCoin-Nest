@@ -180,7 +180,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) 
 		return errors.New("filename should end with .wallet")
 	}
 
-	if isWalletdRunning() {
+	if isWalletdRunning(useRemoteNode) {
 		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
 
 		if isPlatformWindows {
@@ -391,7 +391,7 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 		return errors.New("you should avoid spaces and most special characters in the filename")
 	}
 
-	if isWalletdRunning() {
+	if isWalletdRunning(true) {
 		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
 
 		if isPlatformWindows {
@@ -583,12 +583,12 @@ func findProcess(key string) (int, string, error) {
 	return pid, pname, err
 }
 
-func isWalletdRunning() bool {
+func isWalletdRunning(turtlecoindAllowed bool) bool {
 
 	if _, _, err := findProcess(walletdCommandName); err == nil {
 		return true
 	}
-	if _, _, err := findProcess(turtlecoindCommandName); err == nil {
+	if _, _, err := findProcess(turtlecoindCommandName); err == nil && !turtlecoindAllowed {
 		return true
 	}
 
@@ -596,7 +596,7 @@ func isWalletdRunning() bool {
 		if _, _, err := findProcess(walletdCommandName + ".exe"); err == nil {
 			return true
 		}
-		if _, _, err := findProcess(turtlecoindCommandName + ".exe"); err == nil {
+		if _, _, err := findProcess(turtlecoindCommandName + ".exe"); err == nil && !turtlecoindAllowed {
 			return true
 		}
 	}
