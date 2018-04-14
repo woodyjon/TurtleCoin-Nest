@@ -175,11 +175,6 @@ func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey stri
 // useRemoteNode is true if remote node, false if local
 func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) (err error) {
 
-	fileExtension := filepath.Ext(walletPath)
-	if fileExtension != ".wallet" {
-		return errors.New("filename should end with .wallet")
-	}
-
 	if isWalletdRunning() {
 		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
 
