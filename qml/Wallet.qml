@@ -11,6 +11,29 @@ Rectangle {
     color: "transparent"
 
     Rectangle {
+        id: buttonClose
+        width: 33
+        height: 33
+        anchors.top: parent.top
+        anchors.topMargin: 15
+        anchors.left: parent.left
+        anchors.leftMargin: 15
+        color: "transparent"
+        Image {
+            id: image_close
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectFit
+            source: "images/close.png"
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                QmlBridge.clickedCloseWallet()
+            }
+        }
+    }
+
+    Rectangle {
         id: rectangleTop
         height: 110
         color: "transparent"
@@ -829,27 +852,6 @@ Rectangle {
                 timerPopupText.interval = time
                 popupText.show(text)
             }
-        }
-    }
-
-    Dialog {
-        id: dialogWarningCloseWallet
-        title: "Warning"
-        standardButtons: StandardButton.Cancel | StandardButton.Ok
-        modality: Qt.WindowModal
-
-        Text {
-            id: textDialogWarningCloseWallet
-            text: "This action will close the current wallet"
-            font.family: "Arial"
-        }
-
-        function show() {
-            dialogWarningCloseWallet.open()
-        }
-
-        onAccepted: {
-            QmlBridge.clickedOpenAnotherWallet()
         }
     }
 

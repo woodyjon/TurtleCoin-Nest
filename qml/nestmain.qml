@@ -9,7 +9,7 @@ ApplicationWindow {
     id: window
 
     property var windowWidth: 1060
-    property var windowHeight: 800
+    property var windowHeight: 755
     property var minWindowHeight: 500
 
     width: windowWidth
@@ -22,31 +22,11 @@ ApplicationWindow {
     title: "TurtleCoin Nest"
     visible: true
 
-    menuBar: MenuBar {
-        Menu {
-            id: menuWallet
-            enabled: false
-            title: "Wallet"
-            MenuItem {
-                text: "Open another wallet"
-                onTriggered: {
-                    walletScreen.showDialogWarningCloseWallet()
-                }
-            }
-            MenuItem {
-                text: "Backup wallet"
-                onTriggered: {
-                    QmlBridge.clickedButtonBackupWallet();
-                }
-            }
-        }
-    }
-
     Flickable{
         interactive: true
         boundsBehavior: Flickable.StopAtBounds
         contentWidth: windowWidth
-        contentHeight: windowHeight - 45 // minus height of menu
+        contentHeight: windowHeight // minus height of menu
         width: parent.width
         height: parent.height
 
@@ -98,14 +78,12 @@ ApplicationWindow {
         target: QmlBridge
 
         onDisplayOpenWalletScreen: {
-            menuWallet.enabled = false;
             openWalletScreen.visible = true;
             walletScreen.visible = false;
             openWalletScreen.clearData();
         }
 
         onDisplayMainWalletScreen: {
-            menuWallet.enabled = true;
             openWalletScreen.visible = false;
             walletScreen.visible = true;
             walletScreen.clearData();
