@@ -344,8 +344,8 @@ Rectangle {
         color: "transparent"
         anchors.bottom: rectangleConnectionInfo.top
         anchors.bottomMargin: 10
-        anchors.right: rectangleSeparator1.left
-        anchors.rightMargin: 10
+        anchors.right: parent.left
+        anchors.rightMargin: -590
         anchors.left: parent.left
         anchors.leftMargin: 10
         anchors.top: rectangleAddress.bottom
@@ -444,8 +444,8 @@ Rectangle {
         color: "transparent"
         anchors.bottom: rectangleConnectionInfo.top
         anchors.bottomMargin: 10
-        anchors.left: rectangleSeparator1.right
-        anchors.leftMargin: 10
+        anchors.left: rectangleHistory.right
+        anchors.leftMargin: 30
         anchors.right: parent.right
         anchors.rightMargin: 10
         anchors.top: rectangleHistory.top
@@ -710,8 +710,6 @@ Rectangle {
         color: "#00000000"
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 5
-        anchors.left: rectangleSeparator1.right
-        anchors.leftMargin: 10
         anchors.right: parent.right
         anchors.rightMargin: 10
         height: 20
@@ -778,18 +776,6 @@ Rectangle {
             anchors.right: textConnectionInfoBlocks.left
             anchors.rightMargin: 20
         }
-    }
-
-    Rectangle {
-        id: rectangleSeparator1
-        width: 2
-        color: "#858585"
-        anchors.bottom: rectangleHistory.bottom
-        anchors.bottomMargin: 40
-        anchors.top: rectangleHistory.top
-        anchors.topMargin: 40
-        anchors.left: parent.left
-        anchors.leftMargin: 610
     }
 
     Rectangle {
