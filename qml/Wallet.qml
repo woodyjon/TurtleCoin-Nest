@@ -13,7 +13,7 @@ Rectangle {
     Rectangle {
         id: rectangleTop
         height: 110
-        color: "#00000000"
+        color: "transparent"
         anchors.right: parent.right
         anchors.rightMargin: 15
         anchors.left: parent.left
@@ -26,7 +26,7 @@ Rectangle {
             id: rectangleLockedBalance
             x: 415
             width: 338
-            color: "#00000000"
+            color: "transparent"
             anchors.right: parent.right
             anchors.rightMargin: 0
             anchors.bottom: parent.bottom
@@ -202,14 +202,104 @@ Rectangle {
 
     Rectangle {
         id: rectangleAddress
-        height: 106
+        height: 126
         anchors.right: parent.right
         anchors.rightMargin: 0
         anchors.left: parent.left
         anchors.leftMargin: 0
         anchors.top: rectangleTop.bottom
-        anchors.topMargin: 50
+        anchors.topMargin: 30
         color: "transparent"
+
+        Text {
+            id: textDescrWalletName
+            color: "#858585"
+            text: qsTr("wallet: ")
+            verticalAlignment: Text.AlignBottom
+            anchors.left: parent.left
+            anchors.leftMargin: 40
+            anchors.top: parent.top
+            anchors.topMargin: 0
+            font.family: "Arial"
+            font.pixelSize: 15
+            font.bold: false
+            horizontalAlignment: Text.AlignLeft
+        }
+
+        Text {
+            id: textWalletName
+            color: "#858585"
+            text: ""
+            verticalAlignment: Text.AlignBottom
+            anchors.left: textDescrWalletName.right
+            anchors.leftMargin: 10
+            anchors.bottom: textDescrWalletName.bottom
+            anchors.bottomMargin: 0
+            font.family: "Arial"
+            font.pixelSize: 15
+            font.bold: false
+            horizontalAlignment: Text.AlignLeft
+        }
+
+        Button {
+            id: buttonBackupKeys
+            text: qsTr("Backup keys")
+            anchors.verticalCenter: textDescrWalletName.verticalCenter
+            anchors.left: textWalletName.right
+            anchors.leftMargin: 30
+            height: 30
+            enabled: true
+
+            contentItem: Text {
+                text: buttonBackupKeys.text
+                font.pixelSize: 15
+                font.family: "Arial"
+                font.bold: true
+                opacity: enabled ? 1.0 : 0.3
+                color: buttonBackupKeys.down ? "#dddddd" : "#ffffff"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+            }
+
+            background: Rectangle {
+                implicitWidth: 140
+                height: 30
+                opacity: enabled ? 1 : 0.3
+                radius: 6
+                color: buttonBackupKeys.down ? "#383838" : "#444444"
+            }
+
+            onClicked: {
+                QmlBridge.clickedButtonBackupWallet();
+            }
+        }
+
+        TextInput {
+            id: textAddress
+            color: "#ffffff"
+            text: qsTr("NO WALLET OPEN")
+            anchors.left: textDescrWalletName.left
+            anchors.leftMargin: 0
+            anchors.top: textDescrWalletName.bottom
+            anchors.topMargin: 20
+            font.family: "Arial"
+            font.pixelSize: 15
+            horizontalAlignment: Text.AlignHCenter
+            font.bold: true
+            readOnly: true
+            selectionColor: "#eeeeee"
+            selectedTextColor: "#777777"
+            selectByMouse: true
+
+            Connections {
+                target: QmlBridge
+                onDisplayAddress: {
+                    textAddress.text = address
+                    textWalletName.text = wallet
+                }
+            }
+        }
 
         Rectangle {
             id: buttonCopy
@@ -229,31 +319,6 @@ Rectangle {
                 anchors.fill: parent
                 onClicked: {
                     QmlBridge.clickedButtonCopyAddress();
-                }
-            }
-        }
-
-        TextInput {
-            id: textAddress
-            color: "#ffffff"
-            text: qsTr("NO WALLET OPEN")
-            anchors.left: parent.left
-            anchors.leftMargin: 40
-            anchors.verticalCenterOffset: -20
-            anchors.verticalCenter: parent.verticalCenter
-            font.family: "Arial"
-            font.pixelSize: 15
-            horizontalAlignment: Text.AlignHCenter
-            font.bold: true
-            readOnly: true
-            selectionColor: "#eeeeee"
-            selectedTextColor: "#777777"
-            selectByMouse: true
-
-            Connections {
-                target: QmlBridge
-                onDisplayAddress: {
-                    textAddress.text = data
                 }
             }
         }
@@ -587,8 +652,7 @@ Rectangle {
 
                 Connections{
                     target: QmlBridge
-                    onClearTransferAmount:
-                    {
+                    onClearTransferAmount: {
                         textInputTransferAmount.clear()
                     }
                 }

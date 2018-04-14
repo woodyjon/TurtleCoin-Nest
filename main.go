@@ -42,7 +42,8 @@ type QmlBridge struct {
 	_ func(data string) `signal:"displayTotalBalance"`
 	_ func(data string) `signal:"displayAvailableBalance"`
 	_ func(data string) `signal:"displayLockedBalance"`
-	_ func(data string) `signal:"displayAddress"`
+	_ func(address string,
+		wallet string) `signal:"displayAddress"`
 	_ func(paymentID string,
 		transactionID string,
 		amount string,
@@ -258,7 +259,7 @@ func getAndDisplayAddress() {
 
 	walletAddress, err := walletdmanager.RequestAddress()
 	if err == nil {
-		qmlBridge.DisplayAddress(walletAddress)
+		qmlBridge.DisplayAddress(walletAddress, walletdmanager.WalletFilename)
 	}
 }
 
