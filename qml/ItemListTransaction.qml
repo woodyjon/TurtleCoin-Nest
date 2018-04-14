@@ -49,8 +49,6 @@ Item {
     
     Text {
         id: transactionTime
-        x: 196
-        y: 8
         color: "#cfcfcf"
         text: transactionTimeValue
         anchors.right: transactionConfirmations.left
@@ -65,8 +63,6 @@ Item {
     
     Text {
         id: transactionConfirmations
-        x: 310
-        y: 8
         color: "#cfcfcf"
         text: transactionConfirmationsValue
         anchors.right: parent.right
