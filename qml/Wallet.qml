@@ -10,15 +10,206 @@ Rectangle {
     anchors.fill: parent
     color: "transparent"
 
-    Row {
-        id: rowAddress
-        y: 175
+    Rectangle {
+        id: rectangleTop
+        height: 110
+        color: "#00000000"
+        anchors.right: parent.right
+        anchors.rightMargin: 15
+        anchors.left: parent.left
+        anchors.leftMargin: 15
+        anchors.top: parent.top
+        anchors.topMargin: 15
+        opacity: 1
+
+        Rectangle {
+            id: rectangleLockedBalance
+            x: 415
+            width: 338
+            color: "#00000000"
+            anchors.right: parent.right
+            anchors.rightMargin: 0
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 0
+            anchors.top: parent.top
+            anchors.topMargin: 0
+
+            Text {
+                id: textLockedUnit
+                color: "#cfcfcf"
+                text: qsTr("TRTL")
+                anchors.right: parent.right
+                anchors.rightMargin: 18
+                verticalAlignment: Text.AlignBottom
+                font.family: "Arial"
+                font.pixelSize: 15
+                anchors.bottom: parent.bottom
+                anchors.left: textBalanceValue.right
+                anchors.leftMargin: 15
+                font.bold: false
+                horizontalAlignment: Text.AlignLeft
+                anchors.bottomMargin: 10
+            }
+
+            Text {
+                id: textAvailableUnit
+                color: "#cfcfcf"
+                text: qsTr("TRTL")
+                font.family: "Arial"
+                font.pixelSize: 15
+                anchors.right: textLockedUnit.right
+                anchors.bottom: textLockedUnit.top
+                anchors.left: textBalanceValue.right
+                anchors.leftMargin: 15
+                anchors.rightMargin: 0
+                verticalAlignment: Text.AlignBottom
+                font.bold: false
+                horizontalAlignment: Text.AlignLeft
+                anchors.bottomMargin: 12
+            }
+
+            Text {
+                id: textLockedValue
+                color: "#cfcfcf"
+                text: qsTr("0")
+                anchors.right: textLockedUnit.left
+                anchors.rightMargin: 10
+                anchors.bottom: textLockedUnit.bottom
+                anchors.bottomMargin: -1
+                font.family: "Arial"
+                font.pixelSize: 20
+                anchors.left: textBalanceValue.right
+                anchors.leftMargin: 15
+                verticalAlignment: Text.AlignBottom
+                font.bold: false
+                horizontalAlignment: Text.AlignRight
+
+                Connections {
+                    target: QmlBridge
+                    onDisplayLockedBalance: {
+                        textLockedValue.text = data
+                    }
+                }
+            }
+
+            Text {
+                id: textAvailableValue
+                color: "#cfcfcf"
+                text: qsTr("0")
+                anchors.right: textLockedValue.right
+                anchors.rightMargin: 0
+                anchors.bottom: textAvailableUnit.bottom
+                anchors.bottomMargin: -1
+                font.family: "Arial"
+                font.pixelSize: 20
+                anchors.left: textBalanceValue.right
+                anchors.leftMargin: 15
+                verticalAlignment: Text.AlignBottom
+                font.bold: false
+                horizontalAlignment: Text.AlignRight
+
+                Connections {
+                    target: QmlBridge
+                    onDisplayAvailableBalance: {
+                        textAvailableValue.text = data
+                    }
+                }
+            }
+
+            Text {
+                id: textLockedDescr
+                color: "#cfcfcf"
+                text: qsTr("Locked/Unconfirmed:")
+                anchors.bottom: textLockedUnit.bottom
+                anchors.bottomMargin: 0
+                font.family: "Arial"
+                font.pixelSize: 15
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                verticalAlignment: Text.AlignBottom
+                font.bold: false
+                horizontalAlignment: Text.AlignLeft
+            }
+
+            Text {
+                id: textAvailableDescr
+                color: "#cfcfcf"
+                text: qsTr("Available:")
+                anchors.bottom: textAvailableUnit.bottom
+                anchors.bottomMargin: 0
+                anchors.left: textLockedDescr.left
+                anchors.leftMargin: 0
+                font.family: "Arial"
+                font.pixelSize: 15
+                verticalAlignment: Text.AlignBottom
+                font.bold: false
+                horizontalAlignment: Text.AlignLeft
+            }
+        }
+
+        Text {
+            id: textBalance
+            color: "#ffffff"
+            text: qsTr("BALANCE")
+            verticalAlignment: Text.AlignBottom
+            anchors.horizontalCenterOffset: 0
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 15
+            horizontalAlignment: Text.AlignHCenter
+            font.bold: true
+            font.family: "Arial"
+            font.pixelSize: 25
+        }
+
+        Text {
+            id: textBalanceValue
+            color: "#ffffff"
+            text: qsTr("0")
+            verticalAlignment: Text.AlignBottom
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 10
+            anchors.horizontalCenter: parent.horizontalCenter
+            font.family: "Arial"
+            font.pixelSize: 30
+            font.bold: true
+            anchors.horizontalCenterOffset: 0
+            horizontalAlignment: Text.AlignRight
+
+            Connections {
+                target: QmlBridge
+                onDisplayTotalBalance: {
+                    textBalanceValue.text = data
+                }
+            }
+        }
+
+        Text {
+            id: textBalanceUnit
+            color: "#ffffff"
+            text: qsTr("TRTL")
+            verticalAlignment: Text.AlignBottom
+            anchors.left: textBalanceValue.right
+            anchors.leftMargin: 15
+            anchors.bottom: textBalanceValue.bottom
+            anchors.bottomMargin: 2
+            font.family: "Arial"
+            font.pixelSize: 18
+            font.bold: true
+            horizontalAlignment: Text.AlignLeft
+        }
+    }
+
+    Rectangle {
+        id: rectangleAddress
         height: 106
-        spacing: 0
         anchors.right: parent.right
         anchors.rightMargin: 0
         anchors.left: parent.left
         anchors.leftMargin: 0
+        anchors.top: rectangleTop.bottom
+        anchors.topMargin: 50
+        color: "transparent"
 
         Rectangle {
             id: buttonCopy
@@ -84,210 +275,6 @@ Rectangle {
     }
 
     Rectangle {
-        id: rectangleTop
-        height: 110
-        color: "#00000000"
-        anchors.right: parent.right
-        anchors.rightMargin: 15
-        anchors.left: parent.left
-        anchors.leftMargin: 15
-        anchors.top: parent.top
-        anchors.topMargin: 15
-        opacity: 1
-
-        Rectangle {
-            id: rectangleLockedBalance
-            x: 415
-            width: 338
-            color: "#00000000"
-            anchors.right: parent.right
-            anchors.rightMargin: 0
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 0
-            anchors.top: parent.top
-            anchors.topMargin: 0
-
-            Text {
-                id: textLockedUnit
-                y: 1
-                color: "#cfcfcf"
-                text: qsTr("TRTL")
-                anchors.right: parent.right
-                anchors.rightMargin: 18
-                verticalAlignment: Text.AlignBottom
-                font.family: "Arial"
-                font.pixelSize: 15
-                anchors.bottom: parent.bottom
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
-                font.bold: false
-                horizontalAlignment: Text.AlignLeft
-                anchors.bottomMargin: 10
-            }
-
-            Text {
-                id: textAvailableUnit
-                x: -8
-                y: -2
-                color: "#cfcfcf"
-                text: qsTr("TRTL")
-                font.family: "Arial"
-                font.pixelSize: 15
-                anchors.right: textLockedUnit.right
-                anchors.bottom: textLockedUnit.top
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
-                anchors.rightMargin: 0
-                verticalAlignment: Text.AlignBottom
-                font.bold: false
-                horizontalAlignment: Text.AlignLeft
-                anchors.bottomMargin: 12
-            }
-
-            Text {
-                id: textLockedValue
-                x: 7
-                y: 1
-                color: "#cfcfcf"
-                text: qsTr("0")
-                anchors.right: textLockedUnit.left
-                anchors.rightMargin: 10
-                anchors.bottom: textLockedUnit.bottom
-                anchors.bottomMargin: -1
-                font.family: "Arial"
-                font.pixelSize: 20
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
-                verticalAlignment: Text.AlignBottom
-                font.bold: false
-                horizontalAlignment: Text.AlignRight
-
-                Connections {
-                    target: QmlBridge
-                    onDisplayLockedBalance: {
-                        textLockedValue.text = data
-                    }
-                }
-            }
-
-            Text {
-                id: textAvailableValue
-                x: 16
-                y: 1
-                color: "#cfcfcf"
-                text: qsTr("0")
-                anchors.right: textLockedValue.right
-                anchors.rightMargin: 0
-                anchors.bottom: textAvailableUnit.bottom
-                anchors.bottomMargin: -1
-                font.family: "Arial"
-                font.pixelSize: 20
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
-                verticalAlignment: Text.AlignBottom
-                font.bold: false
-                horizontalAlignment: Text.AlignRight
-
-                Connections {
-                    target: QmlBridge
-                    onDisplayAvailableBalance: {
-                        textAvailableValue.text = data
-                    }
-                }
-            }
-
-            Text {
-                id: textLockedDescr
-                y: -10
-                color: "#cfcfcf"
-                text: qsTr("Locked/Unconfirmed:")
-                anchors.bottom: textLockedUnit.bottom
-                anchors.bottomMargin: 0
-                font.family: "Arial"
-                font.pixelSize: 15
-                anchors.left: parent.left
-                anchors.leftMargin: 10
-                verticalAlignment: Text.AlignBottom
-                font.bold: false
-                horizontalAlignment: Text.AlignLeft
-            }
-
-            Text {
-                id: textAvailableDescr
-                y: -7
-                color: "#cfcfcf"
-                text: qsTr("Available:")
-                anchors.bottom: textAvailableUnit.bottom
-                anchors.bottomMargin: 0
-                anchors.left: textLockedDescr.left
-                anchors.leftMargin: 0
-                font.family: "Arial"
-                font.pixelSize: 15
-                verticalAlignment: Text.AlignBottom
-                font.bold: false
-                horizontalAlignment: Text.AlignLeft
-            }
-        }
-
-        Text {
-            id: textBalance
-            x: 454
-            y: 15
-            color: "#ffffff"
-            text: qsTr("BALANCE")
-            verticalAlignment: Text.AlignBottom
-            anchors.horizontalCenterOffset: 0
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.top: parent.top
-            anchors.topMargin: 15
-            horizontalAlignment: Text.AlignHCenter
-            font.bold: true
-            font.family: "Arial"
-            font.pixelSize: 25
-        }
-
-        Text {
-            id: textBalanceValue
-            x: 455
-            y: 11
-            color: "#ffffff"
-            text: qsTr("0")
-            verticalAlignment: Text.AlignBottom
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 10
-            anchors.horizontalCenter: parent.horizontalCenter
-            font.family: "Arial"
-            font.pixelSize: 30
-            font.bold: true
-            anchors.horizontalCenterOffset: 0
-            horizontalAlignment: Text.AlignRight
-
-            Connections {
-                target: QmlBridge
-                onDisplayTotalBalance: {
-                    textBalanceValue.text = data
-                }
-            }
-        }
-
-        Text {
-            id: textBalanceUnit
-            y: 1
-            color: "#ffffff"
-            text: qsTr("TRTL")
-            verticalAlignment: Text.AlignBottom
-            anchors.left: textBalanceValue.right
-            anchors.leftMargin: 15
-            anchors.bottom: textBalanceValue.bottom
-            anchors.bottomMargin: 2
-            font.family: "Arial"
-            font.pixelSize: 18
-            font.bold: true
-            horizontalAlignment: Text.AlignLeft
-        }
-    }
-
-    Rectangle {
         id: rectangleHistory
         color: "#00000000"
         anchors.bottom: rectangleConnectionInfo.top
@@ -296,12 +283,11 @@ Rectangle {
         anchors.rightMargin: 10
         anchors.left: parent.left
         anchors.leftMargin: 10
-        anchors.top: rowAddress.bottom
+        anchors.top: rectangleAddress.bottom
         anchors.topMargin: 10
 
         Text {
             id: textHistoryTitle
-            x: 116
             color: "#ffffff"
             text: qsTr("PREVIOUS TRANSACTIONS")
             anchors.top: parent.top
@@ -323,7 +309,6 @@ Rectangle {
                 anchors.right: parent.right
                 anchors.rightMargin: 0
                 height: 80
-                y: 0
             }
         }
 
@@ -384,7 +369,6 @@ Rectangle {
 
         Text {
             id: textTransferTitle
-            x: 116
             color: "#ffffff"
             text: qsTr("TRANSFER")
             font.pixelSize: 25
