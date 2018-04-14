@@ -70,7 +70,7 @@ Item {
         color: "#cfcfcf"
         text: transactionConfirmationsValue
         anchors.right: parent.right
-        anchors.rightMargin: 5
+        anchors.rightMargin: 11
         anchors.verticalCenter: transactionTime.verticalCenter
         horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter

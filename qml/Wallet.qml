@@ -276,7 +276,7 @@ Rectangle {
 
     Rectangle {
         id: rectangleHistory
-        color: "#00000000"
+        color: "transparent"
         anchors.bottom: rectangleConnectionInfo.top
         anchors.bottomMargin: 10
         anchors.right: rectangleSeparator1.left
@@ -316,12 +316,10 @@ Rectangle {
             id: modelListViewTransactions
         }
 
-        ListView {
-            id: listViewTransactions
-            model: modelListViewTransactions
-            delegate: delegateListViewTransactions
-            clip: true
-            boundsBehavior: Flickable.DragAndOvershootBounds
+        Rectangle {
+            id: rectangleListTransactions
+            color: "#2b2b2b"
+            radius: 11
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 10
             anchors.right: parent.right
@@ -329,20 +327,41 @@ Rectangle {
             anchors.left: parent.left
             anchors.leftMargin: 10
             anchors.top: textHistoryTitle.bottom
-            anchors.topMargin: 30
+            anchors.topMargin: 15
 
-            Connections {
-                target: QmlBridge
-                onAddTransactionToList:
-                {
-                    modelListViewTransactions.append({
-                                                        transactionAmountValue: amount,
-                                                        transactionPaymentIDValue: paymentID,
-                                                        transactionIDValue: transactionID,
-                                                        transactionConfirmationsValue: confirmations,
-                                                        transactionTimeValue: time,
-                                                        transactionNumberValue: number
-                                                    })
+            ListView {
+                id: listViewTransactions
+                model: modelListViewTransactions
+                delegate: delegateListViewTransactions
+                clip: true
+                boundsBehavior: Flickable.DragAndOvershootBounds
+                ScrollBar.vertical: ScrollBar {
+                    width: 7
+                    anchors.right: parent.right
+                    anchors.rightMargin: 0
+                    policy: ScrollBar.AlwaysOn
+                }
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+                anchors.right: parent.right
+                anchors.rightMargin: 4
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.top: parent.top
+                anchors.topMargin: 10
+
+                Connections {
+                    target: QmlBridge
+                    onAddTransactionToList: {
+                        modelListViewTransactions.append({
+                            transactionAmountValue: amount,
+                            transactionPaymentIDValue: paymentID,
+                            transactionIDValue: transactionID,
+                            transactionConfirmationsValue: confirmations,
+                            transactionTimeValue: time,
+                            transactionNumberValue: number
+                        })
+                    }
                 }
             }
         }
@@ -357,7 +376,7 @@ Rectangle {
 
     Rectangle {
         id: rectangleTransfer
-        color: "#00000000"
+        color: "transparent"
         anchors.bottom: rectangleConnectionInfo.top
         anchors.bottomMargin: 10
         anchors.left: rectangleSeparator1.right
