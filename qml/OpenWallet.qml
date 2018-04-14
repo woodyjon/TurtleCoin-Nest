@@ -769,9 +769,7 @@ Rectangle {
         }
 
         function checkEnableButton() {
-
             buttonImportWallet.enabled = textInputImportWalletFilename.text != "" && textInputImportWalletPassword.text != "" && textInputImportWalletPrivateViewKey.text != "" && textInputImportWalletPrivateSpendKey.text != ""
-
         }
     }
 
@@ -797,39 +795,31 @@ Rectangle {
     Connections {
         target: QmlBridge
 
-        onFinishedLoadingWalletd:
-        {
+        onFinishedLoadingWalletd: {
             busyIndicator.running = false
         }
 
-        onFinishedCreatingWallet:
-        {
+        onFinishedCreatingWallet: {
             busyIndicator.running = false
         }
 
-        onDisplayPathToPreviousWallet:
-        {
+        onDisplayPathToPreviousWallet: {
             textInputExistingWalletPath.text = pathToPreviousWallet
         }
 
-        onDisplayWalletCreationLocation:
-        {
+        onDisplayWalletCreationLocation: {
             textCreateWalletLocation.text = walletLocation;
             textImportWalletLocation.text = walletLocation;
         }
 
-        onDisplayUseRemoteNode:
-        {
+        onDisplayUseRemoteNode: {
             radioButtonUseLocal.checked = !useRemote;
             radioButtonUseRemoteNode.checked = useRemote;
         }
     }
 
     function clearData() {
-
         textInputImportWalletPrivateViewKey.text = "";
         textInputImportWalletPrivateSpendKey.text = "";
-
     }
-
 }
