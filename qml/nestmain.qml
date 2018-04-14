@@ -7,12 +7,17 @@ import QtQuick.Layouts 1.1
 
 ApplicationWindow {
     id: window
-    width: 1060
-    height: 800
-    maximumHeight: height
-    maximumWidth: width
-    minimumHeight: height
-    minimumWidth: width
+
+    property var windowWidth: 1060
+    property var windowHeight: 800
+    property var minWindowHeight: 500
+
+    width: windowWidth
+    height: windowHeight
+    minimumWidth: windowWidth
+    minimumHeight: minWindowHeight
+    maximumWidth: windowWidth
+    maximumHeight: windowHeight
     color: "#333333"
     title: "TurtleCoin Nest"
     visible: true
@@ -37,15 +42,24 @@ ApplicationWindow {
         }
     }
 
-    OpenWallet {
-        id: openWalletScreen
-        anchors.fill: parent
-    }
+    Flickable{
+        interactive: true
+        boundsBehavior: Flickable.StopAtBounds
+        contentWidth: windowWidth
+        contentHeight: windowHeight - 45 // minus height of menu
+        width: parent.width
+        height: parent.height
 
-    Wallet {
-        id: walletScreen
-        anchors.fill: parent
-        visible: false
+        OpenWallet {
+            id: openWalletScreen
+            anchors.fill: parent
+        }
+
+        Wallet {
+            id: walletScreen
+            anchors.fill: parent
+            visible: false
+        }
     }
 
     Dialog {
