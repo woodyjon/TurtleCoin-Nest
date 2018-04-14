@@ -42,7 +42,8 @@ type QmlBridge struct {
 	_ func(data string) `signal:"displayTotalBalance"`
 	_ func(data string) `signal:"displayAvailableBalance"`
 	_ func(data string) `signal:"displayLockedBalance"`
-	_ func(data string) `signal:"displayAddress"`
+	_ func(address string,
+		wallet string) `signal:"displayAddress"`
 	_ func(paymentID string,
 		transactionID string,
 		amount string,
@@ -75,7 +76,7 @@ type QmlBridge struct {
 		transferAmount string,
 		transferPaymentID string) `slot:"clickedButtonSend"`
 	_ func()                                             `slot:"clickedButtonBackupWallet"`
-	_ func()                                             `slot:"clickedOpenAnotherWallet"`
+	_ func()                                             `slot:"clickedCloseWallet"`
 	_ func(pathToWallet string, passwordWallet string)   `slot:"clickedButtonOpen"`
 	_ func(filenameWallet string, passwordWallet string) `slot:"clickedButtonCreate"`
 	_ func(filenameWallet string,
@@ -217,8 +218,8 @@ func connectQMLToGOFunctions() {
 		}()
 	})
 
-	qmlBridge.ConnectClickedOpenAnotherWallet(func() {
-		openAnotherWallet()
+	qmlBridge.ConnectClickedCloseWallet(func() {
+		closeWallet()
 	})
 
 	qmlBridge.ConnectChoseRemote(func(remote bool) {
@@ -258,7 +259,7 @@ func getAndDisplayAddress() {
 
 	walletAddress, err := walletdmanager.RequestAddress()
 	if err == nil {
-		qmlBridge.DisplayAddress(walletAddress)
+		qmlBridge.DisplayAddress(walletAddress, walletdmanager.WalletFilename)
 	}
 }
 
@@ -379,7 +380,7 @@ func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, pr
 	return true
 }
 
-func openAnotherWallet() {
+func closeWallet() {
 
 	tickerRefreshWalletData.Stop()
 

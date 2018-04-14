@@ -49,8 +49,6 @@ Item {
     
     Text {
         id: transactionTime
-        x: 196
-        y: 8
         color: "#cfcfcf"
         text: transactionTimeValue
         anchors.right: transactionConfirmations.left
@@ -65,12 +63,10 @@ Item {
     
     Text {
         id: transactionConfirmations
-        x: 310
-        y: 8
         color: "#cfcfcf"
         text: transactionConfirmationsValue
         anchors.right: parent.right
-        anchors.rightMargin: 5
+        anchors.rightMargin: 11
         anchors.verticalCenter: transactionTime.verticalCenter
         horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter
