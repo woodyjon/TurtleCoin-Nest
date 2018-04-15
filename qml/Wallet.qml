@@ -975,6 +975,40 @@ Rectangle {
             verticalAlignment: Text.AlignVCenter
         }
 
+        Button {
+            id: buttonCopyKeys
+            text: qsTr("Copy to clipboard")
+            anchors.bottom: textInputPrivateSpendKey.bottom
+            anchors.bottomMargin: 40
+            anchors.left: textInputPrivateSpendKey.right
+            anchors.leftMargin: 80
+            height: 30
+
+            contentItem: Text {
+                text: buttonCopyKeys.text
+                font.pixelSize: 15
+                font.family: "Arial"
+                font.bold: true
+                opacity: enabled ? 1.0 : 0.3
+                color: buttonCopyKeys.down ? "#dddddd" : "#ffffff"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+            }
+
+            background: Rectangle {
+                implicitWidth: 140
+                height: 30
+                opacity: enabled ? 1 : 0.3
+                radius: 6
+                color: buttonCopyKeys.down ? "#383838" : "#444444"
+            }
+
+            onClicked: {
+                QmlBridge.clickedButtonCopyKeys();
+            }
+        }
+
         function show(filename, privateViewKey, privateSpendKey, walletAddress) {
             textWalletFilename.text = filename
             textInputPrivateViewKey.text = privateViewKey

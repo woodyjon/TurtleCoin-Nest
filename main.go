@@ -32,6 +32,7 @@ var (
 	db                      *sql.DB
 	dbFilename              = "settings.db"
 	useRemoteNode           = true
+	stringBackupKeys        = ""
 )
 
 // QmlBridge is the bridge between qml and go
@@ -72,6 +73,7 @@ type QmlBridge struct {
 	_ func(transactionID string) `slot:"clickedButtonExplorer"`
 	_ func(transactionID string) `slot:"clickedButtonCopyTx"`
 	_ func()                     `slot:"clickedButtonCopyAddress"`
+	_ func()                     `slot:"clickedButtonCopyKeys"`
 	_ func(transferAddress string,
 		transferAmount string,
 		transferPaymentID string) `slot:"clickedButtonSend"`
@@ -176,6 +178,10 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectClickedButtonCopyAddress(func() {
 		clipboard.WriteAll(walletdmanager.WalletAddress)
 		qmlBridge.DisplayPopup("Copied!", 1500)
+	})
+
+	qmlBridge.ConnectClickedButtonCopyKeys(func() {
+		clipboard.WriteAll(stringBackupKeys)
 	})
 
 	qmlBridge.ConnectClickedButtonCopyTx(func(transactionID string) {
@@ -384,6 +390,8 @@ func closeWallet() {
 
 	tickerRefreshWalletData.Stop()
 
+	stringBackupKeys = ""
+
 	go func() {
 		walletdmanager.GracefullyQuitWalletd()
 	}()
@@ -398,6 +406,8 @@ func showWalletPrivateInfo() {
 		log.Error("Error getting view and spend key: ", err)
 	} else {
 		qmlBridge.DisplayPrivateKeys(walletdmanager.WalletFilename, privateViewKey, privateSpendKey, walletdmanager.WalletAddress)
+
+		stringBackupKeys = "Wallet: " + walletdmanager.WalletFilename + "\nAddress: " + walletdmanager.WalletAddress + "\nPrivate view key: " + privateViewKey + "\nPrivate spend key: " + privateSpendKey
 	}
 }
 
