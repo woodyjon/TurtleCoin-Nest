@@ -689,7 +689,8 @@ Rectangle {
                 verticalAlignment: Text.AlignVCenter
 
                 onTextChanged: {
-                    buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != ""
+                    buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != "";
+                    textTransferAmountUSD.text = QmlBridge.getTransferAmountUSD(textInputTransferAmount.text);
                 }
 
                 Connections{
@@ -713,6 +714,19 @@ Rectangle {
             verticalAlignment: Text.AlignBottom
             anchors.leftMargin: 10
             font.bold: true
+        }
+
+        Text {
+            id: textTransferAmountUSD
+            color: "#858585"
+            text: ""
+            anchors.left: textTransferAmountUnit.right
+            anchors.leftMargin: 25
+            anchors.bottom: textTransferAmountUnit.bottom
+            anchors.bottomMargin: 0
+            font.family: "Arial"
+            font.pixelSize: 15
+            horizontalAlignment: Text.AlignRight
         }
 
         Rectangle {

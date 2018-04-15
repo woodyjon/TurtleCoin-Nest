@@ -91,7 +91,8 @@ type QmlBridge struct {
 		passwordWallet string,
 		privateViewKey string,
 		privateSpendKey string) `slot:"clickedButtonImport"`
-	_ func(remote bool) `slot:"choseRemote"`
+	_ func(remote bool)              `slot:"choseRemote"`
+	_ func(amountTRTL string) string `slot:"getTransferAmountUSD"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -209,6 +210,10 @@ func connectQMLToGOFunctions() {
 
 	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string) {
 		transfer(transferAddress, transferAmount, transferPaymentID)
+	})
+
+	qmlBridge.ConnectGetTransferAmountUSD(func(amountTRTL string) string {
+		return amountStringUSDToTRTL(amountTRTL)
 	})
 
 	qmlBridge.ConnectClickedButtonBackupWallet(func() {
@@ -549,4 +554,14 @@ func requestRateTRTL() {
 			}
 		}
 	}
+}
+
+func amountStringUSDToTRTL(amountTRTLString string) string {
+	amountTRTL, err := strconv.ParseFloat(amountTRTLString, 64)
+	if err != nil || amountTRTL <= 0 || rateUSDTRTL == 0 {
+		return ""
+	}
+	amountUSD := amountTRTL * rateUSDTRTL
+	amountUSDString := strconv.FormatFloat(amountUSD, 'f', 2, 64) + " $"
+	return amountUSDString
 }
