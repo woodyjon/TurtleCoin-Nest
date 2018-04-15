@@ -198,13 +198,6 @@ Rectangle {
             font.bold: true
             anchors.horizontalCenterOffset: 0
             horizontalAlignment: Text.AlignRight
-
-            Connections {
-                target: QmlBridge
-                onDisplayTotalBalance: {
-                    textBalanceValue.text = data
-                }
-            }
         }
 
         Text {
@@ -219,6 +212,32 @@ Rectangle {
             font.family: "Arial"
             font.pixelSize: 18
             font.bold: true
+            horizontalAlignment: Text.AlignLeft
+        }
+
+        Text {
+            id: textBalanceUSD
+            color: "#858585"
+            text: ""
+            anchors.right: textBalanceValue.right
+            anchors.rightMargin: 0
+            anchors.top: textBalanceUnit.bottom
+            anchors.topMargin: 8
+            font.family: "Arial"
+            font.pixelSize: 15
+            horizontalAlignment: Text.AlignRight
+        }
+
+        Text {
+            id: textUSD
+            color: "#858585"
+            text: "$"
+            anchors.left: textBalanceUnit.left
+            anchors.leftMargin: 0
+            anchors.bottom: textBalanceUSD.bottom
+            anchors.bottomMargin: 0
+            font.family: "Arial"
+            font.pixelSize: 15
             horizontalAlignment: Text.AlignLeft
         }
     }
@@ -1029,6 +1048,11 @@ Rectangle {
             textConnectionInfoSync.text = syncing
             textConnectionInfoBlocks.text = blocks
             textConnectionInfoPeers.text = peers
+        }
+
+        onDisplayTotalBalance: {
+            textBalanceValue.text = balance
+            textBalanceUSD.text = balanceUSD
         }
     }
 
