@@ -4,7 +4,10 @@ import (
 	"TurtleCoin-Nest/turtlecoinwalletdrpcgo"
 	"TurtleCoin-Nest/walletdmanager"
 	"database/sql"
+	"encoding/json"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
@@ -33,6 +36,8 @@ var (
 	dbFilename              = "settings.db"
 	useRemoteNode           = true
 	stringBackupKeys        = ""
+	rateUSDTRTL             float64 // USD value for 1 TRTL
+	urlCryptoCompareTRTL    = "https://min-api.cryptocompare.com/data/price?fsym=TRTL&tsyms=USD"
 )
 
 // QmlBridge is the bridge between qml and go
@@ -40,7 +45,8 @@ type QmlBridge struct {
 	core.QObject
 
 	// go to qml
-	_ func(data string) `signal:"displayTotalBalance"`
+	_ func(balance string,
+		balanceUSD string) `signal:"displayTotalBalance"`
 	_ func(data string) `signal:"displayAvailableBalance"`
 	_ func(data string) `signal:"displayLockedBalance"`
 	_ func(address string,
@@ -85,7 +91,8 @@ type QmlBridge struct {
 		passwordWallet string,
 		privateViewKey string,
 		privateSpendKey string) `slot:"clickedButtonImport"`
-	_ func(remote bool) `slot:"choseRemote"`
+	_ func(remote bool)              `slot:"choseRemote"`
+	_ func(amountTRTL string) string `slot:"getTransferAmountUSD"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -128,6 +135,10 @@ func main() {
 	setupDB(pathToDB)
 
 	log.Info("Application started")
+
+	go func() {
+		requestRateTRTL()
+	}()
 
 	platform := "linux"
 	if isPlatformDarwin {
@@ -201,6 +212,10 @@ func connectQMLToGOFunctions() {
 		transfer(transferAddress, transferAmount, transferPaymentID)
 	})
 
+	qmlBridge.ConnectGetTransferAmountUSD(func(amountTRTL string) string {
+		return amountStringUSDToTRTL(amountTRTL)
+	})
+
 	qmlBridge.ConnectClickedButtonBackupWallet(func() {
 		showWalletPrivateInfo()
 	})
@@ -257,7 +272,8 @@ func getAndDisplayBalances() {
 	if err == nil {
 		qmlBridge.DisplayAvailableBalance(strconv.FormatFloat(walletAvailableBalance, 'f', -1, 64))
 		qmlBridge.DisplayLockedBalance(strconv.FormatFloat(walletLockedBalance, 'f', -1, 64))
-		qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64))
+		balanceUSD := walletTotalBalance * rateUSDTRTL
+		qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64), strconv.FormatFloat(balanceUSD, 'f', 2, 64))
 	}
 }
 
@@ -516,4 +532,36 @@ func openBrowser(url string) bool {
 	}
 	cmd := exec.Command(args[0], append(args[1:], url)...)
 	return cmd.Start() == nil
+}
+
+func requestRateTRTL() {
+	response, err := http.Get(urlCryptoCompareTRTL)
+
+	if err != nil {
+		log.Error("error fetching from cryptocompare: ", err)
+	} else {
+		b, err := ioutil.ReadAll(response.Body)
+		response.Body.Close()
+		if err != nil {
+			log.Error("error reading result from cryptocompare: ", err)
+		} else {
+			var resultInterface interface{}
+			if err := json.Unmarshal(b, &resultInterface); err != nil {
+				log.Error("error JSON unmarshaling request cryptocompare: ", err)
+			} else {
+				resultsMap := resultInterface.(map[string]interface{})
+				rateUSDTRTL = resultsMap["USD"].(float64)
+			}
+		}
+	}
+}
+
+func amountStringUSDToTRTL(amountTRTLString string) string {
+	amountTRTL, err := strconv.ParseFloat(amountTRTLString, 64)
+	if err != nil || amountTRTL <= 0 || rateUSDTRTL == 0 {
+		return ""
+	}
+	amountUSD := amountTRTL * rateUSDTRTL
+	amountUSDString := strconv.FormatFloat(amountUSD, 'f', 2, 64) + " $"
+	return amountUSDString
 }
