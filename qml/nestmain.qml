@@ -40,6 +40,12 @@ ApplicationWindow {
             anchors.fill: parent
             visible: false
         }
+
+        Settings {
+            id: settingsScreen
+            anchors.fill: parent
+            visible: false
+        }
     }
 
     Dialog {
@@ -87,6 +93,14 @@ ApplicationWindow {
             openWalletScreen.visible = false;
             walletScreen.visible = true;
             walletScreen.clearData();
+        }
+
+        onDisplaySettingsScreen: {
+            settingsScreen.visible = true;
+        }
+
+        onHideSettingsScreen: {
+            settingsScreen.visible = false;
         }
     }
 }

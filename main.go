@@ -73,6 +73,8 @@ type QmlBridge struct {
 	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
 	_ func(walletLocation string)       `signal:"displayWalletCreationLocation"`
 	_ func(useRemote bool)              `signal:"displayUseRemoteNode"`
+	_ func()                            `signal:"hideSettingsScreen"`
+	_ func()                            `signal:"displaySettingsScreen"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -93,6 +95,8 @@ type QmlBridge struct {
 		privateSpendKey string) `slot:"clickedButtonImport"`
 	_ func(remote bool)              `slot:"choseRemote"`
 	_ func(amountTRTL string) string `slot:"getTransferAmountUSD"`
+	_ func()                         `slot:"clickedCloseSettings"`
+	_ func()                         `slot:"clickedSettingsButton"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -246,6 +250,14 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectChoseRemote(func(remote bool) {
 		useRemoteNode = remote
 		recordUseRemoteToDB(useRemoteNode)
+	})
+
+	qmlBridge.ConnectClickedCloseSettings(func() {
+		qmlBridge.HideSettingsScreen()
+	})
+
+	qmlBridge.ConnectClickedSettingsButton(func() {
+		qmlBridge.DisplaySettingsScreen()
 	})
 }
 
