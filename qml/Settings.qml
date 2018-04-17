@@ -51,12 +51,57 @@ Rectangle {
         font.pixelSize: 25
     }
 
+    OldControls.CheckBox {
+        id: checkBoxUSD
+        text: "Display values also in USD"
+        checked: false
+        anchors.top: parent.top
+        anchors.topMargin: 180
+        anchors.left: parent.left
+        anchors.leftMargin: 180
+
+        style: CheckBoxStyle {
+            label: Text {
+                color: "#ffffff"
+                font.pixelSize: 17
+                font.family: "Arial"
+                text: control.text
+                leftPadding: 15
+            }
+        }
+
+        onClicked: {
+            QmlBridge.choseDisplayFiat(checkBoxUSD.checked);
+        }
+    }
+
+    Text {
+        id: textSettingsUSDDescr
+        color: "#ffffff"
+        text: "(Exchange rate from cryptocompare.com.)\n(Consider cautiously as current volume and liquidity are extremely low.)"
+        anchors.verticalCenterOffset: 0
+        anchors.verticalCenter: checkBoxUSD.verticalCenter
+        anchors.left: checkBoxUSD.right
+        anchors.leftMargin: 23
+        horizontalAlignment: Text.AlignLeft
+        font.family: "Arial"
+        font.pixelSize: 14
+    }
+
     function show() {
         settingsScreen.state = "visible"
     }
 
     function hide() {
         settingsScreen.state = ""
+    }
+
+    Connections {
+        target: QmlBridge
+
+        onDisplaySettingsValues: {
+            checkBoxUSD.checked = displayFiat
+        }
     }
 
     states: State {

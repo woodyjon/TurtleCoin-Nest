@@ -35,6 +35,7 @@ var (
 	db                      *sql.DB
 	dbFilename              = "settings.db"
 	useRemoteNode           = true
+	displayFiatConversion   = false
 	stringBackupKeys        = ""
 	rateUSDTRTL             float64 // USD value for 1 TRTL
 	urlCryptoCompareTRTL    = "https://min-api.cryptocompare.com/data/price?fsym=TRTL&tsyms=USD"
@@ -50,7 +51,8 @@ type QmlBridge struct {
 	_ func(data string) `signal:"displayAvailableBalance"`
 	_ func(data string) `signal:"displayLockedBalance"`
 	_ func(address string,
-		wallet string) `signal:"displayAddress"`
+		wallet string,
+		displayFiatConversion bool) `signal:"displayAddress"`
 	_ func(paymentID string,
 		transactionID string,
 		amount string,
@@ -75,6 +77,7 @@ type QmlBridge struct {
 	_ func(useRemote bool)              `signal:"displayUseRemoteNode"`
 	_ func()                            `signal:"hideSettingsScreen"`
 	_ func()                            `signal:"displaySettingsScreen"`
+	_ func(displayFiat bool)            `signal:"displaySettingsValues"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -97,6 +100,7 @@ type QmlBridge struct {
 	_ func(amountTRTL string) string `slot:"getTransferAmountUSD"`
 	_ func()                         `slot:"clickedCloseSettings"`
 	_ func()                         `slot:"clickedSettingsButton"`
+	_ func(displayFiat bool)         `slot:"choseDisplayFiat"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -174,8 +178,7 @@ func main() {
 		qmlBridge.DisplayWalletCreationLocation(textLocation)
 	}
 
-	getAndDisplayPathWalletFromDB()
-	getAndDisplayUseRemoteFromDB()
+	getAndDisplayStartInfoFromDB()
 
 	gui.QGuiApplication_Exec()
 
@@ -259,6 +262,11 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectClickedSettingsButton(func() {
 		qmlBridge.DisplaySettingsScreen()
 	})
+
+	qmlBridge.ConnectChoseDisplayFiat(func(displayFiat bool) {
+		displayFiatConversion = displayFiat
+		recordDisplayConversionToDB(displayFiat)
+	})
 }
 
 func startDisplayWalletInfo() {
@@ -293,7 +301,7 @@ func getAndDisplayAddress() {
 
 	walletAddress, err := walletdmanager.RequestAddress()
 	if err == nil {
-		qmlBridge.DisplayAddress(walletAddress, walletdmanager.WalletFilename)
+		qmlBridge.DisplayAddress(walletAddress, walletdmanager.WalletFilename, displayFiatConversion)
 	}
 }
 
@@ -452,15 +460,22 @@ func setupDB(pathToDB string) {
 		log.Fatal("error creating table pathWallet. err: ", err)
 	}
 
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNode (id INTEGER PRIMARY KEY AUTOINCREMENT,useRemote BOOL NOT NULL DEFAULT '1', address VARCHAR(64),port INT)")
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNode (id INTEGER PRIMARY KEY AUTOINCREMENT, useRemote BOOL NOT NULL DEFAULT '1', address VARCHAR(64),port INT)")
 	if err != nil {
 		log.Fatal("error creating table remoteNode. err: ", err)
 	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS fiatConversion (id INTEGER PRIMARY KEY AUTOINCREMENT, displayFiat BOOL NOT NULL DEFAULT '0', currency VARCHAR(64) DEFAULT 'USD')")
+	if err != nil {
+		log.Fatal("error creating table fiatConversion. err: ", err)
+	}
 }
 
-func getAndDisplayPathWalletFromDB() {
+func getAndDisplayStartInfoFromDB() {
 
 	qmlBridge.DisplayPathToPreviousWallet(getPathWalletFromDB())
+	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
+	qmlBridge.DisplaySettingsValues(getDisplayConversionFromDB())
 }
 
 func getPathWalletFromDB() string {
@@ -471,7 +486,7 @@ func getPathWalletFromDB() string {
 	if err != nil {
 		log.Fatal("error reading path from pathwallet table. err: ", err)
 	}
-
+	defer rows.Close()
 	for rows.Next() {
 		path := ""
 		err = rows.Scan(&path)
@@ -496,18 +511,13 @@ func recordPathWalletToDB(path string) {
 	}
 }
 
-func getAndDisplayUseRemoteFromDB() {
-
-	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
-}
-
 func getUseRemoteFromDB() bool {
 
 	rows, err := db.Query("SELECT useRemote FROM remoteNode ORDER BY id DESC LIMIT 1")
 	if err != nil {
 		log.Fatal("error reading path from remoteNode table. err: ", err)
 	}
-
+	defer rows.Close()
 	for rows.Next() {
 		useRemote := true
 		err = rows.Scan(&useRemote)
@@ -529,6 +539,37 @@ func recordUseRemoteToDB(useRemote bool) {
 	_, err = stmt.Exec(useRemote)
 	if err != nil {
 		log.Fatal("error inserting useRemoteNode into db. err: ", err)
+	}
+}
+
+func getDisplayConversionFromDB() bool {
+
+	rows, err := db.Query("SELECT displayFiat FROM fiatConversion ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		log.Fatal("error reading displayFiat from fiatConversion table. err: ", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		displayFiat := false
+		err = rows.Scan(&displayFiat)
+		if err != nil {
+			log.Fatal("error reading item from fiatConversion table. err: ", err)
+		}
+		displayFiatConversion = displayFiat
+	}
+
+	return displayFiatConversion
+}
+
+func recordDisplayConversionToDB(displayConversion bool) {
+
+	stmt, err := db.Prepare(`INSERT INTO fiatConversion(displayFiat) VALUES(?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert displayFiat into db. err: ", err)
+	}
+	_, err = stmt.Exec(displayConversion)
+	if err != nil {
+		log.Fatal("error inserting displayFiat into db. err: ", err)
 	}
 }
 

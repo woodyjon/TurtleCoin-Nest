@@ -229,6 +229,7 @@ Rectangle {
             font.family: "Arial"
             font.pixelSize: 15
             horizontalAlignment: Text.AlignRight
+            visible: false
         }
 
         Text {
@@ -242,6 +243,7 @@ Rectangle {
             font.family: "Arial"
             font.pixelSize: 15
             horizontalAlignment: Text.AlignLeft
+            visible: false
         }
     }
 
@@ -336,14 +338,6 @@ Rectangle {
             selectionColor: "#eeeeee"
             selectedTextColor: "#777777"
             selectByMouse: true
-
-            Connections {
-                target: QmlBridge
-                onDisplayAddress: {
-                    textAddress.text = address
-                    textWalletName.text = wallet
-                }
-            }
         }
 
         Rectangle {
@@ -730,6 +724,7 @@ Rectangle {
             font.family: "Arial"
             font.pixelSize: 15
             horizontalAlignment: Text.AlignRight
+            visible: false
         }
 
         Rectangle {
@@ -1070,6 +1065,14 @@ Rectangle {
         onDisplayTotalBalance: {
             textBalanceValue.text = balance
             textBalanceUSD.text = balanceUSD
+        }
+
+        onDisplayAddress: {
+            textAddress.text = address
+            textWalletName.text = wallet
+            textUSD.visible = displayFiatConversion
+            textBalanceUSD.visible = displayFiatConversion
+            textTransferAmountUSD.visible = displayFiatConversion
         }
     }
 
