@@ -51,11 +51,11 @@ Rectangle {
         font.pixelSize: 25
     }
 
-    function show(msg) {
+    function show() {
         settingsScreen.state = "visible"
     }
 
-    function hide(msg) {
+    function hide() {
         settingsScreen.state = ""
     }
 

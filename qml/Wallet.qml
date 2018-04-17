@@ -7,8 +7,11 @@ import QtQuick.Layouts 1.1
 
 Rectangle {
     id: rectangleMainWallet
-    anchors.fill: parent
-    color: "transparent"
+    x: parent.width // starts off "screen"
+    anchors.verticalCenter: parent.verticalCenter
+    width: parent.width
+    height: parent.height
+    color: "#333333"
 
     Rectangle {
         id: buttonClose
@@ -1079,4 +1082,22 @@ Rectangle {
     function showDialogWarningCloseWallet() {
         dialogWarningCloseWallet.show()
     }
+
+    function show() {
+        walletScreen.state = "visible"
+    }
+
+    function hide() {
+        walletScreen.state = ""
+    }
+
+    states: State {
+        name: "visible"
+        PropertyChanges { target: walletScreen; x: 0 }
+    }
+
+    transitions: [
+        Transition { from: ""; PropertyAnimation { properties: "x"; duration: 200 } },
+        Transition { from: "visible"; PropertyAnimation { properties: "x"; duration: 200 } }
+    ]
 }
