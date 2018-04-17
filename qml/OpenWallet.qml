@@ -30,8 +30,8 @@ Rectangle {
 
     Rectangle {
         id: rectangleRadioButtonRemote
-        anchors.right: parent.right
-        anchors.rightMargin: 30
+        anchors.right: buttonSettings.right
+        anchors.rightMargin: 80
         anchors.top: parent.top
         anchors.topMargin: 20
         width: 300
@@ -47,11 +47,34 @@ Rectangle {
             }
             OldControls.RadioButton {
                 id: radioButtonUseRemoteNode
-                text: "Remote node (public.turtlenode.io)"
+                text: ""
                 checked: true
                 exclusiveGroup: tabPositionGroup
                 style: radioButtonStyle
                 onClicked: QmlBridge.choseRemote(true)
+            }
+        }
+    }
+
+    Rectangle {
+        id: buttonSettings
+        width: 33
+        height: 33
+        anchors.top: parent.top
+        anchors.topMargin: 15
+        anchors.right: parent.right
+        anchors.rightMargin: 15
+        color: "transparent"
+        Image {
+            id: imageButtonSettings
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectFit
+            source: "images/settings.png"
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                QmlBridge.clickedSettingsButton()
             }
         }
     }
@@ -815,6 +838,7 @@ Rectangle {
         onDisplayUseRemoteNode: {
             radioButtonUseLocal.checked = !useRemote;
             radioButtonUseRemoteNode.checked = useRemote;
+            radioButtonUseRemoteNode.text = remoteNodeDescr;
         }
     }
 

@@ -37,8 +37,10 @@ ApplicationWindow {
 
         Wallet {
             id: walletScreen
-            anchors.fill: parent
-            visible: false
+        }
+
+        Settings {
+            id: settingsScreen
         }
     }
 
@@ -78,15 +80,21 @@ ApplicationWindow {
         target: QmlBridge
 
         onDisplayOpenWalletScreen: {
-            openWalletScreen.visible = true;
-            walletScreen.visible = false;
             openWalletScreen.clearData();
+            walletScreen.hide();
         }
 
         onDisplayMainWalletScreen: {
-            openWalletScreen.visible = false;
-            walletScreen.visible = true;
             walletScreen.clearData();
+            walletScreen.show();
+        }
+
+        onDisplaySettingsScreen: {
+            settingsScreen.show();
+        }
+
+        onHideSettingsScreen: {
+            settingsScreen.hide();
         }
     }
 }

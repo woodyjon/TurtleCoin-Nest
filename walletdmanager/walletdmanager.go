@@ -173,7 +173,7 @@ func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey stri
 // walletPath is the full path to the wallet
 // walletPassword is the wallet password
 // useRemoteNode is true if remote node, false if local
-func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) (err error) {
+func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, daemonAddress string, daemonPort string) (err error) {
 
 	fileExtension := filepath.Ext(walletPath)
 	if fileExtension != ".wallet" {
@@ -242,7 +242,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool) 
 	rpcPassword = randStringBytesMaskImprSrc(20)
 
 	if useRemoteNode {
-		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--daemon-address", "public.turtlenode.io", "--daemon-port", "11898", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--daemon-address", daemonAddress, "--daemon-port", daemonPort, "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
 	} else {
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
 	}

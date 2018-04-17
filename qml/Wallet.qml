@@ -7,8 +7,11 @@ import QtQuick.Layouts 1.1
 
 Rectangle {
     id: rectangleMainWallet
-    anchors.fill: parent
-    color: "transparent"
+    x: parent.width // starts off "screen"
+    anchors.verticalCenter: parent.verticalCenter
+    width: parent.width
+    height: parent.height
+    color: "#333333"
 
     Rectangle {
         id: buttonClose
@@ -226,6 +229,7 @@ Rectangle {
             font.family: "Arial"
             font.pixelSize: 15
             horizontalAlignment: Text.AlignRight
+            visible: false
         }
 
         Text {
@@ -239,6 +243,7 @@ Rectangle {
             font.family: "Arial"
             font.pixelSize: 15
             horizontalAlignment: Text.AlignLeft
+            visible: false
         }
     }
 
@@ -333,14 +338,6 @@ Rectangle {
             selectionColor: "#eeeeee"
             selectedTextColor: "#777777"
             selectByMouse: true
-
-            Connections {
-                target: QmlBridge
-                onDisplayAddress: {
-                    textAddress.text = address
-                    textWalletName.text = wallet
-                }
-            }
         }
 
         Rectangle {
@@ -727,6 +724,7 @@ Rectangle {
             font.family: "Arial"
             font.pixelSize: 15
             horizontalAlignment: Text.AlignRight
+            visible: false
         }
 
         Rectangle {
@@ -1068,6 +1066,14 @@ Rectangle {
             textBalanceValue.text = balance
             textBalanceUSD.text = balanceUSD
         }
+
+        onDisplayAddress: {
+            textAddress.text = address
+            textWalletName.text = wallet
+            textUSD.visible = displayFiatConversion
+            textBalanceUSD.visible = displayFiatConversion
+            textTransferAmountUSD.visible = displayFiatConversion
+        }
     }
 
     function clearData() {
@@ -1079,4 +1085,22 @@ Rectangle {
     function showDialogWarningCloseWallet() {
         dialogWarningCloseWallet.show()
     }
+
+    function show() {
+        walletScreen.state = "visible"
+    }
+
+    function hide() {
+        walletScreen.state = ""
+    }
+
+    states: State {
+        name: "visible"
+        PropertyChanges { target: walletScreen; x: 0 }
+    }
+
+    transitions: [
+        Transition { from: ""; PropertyAnimation { properties: "x"; duration: 200 } },
+        Transition { from: "visible"; PropertyAnimation { properties: "x"; duration: 200 } }
+    ]
 }
