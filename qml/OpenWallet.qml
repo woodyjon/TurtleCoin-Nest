@@ -31,7 +31,7 @@ Rectangle {
     Rectangle {
         id: rectangleRadioButtonRemote
         anchors.right: buttonSettings.right
-        anchors.rightMargin: 50
+        anchors.rightMargin: 80
         anchors.top: parent.top
         anchors.topMargin: 20
         width: 300
@@ -47,7 +47,7 @@ Rectangle {
             }
             OldControls.RadioButton {
                 id: radioButtonUseRemoteNode
-                text: "Remote node (public.turtlenode.io)"
+                text: ""
                 checked: true
                 exclusiveGroup: tabPositionGroup
                 style: radioButtonStyle
@@ -838,6 +838,7 @@ Rectangle {
         onDisplayUseRemoteNode: {
             radioButtonUseLocal.checked = !useRemote;
             radioButtonUseRemoteNode.checked = useRemote;
+            radioButtonUseRemoteNode.text = remoteNodeDescr;
         }
     }
 

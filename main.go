@@ -25,20 +25,27 @@ import (
 	"github.com/therecipe/qt/quickcontrols2"
 )
 
+const (
+	urlCryptoCompareTRTL       = "https://min-api.cryptocompare.com/data/price?fsym=TRTL&tsyms=USD"
+	defaultRemoteDaemonAddress = "public.turtlenode.io"
+	defaultRemoteDaemonPort    = "11898"
+	logFileFilename            = "turtlecoin-nest-logs.log"
+	urlBlockExplorer           = "https://blocks.turtle.link/"
+	dbFilename                 = "settings.db"
+)
+
 var (
 	// qmlObjects = make(map[string]*core.QObject)
 	qmlBridge               *QmlBridge
 	transfers               []turtlecoinwalletdrpcgo.Transfer
 	tickerRefreshWalletData *time.Ticker
-	logFileFilename         = "turtlecoin-nest-logs.log"
-	urlBlockExplorer        = "https://blocks.turtle.link/"
 	db                      *sql.DB
-	dbFilename              = "settings.db"
 	useRemoteNode           = true
 	displayFiatConversion   = false
 	stringBackupKeys        = ""
 	rateUSDTRTL             float64 // USD value for 1 TRTL
-	urlCryptoCompareTRTL    = "https://min-api.cryptocompare.com/data/price?fsym=TRTL&tsyms=USD"
+	remoteDaemonAddress     = defaultRemoteDaemonAddress
+	remoteDaemonPort        = defaultRemoteDaemonPort
 )
 
 // QmlBridge is the bridge between qml and go
@@ -74,10 +81,13 @@ type QmlBridge struct {
 	_ func()                            `signal:"finishedCreatingWallet"`
 	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
 	_ func(walletLocation string)       `signal:"displayWalletCreationLocation"`
-	_ func(useRemote bool)              `signal:"displayUseRemoteNode"`
-	_ func()                            `signal:"hideSettingsScreen"`
-	_ func()                            `signal:"displaySettingsScreen"`
-	_ func(displayFiat bool)            `signal:"displaySettingsValues"`
+	_ func(useRemote bool,
+		remoteNodeDescr string) `signal:"displayUseRemoteNode"`
+	_ func()                 `signal:"hideSettingsScreen"`
+	_ func()                 `signal:"displaySettingsScreen"`
+	_ func(displayFiat bool) `signal:"displaySettingsValues"`
+	_ func(remoteNodeAddress string,
+		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -101,6 +111,9 @@ type QmlBridge struct {
 	_ func()                         `slot:"clickedCloseSettings"`
 	_ func()                         `slot:"clickedSettingsButton"`
 	_ func(displayFiat bool)         `slot:"choseDisplayFiat"`
+	_ func(daemonAddress string,
+		daemonPort string) `slot:"saveRemoteDaemonInfo"`
+	_ func() `slot:"resetRemoteDaemonInfo"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -267,6 +280,15 @@ func connectQMLToGOFunctions() {
 		displayFiatConversion = displayFiat
 		recordDisplayConversionToDB(displayFiat)
 	})
+
+	qmlBridge.ConnectSaveRemoteDaemonInfo(func(daemonAddress string, daemonPort string) {
+		saveRemoteDaemonInfo(daemonAddress, daemonPort)
+	})
+
+	qmlBridge.ConnectResetRemoteDaemonInfo(func() {
+		saveRemoteDaemonInfo(defaultRemoteDaemonAddress, defaultRemoteDaemonPort)
+		qmlBridge.DisplaySettingsRemoteDaemonInfo(defaultRemoteDaemonAddress, defaultRemoteDaemonPort)
+	})
 }
 
 func startDisplayWalletInfo() {
@@ -370,7 +392,7 @@ func transfer(transferAddress string, transferAmount string, transferPaymentID s
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {
 
-	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode)
+	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode, remoteDaemonAddress, remoteDaemonPort)
 	if err != nil {
 		log.Warn("error starting walletd with provided wallet info. error: ", err)
 		qmlBridge.FinishedLoadingWalletd()
@@ -447,6 +469,14 @@ func showWalletPrivateInfo() {
 	}
 }
 
+func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
+	remoteDaemonAddress = daemonAddress
+	remoteDaemonPort = daemonPort
+	recordRemoteDaemonInfoToDB(remoteDaemonAddress, remoteDaemonPort)
+	remoteNodeDescr := "Remote node (" + remoteDaemonAddress + ")"
+	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB(), remoteNodeDescr)
+}
+
 func setupDB(pathToDB string) {
 
 	var err error
@@ -460,7 +490,7 @@ func setupDB(pathToDB string) {
 		log.Fatal("error creating table pathWallet. err: ", err)
 	}
 
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNode (id INTEGER PRIMARY KEY AUTOINCREMENT, useRemote BOOL NOT NULL DEFAULT '1', address VARCHAR(64),port INT)")
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNode (id INTEGER PRIMARY KEY AUTOINCREMENT, useRemote BOOL NOT NULL DEFAULT '1')")
 	if err != nil {
 		log.Fatal("error creating table remoteNode. err: ", err)
 	}
@@ -469,13 +499,21 @@ func setupDB(pathToDB string) {
 	if err != nil {
 		log.Fatal("error creating table fiatConversion. err: ", err)
 	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNodeInfo (id INTEGER PRIMARY KEY AUTOINCREMENT, address VARCHAR(64), port VARCHAR(64))")
+	if err != nil {
+		log.Fatal("error creating table remoteNodeInfo. err: ", err)
+	}
 }
 
 func getAndDisplayStartInfoFromDB() {
 
 	qmlBridge.DisplayPathToPreviousWallet(getPathWalletFromDB())
-	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
+	remoteDaemonAddress, remoteDaemonPort = getRemoteDaemonInfoFromDB()
+	remoteNodeDescr := "Remote node (" + remoteDaemonAddress + ")"
+	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB(), remoteNodeDescr)
 	qmlBridge.DisplaySettingsValues(getDisplayConversionFromDB())
+	qmlBridge.DisplaySettingsRemoteDaemonInfo(remoteDaemonAddress, remoteDaemonPort)
 }
 
 func getPathWalletFromDB() string {
@@ -484,7 +522,7 @@ func getPathWalletFromDB() string {
 
 	rows, err := db.Query("SELECT path FROM pathWallet ORDER BY id DESC LIMIT 1")
 	if err != nil {
-		log.Fatal("error reading path from pathwallet table. err: ", err)
+		log.Fatal("error querying path from pathwallet table. err: ", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -515,7 +553,7 @@ func getUseRemoteFromDB() bool {
 
 	rows, err := db.Query("SELECT useRemote FROM remoteNode ORDER BY id DESC LIMIT 1")
 	if err != nil {
-		log.Fatal("error reading path from remoteNode table. err: ", err)
+		log.Fatal("error querying useRemote from remoteNode table. err: ", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
@@ -539,6 +577,39 @@ func recordUseRemoteToDB(useRemote bool) {
 	_, err = stmt.Exec(useRemote)
 	if err != nil {
 		log.Fatal("error inserting useRemoteNode into db. err: ", err)
+	}
+}
+
+func getRemoteDaemonInfoFromDB() (daemonAddress string, daemonPort string) {
+
+	rows, err := db.Query("SELECT address, port FROM remoteNodeInfo ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		log.Fatal("error querying address and port from remoteNodeInfo table. err: ", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		daemonAddress := ""
+		daemonPort := ""
+		err = rows.Scan(&daemonAddress, &daemonPort)
+		if err != nil {
+			log.Fatal("error reading item from remoteNodeInfo table. err: ", err)
+		}
+		remoteDaemonAddress = daemonAddress
+		remoteDaemonPort = daemonPort
+	}
+
+	return remoteDaemonAddress, remoteDaemonPort
+}
+
+func recordRemoteDaemonInfoToDB(daemonAddress string, daemonPort string) {
+
+	stmt, err := db.Prepare(`INSERT INTO remoteNodeInfo(address,port) VALUES(?,?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert address and port of remote node into db. err: ", err)
+	}
+	_, err = stmt.Exec(daemonAddress, daemonPort)
+	if err != nil {
+		log.Fatal("error inserting address and port of remote node into db. err: ", err)
 	}
 }
 

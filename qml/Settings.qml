@@ -58,7 +58,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.topMargin: 180
         anchors.left: parent.left
-        anchors.leftMargin: 180
+        anchors.leftMargin: 130
 
         style: CheckBoxStyle {
             label: Text {
@@ -88,6 +88,174 @@ Rectangle {
         font.pixelSize: 14
     }
 
+    Text {
+        id: textSettingsRemoteNodeDescr
+        color: "#ffffff"
+        text: "Remote node: "
+        anchors.top: checkBoxUSD.bottom
+        anchors.topMargin: 80
+        anchors.left: checkBoxUSD.left
+        anchors.leftMargin: 0
+        horizontalAlignment: Text.AlignLeft
+        font.family: "Arial"
+        font.pixelSize: 17
+    }
+
+    Text {
+        id: textSettingsRemoteNodeAddressDescr
+        color: "#ffffff"
+        text: "address:"
+        anchors.verticalCenterOffset: 0
+        anchors.verticalCenter: textSettingsRemoteNodeDescr.verticalCenter
+        anchors.left: textSettingsRemoteNodeDescr.right
+        anchors.leftMargin: 25
+        horizontalAlignment: Text.AlignLeft
+        font.family: "Arial"
+        font.pixelSize: 16
+        verticalAlignment: Text.AlignVCenter
+    }
+
+    Rectangle {
+        id: rectangleTextInputSettingsRemoteNodeAddress
+        color: "#555555"
+        height: 25
+        width: 250
+        anchors.verticalCenterOffset: 0
+        anchors.verticalCenter: textSettingsRemoteNodeDescr.verticalCenter
+        anchors.left: textSettingsRemoteNodeAddressDescr.right
+        anchors.leftMargin: 10
+        radius: 3
+
+        TextInput {
+            id: textInputSettingsRemoteNodeAddress
+            anchors.fill: parent
+            color: "#cfcfcf"
+            text: ""
+            rightPadding: 5
+            leftPadding: 5
+            selectionColor: "#eeeeee"
+            selectedTextColor: "#999999"
+            selectByMouse: true
+            clip: true
+            font.family: "Arial"
+            horizontalAlignment: Text.AlignLeft
+            font.pixelSize: 15
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
+    Text {
+        id: textSettingsRemoteNodePortDescr
+        color: "#ffffff"
+        text: "port:"
+        anchors.verticalCenterOffset: 0
+        anchors.verticalCenter: textSettingsRemoteNodeDescr.verticalCenter
+        anchors.left: rectangleTextInputSettingsRemoteNodeAddress.right
+        anchors.leftMargin: 25
+        horizontalAlignment: Text.AlignLeft
+        font.family: "Arial"
+        font.pixelSize: 16
+    }
+
+    Rectangle {
+        id: rectangleTextInputSettingsRemoteNodePort
+        color: "#555555"
+        height: 25
+        width: 70
+        anchors.verticalCenterOffset: 0
+        anchors.verticalCenter: textSettingsRemoteNodeDescr.verticalCenter
+        anchors.left: textSettingsRemoteNodePortDescr.right
+        anchors.leftMargin: 10
+        radius: 3
+
+        TextInput {
+            id: textInputSettingsRemoteNodePort
+            anchors.fill: parent
+            color: "#cfcfcf"
+            text: ""
+            rightPadding: 5
+            leftPadding: 5
+            selectionColor: "#eeeeee"
+            selectedTextColor: "#999999"
+            selectByMouse: true
+            clip: true
+            font.family: "Arial"
+            horizontalAlignment: Text.AlignLeft
+            font.pixelSize: 15
+            verticalAlignment: Text.AlignVCenter
+        }
+    }
+
+    Button {
+        id: buttonSaveDaemonAddress
+        text: "Save"
+        anchors.verticalCenterOffset: 0
+        anchors.verticalCenter: textSettingsRemoteNodeDescr.verticalCenter
+        anchors.left: rectangleTextInputSettingsRemoteNodePort.right
+        anchors.leftMargin: 60
+        height: 30
+        enabled: true
+
+        contentItem: Text {
+            text: buttonSaveDaemonAddress.text
+            font.pixelSize: 15
+            font.family: "Arial"
+            font.bold: true
+            opacity: enabled ? 1.0 : 0.3
+            color: buttonSaveDaemonAddress.down ? "#dddddd" : "#ffffff"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+        }
+
+        background: Rectangle {
+            implicitWidth: 70
+            height: buttonSaveDaemonAddress.height
+            opacity: enabled ? 1 : 0.3
+            radius: 6
+            color: buttonSaveDaemonAddress.down ? "#383838" : "#444444"
+        }
+
+        onClicked: {
+            QmlBridge.saveRemoteDaemonInfo(textInputSettingsRemoteNodeAddress.text, textInputSettingsRemoteNodePort.text);
+        }
+    }
+
+    Button {
+        id: buttonResetDaemonAddress
+        text: "Reset to default"
+        anchors.verticalCenterOffset: 0
+        anchors.verticalCenter: textSettingsRemoteNodeDescr.verticalCenter
+        anchors.left: buttonSaveDaemonAddress.right
+        anchors.leftMargin: 20
+        height: 30
+        enabled: true
+
+        contentItem: Text {
+            text: buttonResetDaemonAddress.text
+            font.pixelSize: 15
+            font.family: "Arial"
+            font.bold: true
+            opacity: enabled ? 1.0 : 0.3
+            color: buttonResetDaemonAddress.down ? "#dddddd" : "#ffffff"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+            elide: Text.ElideRight
+        }
+
+        background: Rectangle {
+            implicitWidth: 140
+            height: buttonResetDaemonAddress.height
+            opacity: enabled ? 1 : 0.3
+            radius: 6
+            color: buttonResetDaemonAddress.down ? "#383838" : "#444444"
+        }
+
+        onClicked: {
+            QmlBridge.resetRemoteDaemonInfo();
+        }
+    }
+
     function show() {
         settingsScreen.state = "visible"
     }
@@ -101,6 +269,11 @@ Rectangle {
 
         onDisplaySettingsValues: {
             checkBoxUSD.checked = displayFiat
+        }
+
+        onDisplaySettingsRemoteDaemonInfo: {
+            textInputSettingsRemoteNodeAddress.text = remoteNodeAddress
+            textInputSettingsRemoteNodePort.text = remoteNodePort
         }
     }
 
