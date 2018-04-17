@@ -4,7 +4,10 @@ import (
 	"TurtleCoin-Nest/turtlecoinwalletdrpcgo"
 	"TurtleCoin-Nest/walletdmanager"
 	"database/sql"
+	"encoding/json"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/user"
@@ -22,16 +25,27 @@ import (
 	"github.com/therecipe/qt/quickcontrols2"
 )
 
+const (
+	urlCryptoCompareTRTL       = "https://min-api.cryptocompare.com/data/price?fsym=TRTL&tsyms=USD"
+	defaultRemoteDaemonAddress = "public.turtlenode.io"
+	defaultRemoteDaemonPort    = "11898"
+	logFileFilename            = "turtlecoin-nest-logs.log"
+	urlBlockExplorer           = "https://blocks.turtle.link/"
+	dbFilename                 = "settings.db"
+)
+
 var (
 	// qmlObjects = make(map[string]*core.QObject)
 	qmlBridge               *QmlBridge
 	transfers               []turtlecoinwalletdrpcgo.Transfer
 	tickerRefreshWalletData *time.Ticker
-	logFileFilename         = "turtlecoin-nest-logs.log"
-	urlBlockExplorer        = "https://blocks.turtle.link/"
 	db                      *sql.DB
-	dbFilename              = "settings.db"
 	useRemoteNode           = true
+	displayFiatConversion   = false
+	stringBackupKeys        = ""
+	rateUSDTRTL             float64 // USD value for 1 TRTL
+	remoteDaemonAddress     = defaultRemoteDaemonAddress
+	remoteDaemonPort        = defaultRemoteDaemonPort
 )
 
 // QmlBridge is the bridge between qml and go
@@ -39,10 +53,13 @@ type QmlBridge struct {
 	core.QObject
 
 	// go to qml
-	_ func(data string) `signal:"displayTotalBalance"`
+	_ func(balance string,
+		balanceUSD string) `signal:"displayTotalBalance"`
 	_ func(data string) `signal:"displayAvailableBalance"`
 	_ func(data string) `signal:"displayLockedBalance"`
-	_ func(data string) `signal:"displayAddress"`
+	_ func(address string,
+		wallet string,
+		displayFiatConversion bool) `signal:"displayAddress"`
 	_ func(paymentID string,
 		transactionID string,
 		amount string,
@@ -64,25 +81,39 @@ type QmlBridge struct {
 	_ func()                            `signal:"finishedCreatingWallet"`
 	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
 	_ func(walletLocation string)       `signal:"displayWalletCreationLocation"`
-	_ func(useRemote bool)              `signal:"displayUseRemoteNode"`
+	_ func(useRemote bool,
+		remoteNodeDescr string) `signal:"displayUseRemoteNode"`
+	_ func()                 `signal:"hideSettingsScreen"`
+	_ func()                 `signal:"displaySettingsScreen"`
+	_ func(displayFiat bool) `signal:"displaySettingsValues"`
+	_ func(remoteNodeAddress string,
+		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
 	_ func(transactionID string) `slot:"clickedButtonExplorer"`
 	_ func(transactionID string) `slot:"clickedButtonCopyTx"`
 	_ func()                     `slot:"clickedButtonCopyAddress"`
+	_ func()                     `slot:"clickedButtonCopyKeys"`
 	_ func(transferAddress string,
 		transferAmount string,
 		transferPaymentID string) `slot:"clickedButtonSend"`
 	_ func()                                             `slot:"clickedButtonBackupWallet"`
-	_ func()                                             `slot:"clickedOpenAnotherWallet"`
+	_ func()                                             `slot:"clickedCloseWallet"`
 	_ func(pathToWallet string, passwordWallet string)   `slot:"clickedButtonOpen"`
 	_ func(filenameWallet string, passwordWallet string) `slot:"clickedButtonCreate"`
 	_ func(filenameWallet string,
 		passwordWallet string,
 		privateViewKey string,
 		privateSpendKey string) `slot:"clickedButtonImport"`
-	_ func(remote bool) `slot:"choseRemote"`
+	_ func(remote bool)              `slot:"choseRemote"`
+	_ func(amountTRTL string) string `slot:"getTransferAmountUSD"`
+	_ func()                         `slot:"clickedCloseSettings"`
+	_ func()                         `slot:"clickedSettingsButton"`
+	_ func(displayFiat bool)         `slot:"choseDisplayFiat"`
+	_ func(daemonAddress string,
+		daemonPort string) `slot:"saveRemoteDaemonInfo"`
+	_ func() `slot:"resetRemoteDaemonInfo"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -126,6 +157,10 @@ func main() {
 
 	log.Info("Application started")
 
+	go func() {
+		requestRateTRTL()
+	}()
+
 	platform := "linux"
 	if isPlatformDarwin {
 		platform = "darwin"
@@ -156,8 +191,7 @@ func main() {
 		qmlBridge.DisplayWalletCreationLocation(textLocation)
 	}
 
-	getAndDisplayPathWalletFromDB()
-	getAndDisplayUseRemoteFromDB()
+	getAndDisplayStartInfoFromDB()
 
 	gui.QGuiApplication_Exec()
 
@@ -177,6 +211,10 @@ func connectQMLToGOFunctions() {
 		qmlBridge.DisplayPopup("Copied!", 1500)
 	})
 
+	qmlBridge.ConnectClickedButtonCopyKeys(func() {
+		clipboard.WriteAll(stringBackupKeys)
+	})
+
 	qmlBridge.ConnectClickedButtonCopyTx(func(transactionID string) {
 		clipboard.WriteAll(transactionID)
 		qmlBridge.DisplayPopup("Copied!", 1500)
@@ -192,6 +230,10 @@ func connectQMLToGOFunctions() {
 
 	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string) {
 		transfer(transferAddress, transferAmount, transferPaymentID)
+	})
+
+	qmlBridge.ConnectGetTransferAmountUSD(func(amountTRTL string) string {
+		return amountStringUSDToTRTL(amountTRTL)
 	})
 
 	qmlBridge.ConnectClickedButtonBackupWallet(func() {
@@ -217,13 +259,35 @@ func connectQMLToGOFunctions() {
 		}()
 	})
 
-	qmlBridge.ConnectClickedOpenAnotherWallet(func() {
-		openAnotherWallet()
+	qmlBridge.ConnectClickedCloseWallet(func() {
+		closeWallet()
 	})
 
 	qmlBridge.ConnectChoseRemote(func(remote bool) {
 		useRemoteNode = remote
 		recordUseRemoteToDB(useRemoteNode)
+	})
+
+	qmlBridge.ConnectClickedCloseSettings(func() {
+		qmlBridge.HideSettingsScreen()
+	})
+
+	qmlBridge.ConnectClickedSettingsButton(func() {
+		qmlBridge.DisplaySettingsScreen()
+	})
+
+	qmlBridge.ConnectChoseDisplayFiat(func(displayFiat bool) {
+		displayFiatConversion = displayFiat
+		recordDisplayConversionToDB(displayFiat)
+	})
+
+	qmlBridge.ConnectSaveRemoteDaemonInfo(func(daemonAddress string, daemonPort string) {
+		saveRemoteDaemonInfo(daemonAddress, daemonPort)
+	})
+
+	qmlBridge.ConnectResetRemoteDaemonInfo(func() {
+		saveRemoteDaemonInfo(defaultRemoteDaemonAddress, defaultRemoteDaemonPort)
+		qmlBridge.DisplaySettingsRemoteDaemonInfo(defaultRemoteDaemonAddress, defaultRemoteDaemonPort)
 	})
 }
 
@@ -250,7 +314,8 @@ func getAndDisplayBalances() {
 	if err == nil {
 		qmlBridge.DisplayAvailableBalance(strconv.FormatFloat(walletAvailableBalance, 'f', -1, 64))
 		qmlBridge.DisplayLockedBalance(strconv.FormatFloat(walletLockedBalance, 'f', -1, 64))
-		qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64))
+		balanceUSD := walletTotalBalance * rateUSDTRTL
+		qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64), strconv.FormatFloat(balanceUSD, 'f', 2, 64))
 	}
 }
 
@@ -258,7 +323,7 @@ func getAndDisplayAddress() {
 
 	walletAddress, err := walletdmanager.RequestAddress()
 	if err == nil {
-		qmlBridge.DisplayAddress(walletAddress)
+		qmlBridge.DisplayAddress(walletAddress, walletdmanager.WalletFilename, displayFiatConversion)
 	}
 }
 
@@ -327,7 +392,7 @@ func transfer(transferAddress string, transferAmount string, transferPaymentID s
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {
 
-	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode)
+	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode, remoteDaemonAddress, remoteDaemonPort)
 	if err != nil {
 		log.Warn("error starting walletd with provided wallet info. error: ", err)
 		qmlBridge.FinishedLoadingWalletd()
@@ -379,9 +444,11 @@ func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, pr
 	return true
 }
 
-func openAnotherWallet() {
+func closeWallet() {
 
 	tickerRefreshWalletData.Stop()
+
+	stringBackupKeys = ""
 
 	go func() {
 		walletdmanager.GracefullyQuitWalletd()
@@ -397,7 +464,17 @@ func showWalletPrivateInfo() {
 		log.Error("Error getting view and spend key: ", err)
 	} else {
 		qmlBridge.DisplayPrivateKeys(walletdmanager.WalletFilename, privateViewKey, privateSpendKey, walletdmanager.WalletAddress)
+
+		stringBackupKeys = "Wallet: " + walletdmanager.WalletFilename + "\nAddress: " + walletdmanager.WalletAddress + "\nPrivate view key: " + privateViewKey + "\nPrivate spend key: " + privateSpendKey
 	}
+}
+
+func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
+	remoteDaemonAddress = daemonAddress
+	remoteDaemonPort = daemonPort
+	recordRemoteDaemonInfoToDB(remoteDaemonAddress, remoteDaemonPort)
+	remoteNodeDescr := "Remote node (" + remoteDaemonAddress + ")"
+	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB(), remoteNodeDescr)
 }
 
 func setupDB(pathToDB string) {
@@ -413,15 +490,30 @@ func setupDB(pathToDB string) {
 		log.Fatal("error creating table pathWallet. err: ", err)
 	}
 
-	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNode (id INTEGER PRIMARY KEY AUTOINCREMENT,useRemote BOOL NOT NULL DEFAULT '1', address VARCHAR(64),port INT)")
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNode (id INTEGER PRIMARY KEY AUTOINCREMENT, useRemote BOOL NOT NULL DEFAULT '1')")
 	if err != nil {
 		log.Fatal("error creating table remoteNode. err: ", err)
 	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS fiatConversion (id INTEGER PRIMARY KEY AUTOINCREMENT, displayFiat BOOL NOT NULL DEFAULT '0', currency VARCHAR(64) DEFAULT 'USD')")
+	if err != nil {
+		log.Fatal("error creating table fiatConversion. err: ", err)
+	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNodeInfo (id INTEGER PRIMARY KEY AUTOINCREMENT, address VARCHAR(64), port VARCHAR(64))")
+	if err != nil {
+		log.Fatal("error creating table remoteNodeInfo. err: ", err)
+	}
 }
 
-func getAndDisplayPathWalletFromDB() {
+func getAndDisplayStartInfoFromDB() {
 
 	qmlBridge.DisplayPathToPreviousWallet(getPathWalletFromDB())
+	remoteDaemonAddress, remoteDaemonPort = getRemoteDaemonInfoFromDB()
+	remoteNodeDescr := "Remote node (" + remoteDaemonAddress + ")"
+	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB(), remoteNodeDescr)
+	qmlBridge.DisplaySettingsValues(getDisplayConversionFromDB())
+	qmlBridge.DisplaySettingsRemoteDaemonInfo(remoteDaemonAddress, remoteDaemonPort)
 }
 
 func getPathWalletFromDB() string {
@@ -430,9 +522,9 @@ func getPathWalletFromDB() string {
 
 	rows, err := db.Query("SELECT path FROM pathWallet ORDER BY id DESC LIMIT 1")
 	if err != nil {
-		log.Fatal("error reading path from pathwallet table. err: ", err)
+		log.Fatal("error querying path from pathwallet table. err: ", err)
 	}
-
+	defer rows.Close()
 	for rows.Next() {
 		path := ""
 		err = rows.Scan(&path)
@@ -457,18 +549,13 @@ func recordPathWalletToDB(path string) {
 	}
 }
 
-func getAndDisplayUseRemoteFromDB() {
-
-	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
-}
-
 func getUseRemoteFromDB() bool {
 
 	rows, err := db.Query("SELECT useRemote FROM remoteNode ORDER BY id DESC LIMIT 1")
 	if err != nil {
-		log.Fatal("error reading path from remoteNode table. err: ", err)
+		log.Fatal("error querying useRemote from remoteNode table. err: ", err)
 	}
-
+	defer rows.Close()
 	for rows.Next() {
 		useRemote := true
 		err = rows.Scan(&useRemote)
@@ -493,6 +580,70 @@ func recordUseRemoteToDB(useRemote bool) {
 	}
 }
 
+func getRemoteDaemonInfoFromDB() (daemonAddress string, daemonPort string) {
+
+	rows, err := db.Query("SELECT address, port FROM remoteNodeInfo ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		log.Fatal("error querying address and port from remoteNodeInfo table. err: ", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		daemonAddress := ""
+		daemonPort := ""
+		err = rows.Scan(&daemonAddress, &daemonPort)
+		if err != nil {
+			log.Fatal("error reading item from remoteNodeInfo table. err: ", err)
+		}
+		remoteDaemonAddress = daemonAddress
+		remoteDaemonPort = daemonPort
+	}
+
+	return remoteDaemonAddress, remoteDaemonPort
+}
+
+func recordRemoteDaemonInfoToDB(daemonAddress string, daemonPort string) {
+
+	stmt, err := db.Prepare(`INSERT INTO remoteNodeInfo(address,port) VALUES(?,?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert address and port of remote node into db. err: ", err)
+	}
+	_, err = stmt.Exec(daemonAddress, daemonPort)
+	if err != nil {
+		log.Fatal("error inserting address and port of remote node into db. err: ", err)
+	}
+}
+
+func getDisplayConversionFromDB() bool {
+
+	rows, err := db.Query("SELECT displayFiat FROM fiatConversion ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		log.Fatal("error reading displayFiat from fiatConversion table. err: ", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		displayFiat := false
+		err = rows.Scan(&displayFiat)
+		if err != nil {
+			log.Fatal("error reading item from fiatConversion table. err: ", err)
+		}
+		displayFiatConversion = displayFiat
+	}
+
+	return displayFiatConversion
+}
+
+func recordDisplayConversionToDB(displayConversion bool) {
+
+	stmt, err := db.Prepare(`INSERT INTO fiatConversion(displayFiat) VALUES(?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert displayFiat into db. err: ", err)
+	}
+	_, err = stmt.Exec(displayConversion)
+	if err != nil {
+		log.Fatal("error inserting displayFiat into db. err: ", err)
+	}
+}
+
 func openBrowser(url string) bool {
 	var args []string
 	switch runtime.GOOS {
@@ -505,4 +656,36 @@ func openBrowser(url string) bool {
 	}
 	cmd := exec.Command(args[0], append(args[1:], url)...)
 	return cmd.Start() == nil
+}
+
+func requestRateTRTL() {
+	response, err := http.Get(urlCryptoCompareTRTL)
+
+	if err != nil {
+		log.Error("error fetching from cryptocompare: ", err)
+	} else {
+		b, err := ioutil.ReadAll(response.Body)
+		response.Body.Close()
+		if err != nil {
+			log.Error("error reading result from cryptocompare: ", err)
+		} else {
+			var resultInterface interface{}
+			if err := json.Unmarshal(b, &resultInterface); err != nil {
+				log.Error("error JSON unmarshaling request cryptocompare: ", err)
+			} else {
+				resultsMap := resultInterface.(map[string]interface{})
+				rateUSDTRTL = resultsMap["USD"].(float64)
+			}
+		}
+	}
+}
+
+func amountStringUSDToTRTL(amountTRTLString string) string {
+	amountTRTL, err := strconv.ParseFloat(amountTRTLString, 64)
+	if err != nil || amountTRTL <= 0 || rateUSDTRTL == 0 {
+		return ""
+	}
+	amountUSD := amountTRTL * rateUSDTRTL
+	amountUSDString := strconv.FormatFloat(amountUSD, 'f', 2, 64) + " $"
+	return amountUSDString
 }

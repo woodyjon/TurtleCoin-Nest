@@ -30,8 +30,8 @@ Rectangle {
 
     Rectangle {
         id: rectangleRadioButtonRemote
-        anchors.right: parent.right
-        anchors.rightMargin: 30
+        anchors.right: buttonSettings.right
+        anchors.rightMargin: 80
         anchors.top: parent.top
         anchors.topMargin: 20
         width: 300
@@ -47,11 +47,34 @@ Rectangle {
             }
             OldControls.RadioButton {
                 id: radioButtonUseRemoteNode
-                text: "Remote node (public.turtlenode.io)"
+                text: ""
                 checked: true
                 exclusiveGroup: tabPositionGroup
                 style: radioButtonStyle
                 onClicked: QmlBridge.choseRemote(true)
+            }
+        }
+    }
+
+    Rectangle {
+        id: buttonSettings
+        width: 33
+        height: 33
+        anchors.top: parent.top
+        anchors.topMargin: 15
+        anchors.right: parent.right
+        anchors.rightMargin: 15
+        color: "transparent"
+        Image {
+            id: imageButtonSettings
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectFit
+            source: "images/settings.png"
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                QmlBridge.clickedSettingsButton()
             }
         }
     }
@@ -769,9 +792,7 @@ Rectangle {
         }
 
         function checkEnableButton() {
-
             buttonImportWallet.enabled = textInputImportWalletFilename.text != "" && textInputImportWalletPassword.text != "" && textInputImportWalletPrivateViewKey.text != "" && textInputImportWalletPrivateSpendKey.text != ""
-
         }
     }
 
@@ -797,39 +818,32 @@ Rectangle {
     Connections {
         target: QmlBridge
 
-        onFinishedLoadingWalletd:
-        {
+        onFinishedLoadingWalletd: {
             busyIndicator.running = false
         }
 
-        onFinishedCreatingWallet:
-        {
+        onFinishedCreatingWallet: {
             busyIndicator.running = false
         }
 
-        onDisplayPathToPreviousWallet:
-        {
+        onDisplayPathToPreviousWallet: {
             textInputExistingWalletPath.text = pathToPreviousWallet
         }
 
-        onDisplayWalletCreationLocation:
-        {
+        onDisplayWalletCreationLocation: {
             textCreateWalletLocation.text = walletLocation;
             textImportWalletLocation.text = walletLocation;
         }
 
-        onDisplayUseRemoteNode:
-        {
+        onDisplayUseRemoteNode: {
             radioButtonUseLocal.checked = !useRemote;
             radioButtonUseRemoteNode.checked = useRemote;
+            radioButtonUseRemoteNode.text = remoteNodeDescr;
         }
     }
 
     function clearData() {
-
         textInputImportWalletPrivateViewKey.text = "";
         textInputImportWalletPrivateSpendKey.text = "";
-
     }
-
 }
