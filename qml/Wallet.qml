@@ -12,6 +12,7 @@ Rectangle {
     width: parent.width
     height: parent.height
     color: "#333333"
+    visible: false
 
     Rectangle {
         id: buttonClose
@@ -1087,6 +1088,7 @@ Rectangle {
     }
 
     function show() {
+        walletScreen.visible = true
         walletScreen.state = "visible"
     }
 
@@ -1100,7 +1102,23 @@ Rectangle {
     }
 
     transitions: [
-        Transition { from: ""; PropertyAnimation { properties: "x"; duration: 200 } },
-        Transition { from: "visible"; PropertyAnimation { properties: "x"; duration: 200 } }
+        Transition {
+            from: ""
+            PropertyAnimation {
+                properties: "x"
+                duration: 200
+            }
+        },
+        Transition {
+            from: "visible"
+            PropertyAnimation {
+                properties: "x"
+                duration: 200
+            }
+            onRunningChanged: {
+                if ((state == "") && (!running))
+                    walletScreen.visible = false;
+            }
+        }
     ]
 }

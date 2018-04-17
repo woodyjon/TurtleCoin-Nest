@@ -13,6 +13,7 @@ Rectangle {
     width: parent.width
     height: parent.height
     color: "#333333"
+    visible: false
 
     Rectangle {
         id: buttonClose
@@ -257,12 +258,39 @@ Rectangle {
     }
 
     function show() {
+        settingsScreen.visible = true
         settingsScreen.state = "visible"
     }
 
     function hide() {
         settingsScreen.state = ""
     }
+
+    states: State {
+        name: "visible"
+        PropertyChanges { target: settingsScreen; y: 0 }
+    }
+
+    transitions: [
+        Transition {
+            from: ""
+            PropertyAnimation {
+                properties: "y"
+                duration: 200
+            }
+        },
+        Transition {
+            from: "visible"
+            PropertyAnimation {
+                properties: "y"
+                duration: 200
+            }
+            onRunningChanged: {
+                if ((state == "") && (!running))
+                    settingsScreen.visible = false;
+            }
+        }
+    ]
 
     Connections {
         target: QmlBridge
@@ -276,14 +304,4 @@ Rectangle {
             textInputSettingsRemoteNodePort.text = remoteNodePort
         }
     }
-
-    states: State {
-        name: "visible"
-        PropertyChanges { target: settingsScreen; y: 0 }
-    }
-
-    transitions: [
-        Transition { from: ""; PropertyAnimation { properties: "y"; duration: 200 } },
-        Transition { from: "visible"; PropertyAnimation { properties: "y"; duration: 200 } }
-    ]
 }
