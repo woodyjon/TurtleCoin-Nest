@@ -62,4 +62,9 @@ TRTLv3jzutiQwqHL3qFwsu5EVLWesxZr1AFQ4AuMR3SD56n3rkHDkwj79eKwvaiU1nYQWGydKoXM6fXy
 
 (for developers only)
 
-Install this binding: https://github.com/therecipe/qt and run `qtdeploy build desktop`
+1. Install this binding: https://github.com/therecipe/qt
+2. Run `qtdeploy build desktop`
+3. The app folder is in deploy/*your os*/
+3. Include the latest walletd build in:
+    * Windows, Linux: in the app folder
+    * Mac: in TurtleCoin-Nest.app/Contents/
