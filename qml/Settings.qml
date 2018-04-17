@@ -8,7 +8,10 @@ import QtQuick.Layouts 1.1
 
 Rectangle {
     id: rectangleSettings
-    anchors.fill: parent
+    y: parent.height // starts off "screen"
+    anchors.horizontalCenter: parent.horizontalCenter
+    width: parent.width
+    height: parent.height
     color: "#333333"
 
     Rectangle {
@@ -47,4 +50,22 @@ Rectangle {
         font.family: "Arial"
         font.pixelSize: 25
     }
+
+    function show(msg) {
+        settingsScreen.state = "visible"
+    }
+
+    function hide(msg) {
+        settingsScreen.state = ""
+    }
+
+    states: State {
+        name: "visible"
+        PropertyChanges { target: settingsScreen; y: 0 }
+    }
+
+    transitions: [
+        Transition { from: ""; PropertyAnimation { properties: "y"; duration: 200 } },
+        Transition { from: "visible"; PropertyAnimation { properties: "y"; duration: 200 } }
+    ]
 }

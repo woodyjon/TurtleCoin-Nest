@@ -43,8 +43,6 @@ ApplicationWindow {
 
         Settings {
             id: settingsScreen
-            anchors.fill: parent
-            visible: false
         }
     }
 
@@ -96,11 +94,11 @@ ApplicationWindow {
         }
 
         onDisplaySettingsScreen: {
-            settingsScreen.visible = true;
+            settingsScreen.show();
         }
 
         onHideSettingsScreen: {
-            settingsScreen.visible = false;
+            settingsScreen.hide();
         }
     }
 }
