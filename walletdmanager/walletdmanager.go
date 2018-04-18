@@ -117,6 +117,10 @@ func RequestListTransactions() (transfers []turtlecoinwalletdrpcgo.Transfer, err
 // SendTransaction makes a transfer with the provided information
 func SendTransaction(transferAddress string, transferAmountString string, transferPaymentID string) (transactionHash string, err error) {
 
+	if !WalletdSynced {
+		return "", errors.New("wallet and/or blockchain not fully synced yet")
+	}
+
 	if !strings.HasPrefix(transferAddress, "TRTL") || len(transferAddress) != 99 {
 		return "", errors.New("address is invalid")
 	}
