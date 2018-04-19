@@ -327,10 +327,12 @@ Rectangle {
             id: textAddress
             color: "#ffffff"
             text: qsTr("NO WALLET OPEN")
-            anchors.left: textDescrWalletName.left
+            anchors.left: parent.left
             anchors.leftMargin: 0
             anchors.top: textDescrWalletName.bottom
             anchors.topMargin: 20
+            anchors.right: parent.right
+            anchors.rightMargin: 0
             font.family: "Arial"
             font.pixelSize: 15
             horizontalAlignment: Text.AlignHCenter
@@ -345,9 +347,10 @@ Rectangle {
             id: buttonCopy
             width: 39
             height: 42
-            anchors.verticalCenter: textAddress.verticalCenter
+            anchors.top: textAddress.bottom
+            anchors.topMargin: 15
             anchors.right: parent.right
-            anchors.rightMargin: 30
+            anchors.rightMargin: 20
             color: "transparent"
             Image {
                 id: image_copy
@@ -367,10 +370,9 @@ Rectangle {
             id: textDescrCopyAddress
             color: "#858585"
             text: qsTr("Copy your address to receive TRTL")
-            anchors.top: buttonCopy.bottom
-            anchors.topMargin: 25
-            anchors.right: buttonCopy.right
-            anchors.rightMargin: 0
+            anchors.verticalCenter: buttonCopy.verticalCenter
+            anchors.right: buttonCopy.left
+            anchors.rightMargin: 15
             font.family: "Arial"
             horizontalAlignment: Text.AlignRight
             font.weight: Font.Normal
