@@ -169,12 +169,9 @@ func main() {
 	}
 	walletdmanager.Setup(platform)
 
-	gui.NewQGuiApplication(len(os.Args), os.Args)
+	app := gui.NewQGuiApplication(len(os.Args), os.Args)
+	app.SetWindowIcon(gui.NewQIcon5("qrc:/qml/images/icon.png"))
 
-	// Enable high DPI scaling
-	// app.SetAttribute(core.Qt__AA_EnableHighDpiScaling, true)
-
-	// Use the material style for qml
 	quickcontrols2.QQuickStyle_SetStyle("material")
 
 	engine := qml.NewQQmlApplicationEngine(nil)
