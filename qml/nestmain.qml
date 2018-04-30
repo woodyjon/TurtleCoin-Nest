@@ -16,8 +16,6 @@ ApplicationWindow {
     height: windowHeight
     minimumWidth: windowWidth
     minimumHeight: minWindowHeight
-    maximumWidth: windowWidth
-    maximumHeight: windowHeight
     color: "#333333"
     title: "TurtleCoin Nest"
     visible: true
@@ -26,7 +24,7 @@ ApplicationWindow {
         interactive: true
         boundsBehavior: Flickable.StopAtBounds
         contentWidth: windowWidth
-        contentHeight: windowHeight // minus height of menu
+        contentHeight: windowHeight
         width: parent.width
         height: parent.height
 
