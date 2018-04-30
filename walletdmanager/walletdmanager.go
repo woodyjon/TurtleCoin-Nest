@@ -430,6 +430,11 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 		pathToWallet = pathToHomeDir + "/" + walletFilename
 	}
 
+	// check file with same filename does not already exist
+	if _, err := os.Stat(pathToWallet); err == nil {
+		return errors.New("a file with the same filename already exists")
+	}
+
 	// setup current session log file (logs are added real time in this file)
 	walletdCurrentSessionLogFile, err := os.Create(pathToLogWalletdCurrentSession)
 	if err != nil {
