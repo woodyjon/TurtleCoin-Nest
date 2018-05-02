@@ -503,9 +503,6 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 			successCreatingWallet = true
 			break
 		}
-
-		killWalletd()
-		time.Sleep(1 * time.Second)
 	}
 
 	errorMessage := "Error opening walletd and/or creating a wallet. More info in the file " + logWalletdCurrentSessionFilename + "\n"
@@ -519,6 +516,9 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 		killWalletd()
 		return errors.New(errorMessage)
 	}
+
+	killWalletd()
+	time.Sleep(1 * time.Second)
 
 	return nil
 }
