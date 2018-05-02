@@ -472,10 +472,14 @@ Rectangle {
             }
 
             onClicked: {
-                busyIndicator.running = true
-                QmlBridge.clickedButtonCreate(textCreateWalletFilename.text, textInputCreateWalletPassword.text);
-                textInputCreateWalletPassword.text = ""
+                dialogConfirmPassword.show(false);
             }
+        }
+
+        function enteredPasswordConfirmation(passwordConfirmation) {
+            busyIndicator.running = true;
+            QmlBridge.clickedButtonCreate(textCreateWalletFilename.text, textInputCreateWalletPassword.text, passwordConfirmation);
+            textInputCreateWalletPassword.text = "";
         }
     }
 
@@ -785,14 +789,18 @@ Rectangle {
             }
 
             onClicked: {
-                busyIndicator.running = true
-                QmlBridge.clickedButtonImport(textImportWalletFilename.text, textInputImportWalletPassword.text, textInputImportWalletPrivateViewKey.text, textInputImportWalletPrivateSpendKey.text);
-                textInputImportWalletPassword.text = ""
+                dialogConfirmPassword.show(true);
             }
         }
 
         function checkEnableButton() {
             buttonImportWallet.enabled = textInputImportWalletFilename.text != "" && textInputImportWalletPassword.text != "" && textInputImportWalletPrivateViewKey.text != "" && textInputImportWalletPrivateSpendKey.text != ""
+        }
+
+        function enteredPasswordConfirmation(passwordConfirmation) {
+            busyIndicator.running = true;
+            QmlBridge.clickedButtonImport(textImportWalletFilename.text, textInputImportWalletPassword.text, textInputImportWalletPrivateViewKey.text, textInputImportWalletPrivateSpendKey.text, passwordConfirmation);
+            textInputImportWalletPassword.text = "";
         }
     }
 
@@ -806,6 +814,63 @@ Rectangle {
         
         function show() {
             dialogChooseWalletFile.open()
+        }
+    }
+
+    Dialog {
+        id: dialogConfirmPassword
+        title: "Confirm password"
+        standardButtons: StandardButton.Cancel | StandardButton.Ok
+        width: 250
+        height: 120
+
+        property var walletIsImporting: false
+
+        Text {
+            id: textDescriptionConfirmPassword
+            text: "Re-type your new password:"
+            font.family: "Arial"
+        }
+
+        Rectangle {
+            id: rectangleTextInputConfirmPassword
+            color: "#bbbbbb"
+            height: 25
+            anchors.top: textDescriptionConfirmPassword.bottom
+            anchors.topMargin: 12
+            anchors.left: textDescriptionConfirmPassword.left
+            anchors.leftMargin: 0
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            radius: 3
+
+            TextInput {
+                id: textInputConfirmPassword
+                echoMode: TextInput.Password
+                anchors.fill: parent
+                color: "#444444"
+                text: ""
+                rightPadding: 5
+                leftPadding: 5
+                verticalAlignment: Text.AlignVCenter
+                clip: true
+                font.family: "Arial"
+            }
+        }
+
+        function show(isImporting) {
+            walletIsImporting = isImporting;
+            dialogConfirmPassword.open();
+            textInputConfirmPassword.text = "";
+            textInputConfirmPassword.focus = true;
+        }
+
+        onAccepted: {
+            if (walletIsImporting) {
+                rectangleImportWalletFromKeys.enteredPasswordConfirmation(textInputConfirmPassword.text)
+            } else {
+                rectangleCreateWallet.enteredPasswordConfirmation(textInputConfirmPassword.text)
+            }
         }
     }
 

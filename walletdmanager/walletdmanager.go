@@ -378,9 +378,10 @@ func killWalletd() {
 // CreateWallet calls walletd to create a new wallet. If privateViewKey and privateSpendKey are empty strings, a new wallet will be generated. If they are not empty, a wallet will be generated from those keys (import)
 // walletFilename is the filename chosen by the user. The created wallet file will be located in the same folder as walletd.
 // walletPassword is the password of the new wallet.
+// walletPasswordConfirmation is the repeat of the password for confirmation that the password was correctly entered.
 // privateViewKey is the private view key of the wallet.
 // privateSpendKey is the private spend key of the wallet.
-func CreateWallet(walletFilename string, walletPassword string, privateViewKey string, privateSpendKey string) (err error) {
+func CreateWallet(walletFilename string, walletPassword string, walletPasswordConfirmation string, privateViewKey string, privateSpendKey string) (err error) {
 
 	if WalletdOpenAndRunning {
 		return errors.New("walletd is already running. It should be stopped before being able to generate a new wallet")
@@ -433,6 +434,10 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 	// check file with same filename does not already exist
 	if _, err := os.Stat(pathToWallet); err == nil {
 		return errors.New("a file with the same filename already exists")
+	}
+
+	if walletPassword != walletPasswordConfirmation {
+		return errors.New("passwords do not match")
 	}
 
 	// setup current session log file (logs are added real time in this file)

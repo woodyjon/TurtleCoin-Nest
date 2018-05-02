@@ -98,14 +98,17 @@ type QmlBridge struct {
 	_ func(transferAddress string,
 		transferAmount string,
 		transferPaymentID string) `slot:"clickedButtonSend"`
-	_ func()                                             `slot:"clickedButtonBackupWallet"`
-	_ func()                                             `slot:"clickedCloseWallet"`
-	_ func(pathToWallet string, passwordWallet string)   `slot:"clickedButtonOpen"`
-	_ func(filenameWallet string, passwordWallet string) `slot:"clickedButtonCreate"`
+	_ func()                                           `slot:"clickedButtonBackupWallet"`
+	_ func()                                           `slot:"clickedCloseWallet"`
+	_ func(pathToWallet string, passwordWallet string) `slot:"clickedButtonOpen"`
+	_ func(filenameWallet string,
+		passwordWallet string,
+		confirmPasswordWallet string) `slot:"clickedButtonCreate"`
 	_ func(filenameWallet string,
 		passwordWallet string,
 		privateViewKey string,
-		privateSpendKey string) `slot:"clickedButtonImport"`
+		privateSpendKey string,
+		confirmPasswordWallet string) `slot:"clickedButtonImport"`
 	_ func(remote bool)              `slot:"choseRemote"`
 	_ func(amountTRTL string) string `slot:"getTransferAmountUSD"`
 	_ func()                         `slot:"clickedCloseSettings"`
@@ -244,15 +247,15 @@ func connectQMLToGOFunctions() {
 		}()
 	})
 
-	qmlBridge.ConnectClickedButtonCreate(func(filenameWallet string, passwordWallet string) {
+	qmlBridge.ConnectClickedButtonCreate(func(filenameWallet string, passwordWallet string, confirmPasswordWallet string) {
 		go func() {
-			createWalletWithWalletInfo(filenameWallet, passwordWallet)
+			createWalletWithWalletInfo(filenameWallet, passwordWallet, confirmPasswordWallet)
 		}()
 	})
 
-	qmlBridge.ConnectClickedButtonImport(func(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string) {
+	qmlBridge.ConnectClickedButtonImport(func(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string, confirmPasswordWallet string) {
 		go func() {
-			importWalletWithWalletInfo(filenameWallet, passwordWallet, privateViewKey, privateSpendKey)
+			importWalletWithWalletInfo(filenameWallet, passwordWallet, confirmPasswordWallet, privateViewKey, privateSpendKey)
 		}()
 	})
 
@@ -406,9 +409,9 @@ func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool 
 	return true
 }
 
-func createWalletWithWalletInfo(filenameWallet string, passwordWallet string) bool {
+func createWalletWithWalletInfo(filenameWallet string, passwordWallet string, confirmPasswordWallet string) bool {
 
-	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, "", "")
+	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, confirmPasswordWallet, "", "")
 	if err != nil {
 		log.Warn("error creating wallet. error: ", err)
 		qmlBridge.FinishedCreatingWallet()
@@ -424,9 +427,9 @@ func createWalletWithWalletInfo(filenameWallet string, passwordWallet string) bo
 	return true
 }
 
-func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string) bool {
+func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, confirmPasswordWallet string, privateViewKey string, privateSpendKey string) bool {
 
-	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, privateViewKey, privateSpendKey)
+	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, confirmPasswordWallet, privateViewKey, privateSpendKey)
 	if err != nil {
 		log.Warn("error importing wallet. error: ", err)
 		qmlBridge.FinishedCreatingWallet()
