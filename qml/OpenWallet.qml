@@ -222,6 +222,12 @@ Rectangle {
                 onTextChanged: {
                     buttonOpenWallet.enabled = textInputExistingWalletPath.text != "" && textInputExistingWalletPassword.text != ""
                 }
+
+                Keys.onReturnPressed: {
+                    if (buttonOpenWallet.enabled) {
+                        buttonOpenWallet.clicked();
+                    }
+                }
             }
 
         }
@@ -438,6 +444,12 @@ Rectangle {
 
                 onTextChanged: {
                     buttonCreateWallet.enabled = textInputCreateWalletFilename.text != "" && textInputCreateWalletPassword.text != ""
+                }
+
+                Keys.onReturnPressed: {
+                    if (buttonCreateWallet.enabled) {
+                        buttonCreateWallet.clicked();
+                    }
                 }
             }
         }
