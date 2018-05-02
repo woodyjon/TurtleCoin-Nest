@@ -493,6 +493,10 @@ Rectangle {
         anchors.top: rectangleHistory.top
         anchors.topMargin: 0
 
+        property var transferRecipient: ""
+        property var transferAmount: ""
+        property var transferPaymentID: ""
+
         Text {
             id: textTransferTitle
             color: "#ffffff"
@@ -591,39 +595,6 @@ Rectangle {
             horizontalAlignment: Text.AlignLeft
             anchors.bottom: textAvailableUnit.bottom
         }
-
-        Button {
-            id: buttonSend
-            text: qsTr("SEND")
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 30
-            enabled: false
-
-            contentItem: Text {
-                text: buttonSend.text
-                font.bold: true
-                font.pointSize: 20
-                font.family: "Arial"
-                opacity: enabled ? 1.0 : 0.3
-                color: buttonSend.down ? "#dddddd" : "#ffffff"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                elide: Text.ElideRight
-            }
-
-            background: Rectangle {
-                implicitWidth: 140
-                implicitHeight: 60
-                opacity: enabled ? 1 : 0.3
-                radius: 6
-                color: buttonSend.down ? "#383838" : "#444444"
-            }
-
-            onClicked: {
-                QmlBridge.clickedButtonSend(textInputTransferAddress.text, textInputTransferAmount.text, textInputTransferPaymentID.text);
-            }
-        }
             
         Rectangle {
             id: rectangleTextInputTransferAddress
@@ -696,7 +667,8 @@ Rectangle {
                 Connections{
                     target: QmlBridge
                     onClearTransferAmount: {
-                        textInputTransferAmount.clear()
+                        textInputTransferAmount.clear();
+                        transferAmount = "";
                     }
                 }
             }
@@ -759,6 +731,48 @@ Rectangle {
                 font.pixelSize: 16
                 verticalAlignment: Text.AlignVCenter
             }
+        }
+
+        Button {
+            id: buttonSend
+            text: qsTr("SEND")
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 30
+            enabled: false
+
+            contentItem: Text {
+                text: buttonSend.text
+                font.bold: true
+                font.pointSize: 20
+                font.family: "Arial"
+                opacity: enabled ? 1.0 : 0.3
+                color: buttonSend.down ? "#dddddd" : "#ffffff"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+                elide: Text.ElideRight
+            }
+
+            background: Rectangle {
+                implicitWidth: 140
+                implicitHeight: 60
+                opacity: enabled ? 1 : 0.3
+                radius: 6
+                color: buttonSend.down ? "#383838" : "#444444"
+            }
+
+            onClicked: {
+                rectangleTransfer.transferRecipient = textInputTransferAddress.text
+                rectangleTransfer.transferAmount = textInputTransferAmount.text
+                rectangleTransfer.transferPaymentID = textInputTransferPaymentID.text
+                dialogConfirmTransfer.show(rectangleTransfer.transferRecipient, rectangleTransfer.transferAmount + " TRTL + 1 TRTL (fee)", rectangleTransfer.transferPaymentID);
+            }
+        }
+
+        function transferConfirmed() {
+            QmlBridge.clickedButtonSend(transferRecipient, transferAmount, transferPaymentID);
+            textInputTransferAmount.text = "";
+            transferAmount = "";
         }   
     }
 
@@ -1049,6 +1063,92 @@ Rectangle {
             textInputPrivateSpendKey.text = privateSpendKey
             textInputAddress.text = walletAddress
             dialogPrivateKeys.open()
+        }
+    }
+
+    Dialog {
+        id: dialogConfirmTransfer
+        title: "Confirm transfer"
+        standardButtons: StandardButton.Cancel | StandardButton.Ok
+        width: 400
+
+        Text {
+            id: textDescriptionConfirmRecipient
+            text: "To:"
+            font.family: "Arial"
+        }
+
+        Text {
+            id: textConfirmRecipient
+            text: ""
+            font.family: "Arial"
+            font.bold: true
+            elide: Text.ElideMiddle
+            anchors.bottom: textDescriptionConfirmRecipient.bottom
+            anchors.bottomMargin: 0
+            anchors.left: parent.left
+            anchors.leftMargin: 100
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+        }
+
+        Text {
+            id: textDescriptionConfirmAmount
+            text: "Amount:"
+            font.family: "Arial"
+            anchors.top: textDescriptionConfirmRecipient.bottom
+            anchors.topMargin: 12
+            anchors.left: textDescriptionConfirmRecipient.left
+            anchors.leftMargin: 0
+        }
+
+        Text {
+            id: textConfirmAmount
+            text: ""
+            font.family: "Arial"
+            font.bold: true
+            anchors.bottom: textDescriptionConfirmAmount.bottom
+            anchors.bottomMargin: 0
+            anchors.left: textConfirmRecipient.left
+            anchors.leftMargin: 0
+        }
+
+        Text {
+            id: textDescriptionConfirmPaymentID
+            text: "Payment ID:"
+            font.family: "Arial"
+            anchors.top: textDescriptionConfirmAmount.bottom
+            anchors.topMargin: 12
+            anchors.left: textDescriptionConfirmAmount.left
+            anchors.leftMargin: 0
+        }
+
+        Text {
+            id: textConfirmPaymentID
+            text: ""
+            font.family: "Arial"
+            font.bold: true
+            elide: Text.ElideMiddle
+            anchors.bottom: textDescriptionConfirmPaymentID.bottom
+            anchors.bottomMargin: 0
+            anchors.left: textConfirmRecipient.left
+            anchors.leftMargin: 0
+            anchors.right: textConfirmRecipient.right
+            anchors.rightMargin: 0
+        }
+
+        function show(recipient, amount, paymentID) {
+            textConfirmRecipient.text = recipient;
+            textConfirmAmount.text = amount;
+            textConfirmPaymentID.text = paymentID;
+            dialogConfirmTransfer.open();
+        }
+
+        onAccepted: {
+            rectangleTransfer.transferConfirmed();
+            textConfirmRecipient.text = "";
+            textConfirmAmount.text = "";
+            textConfirmPaymentID.text = "";
         }
     }
 
