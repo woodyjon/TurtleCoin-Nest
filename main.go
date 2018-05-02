@@ -69,9 +69,10 @@ type QmlBridge struct {
 		number string) `signal:"addTransactionToList"`
 	_ func(text string, time int)                       `signal:"displayPopup"`
 	_ func(syncing string, blocks string, peers string) `signal:"displaySyncingInfo"`
-	_ func(errorMessage string)                         `signal:"displayErrorDialog"`
-	_ func()                                            `signal:"clearTransferAmount"`
-	_ func()                                            `signal:"clearListTransactions"`
+	_ func(errorText string,
+		errorInformativeText string) `signal:"displayErrorDialog"`
+	_ func() `signal:"clearTransferAmount"`
+	_ func() `signal:"clearListTransactions"`
 	_ func(filename string,
 		privateViewKey string,
 		privateSpendKey string,
@@ -378,7 +379,7 @@ func transfer(transferAddress string, transferAmount string, transferPaymentID s
 	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID)
 	if err != nil {
 		log.Warn("error transfer: ", err)
-		qmlBridge.DisplayErrorDialog(err.Error())
+		qmlBridge.DisplayErrorDialog("Error transfer.", err.Error())
 		return false
 	}
 
@@ -397,7 +398,7 @@ func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool 
 	if err != nil {
 		log.Warn("error starting walletd with provided wallet info. error: ", err)
 		qmlBridge.FinishedLoadingWalletd()
-		qmlBridge.DisplayErrorDialog(err.Error())
+		qmlBridge.DisplayErrorDialog("Error opening wallet.", err.Error())
 		return false
 	}
 
@@ -416,7 +417,7 @@ func createWalletWithWalletInfo(filenameWallet string, passwordWallet string, co
 	if err != nil {
 		log.Warn("error creating wallet. error: ", err)
 		qmlBridge.FinishedCreatingWallet()
-		qmlBridge.DisplayErrorDialog(err.Error())
+		qmlBridge.DisplayErrorDialog("Error creating the wallet.", err.Error())
 		return false
 	}
 
@@ -434,7 +435,7 @@ func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, co
 	if err != nil {
 		log.Warn("error importing wallet. error: ", err)
 		qmlBridge.FinishedCreatingWallet()
-		qmlBridge.DisplayErrorDialog(err.Error())
+		qmlBridge.DisplayErrorDialog("Error importing the wallet.", err.Error())
 		return false
 	}
 

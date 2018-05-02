@@ -283,12 +283,14 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		}
 	}
 
-	errorMessage := "Error opening the daemon walletd or communicating with it.\n"
+	errorMessage := ""
 
 	if len(listWalletdErrors) > 0 {
 		for _, line := range listWalletdErrors {
 			errorMessage = errorMessage + line
 		}
+	} else {
+		errorMessage = "Unknown error opening the daemon walletd or communicating with it"
 	}
 
 	// check rpc connection with walletd
@@ -505,13 +507,15 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 		}
 	}
 
-	errorMessage := "Error opening walletd and/or creating a wallet. More info in the file " + logWalletdCurrentSessionFilename + "\n"
+	errorMessage := ""
 
 	if !successCreatingWallet {
 		if len(listWalletdErrors) > 0 {
 			for _, line := range listWalletdErrors {
 				errorMessage = errorMessage + line
 			}
+		} else {
+			errorMessage = "unknow error"
 		}
 		killWalletd()
 		return errors.New(errorMessage)

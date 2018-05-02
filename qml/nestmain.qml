@@ -42,40 +42,31 @@ ApplicationWindow {
         }
     }
 
-    Dialog {
+    MessageDialog {
         id: dialogInfo
-        title: "Info"
+        title: ""
+        text: ""
         standardButtons: StandardButton.Ok
-        width: 800
-        height: 150
-        modality: Qt.WindowModal
 
-        Text {
-            id: textDialogInfo
-            text: ""
-            font.family: "Arial"
+        function show(title, errorText, errorInformativeText) {
+            dialogInfo.title = title;
+            dialogInfo.text = errorText;
+            dialogInfo.informativeText = errorInformativeText;
+            dialogInfo.open();
         }
 
-        function show(title, msg) {
-            dialogInfo.title = title
-            textDialogInfo.text = msg
-            dialogInfo.open()
-        }
-
-        function showError(msg) {
-            dialogInfo.show("Error", msg)
-        }
-
-        Connections{
-            target: QmlBridge
-            onDisplayErrorDialog: {
-                dialogInfo.showError(errorMessage)
-            }
+        function showError(errorText, errorInformativeText) {
+            dialogInfo.icon = StandardIcon.Warning;
+            dialogInfo.show("Error", errorText, errorInformativeText);
         }
     }
 
     Connections {
         target: QmlBridge
+
+        onDisplayErrorDialog: {
+            dialogInfo.showError(errorText, errorInformativeText);
+        }
 
         onDisplayOpenWalletScreen: {
             openWalletScreen.clearData();
