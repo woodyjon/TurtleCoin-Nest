@@ -907,12 +907,12 @@ Rectangle {
         id: dialogPrivateKeys
         title: "Private Keys"
         standardButtons: StandardButton.Ok
-        width: 900
 
         Text {
             id: textDescriptionPrivateKeys
             text: "See below your public address and your 2 private (secret) keys. The 2 private keys can be used to re-generate your wallet.\nCopy them both and keep them in a safe place.\nIf you lose them and lose your password or wallet file, you will not be able to recover your TRTLs.\nIf anybody has access to those keys, he can steal your TRTLs."
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         Text {
@@ -923,6 +923,7 @@ Rectangle {
             anchors.left: textDescriptionPrivateKeys.left
             anchors.leftMargin: 0
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         Text {
@@ -933,7 +934,7 @@ Rectangle {
             anchors.left: textDescriptionWalletFilename.right
             anchors.leftMargin: 20
             font.family: "Arial"
-
+            font.pixelSize: 13
         }
 
         Text {
@@ -944,6 +945,7 @@ Rectangle {
             anchors.left: textDescriptionWalletFilename.left
             anchors.leftMargin: 0
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         TextInput {
@@ -960,6 +962,7 @@ Rectangle {
             selectedTextColor: "white"
             selectByMouse: true
             font.family: "Arial"
+            font.pixelSize: 13
             font.bold: true
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
@@ -973,6 +976,7 @@ Rectangle {
             anchors.left: textInputAddress.left
             anchors.leftMargin: 0
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         TextInput {
@@ -989,6 +993,7 @@ Rectangle {
             selectedTextColor: "white"
             selectByMouse: true
             font.family: "Arial"
+            font.pixelSize: 13
             font.bold: true
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
@@ -1002,6 +1007,7 @@ Rectangle {
             anchors.left: textInputPrivateViewKey.left
             anchors.leftMargin: 0
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         TextInput {
@@ -1018,6 +1024,7 @@ Rectangle {
             selectedTextColor: "white"
             selectByMouse: true
             font.family: "Arial"
+            font.pixelSize: 13
             font.bold: true
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
