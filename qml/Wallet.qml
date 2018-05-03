@@ -907,7 +907,7 @@ Rectangle {
         id: dialogPrivateKeys
         title: "Private Keys"
         standardButtons: StandardButton.Ok
-        width: Qt.platform.os == "osx" ? 900 : auto
+        width: 900
 
         Text {
             id: textDescriptionPrivateKeys
@@ -1198,10 +1198,6 @@ Rectangle {
         textInputTransferAddress.text = "";
         textInputTransferAmount.text = "";
         textInputTransferPaymentID.text = "";
-    }
-
-    function showDialogWarningCloseWallet() {
-        dialogWarningCloseWallet.show()
     }
 
     function show() {

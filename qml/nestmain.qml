@@ -48,6 +48,12 @@ ApplicationWindow {
         text: ""
         standardButtons: StandardButton.Ok
 
+        onAccepted: {
+            dialogInfo.title = "";
+            dialogInfo.text = "";
+            dialogInfo.informativeText = "";
+        }
+
         function show(title, errorText, errorInformativeText) {
             dialogInfo.title = title;
             dialogInfo.text = errorText;
