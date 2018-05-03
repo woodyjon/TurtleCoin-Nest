@@ -21,14 +21,20 @@ import (
 	"github.com/mitchellh/go-ps"
 )
 
-var (
+const (
+	// TransferFee is the set fee
+	TransferFee float64 = 1 // TransferFee is expressed in TRTL
+	// TransferMixin is the set mixin
+	TransferMixin = 4
+
 	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
 	logWalletdAllSessionsFilename    = "walletd.log"
 	walletdLogLevel                  = "3" // should be at least 3 as I use some logs messages to confirm creation of wallet
+	walletdCommandName               = "walletd"
+	turtlecoindCommandName           = "TurtleCoind"
+)
 
-	walletdCommandName     = "walletd"
-	turtlecoindCommandName = "TurtleCoind"
-
+var (
 	// WalletAvailableBalance is the available balance
 	WalletAvailableBalance float64
 
@@ -86,6 +92,22 @@ func RequestBalance() (availableBalance float64, lockedBalance float64, totalBal
 	return availableBalance, lockedBalance, totalBalance, err
 }
 
+// RequestAvailableBalanceToBeSpent returns the available balance minus the fee
+func RequestAvailableBalanceToBeSpent() (availableBalance float64, err error) {
+
+	availableBalance, _, _, err = RequestBalance()
+	if err != nil {
+		return 0, err
+	}
+
+	availableBalance -= TransferFee
+	if availableBalance < 0 {
+		availableBalance = 0
+	}
+
+	return availableBalance, nil
+}
+
 // RequestAddress provides the address of the current wallet
 func RequestAddress() (address string, err error) {
 
@@ -129,8 +151,6 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("sending to yourself is not supported")
 	}
 
-	var transferFee float64 = 1 // transferFee is expressed in TRTL
-	transferMixin := 4
 	transferAmount, err := strconv.ParseFloat(transferAmountString, 64) // transferAmount is expressed in TRTL
 	if err != nil {
 		return "", errors.New("amount is invalid")
@@ -140,7 +160,7 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("amount of TRTL to be sent should be greater than 0")
 	}
 
-	if transferAmount+transferFee > WalletAvailableBalance {
+	if transferAmount+TransferFee > WalletAvailableBalance {
 		return "", errors.New("your available balance is insufficient")
 	}
 
@@ -148,11 +168,13 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("for sending more than 5,000,000 TRTL to one address, you should split in multiple transfers of smaller amounts")
 	}
 
-	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, transferMixin, rpcPassword)
+	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, TransferFee, TransferMixin, rpcPassword)
 	if err != nil {
 		log.Error("error sending transaction. err: ", err)
+		errorMessage := err.Error() + "\nYou sometimes need to send a small amount less than your full balance to get the transfer to succeed. This is possibly due to dust in your wallet that is unable to be sent without a mixin of 0."
+		return "", errors.New(errorMessage)
 	}
-	return transactionHash, err
+	return transactionHash, nil
 }
 
 // GetPrivateViewKeyAndSpendKey provides the private view and spend keys of the current wallet

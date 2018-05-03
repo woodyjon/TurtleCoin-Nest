@@ -90,6 +90,7 @@ type QmlBridge struct {
 	_ func(displayFiat bool) `signal:"displaySettingsValues"`
 	_ func(remoteNodeAddress string,
 		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
+	_ func(fullBalance string) `signal:"displayFullBalanceInTransferAmount"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -119,6 +120,7 @@ type QmlBridge struct {
 	_ func(daemonAddress string,
 		daemonPort string) `slot:"saveRemoteDaemonInfo"`
 	_ func() `slot:"resetRemoteDaemonInfo"`
+	_ func() `slot:"getFullBalanceAndDisplayInTransferAmount"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -291,6 +293,10 @@ func connectQMLToGOFunctions() {
 		saveRemoteDaemonInfo(defaultRemoteDaemonAddress, defaultRemoteDaemonPort)
 		qmlBridge.DisplaySettingsRemoteDaemonInfo(defaultRemoteDaemonAddress, defaultRemoteDaemonPort)
 	})
+
+	qmlBridge.ConnectGetFullBalanceAndDisplayInTransferAmount(func() {
+		getFullBalanceAndDisplayInTransferAmount()
+	})
 }
 
 func startDisplayWalletInfo() {
@@ -374,7 +380,7 @@ func getAndDisplayListTransactions() {
 
 func transfer(transferAddress string, transferAmount string, transferPaymentID string) bool {
 
-	log.Info("SEND: ", transferAddress, transferAmount, transferPaymentID)
+	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID)
 
 	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID)
 	if err != nil {
@@ -471,7 +477,16 @@ func showWalletPrivateInfo() {
 	}
 }
 
+func getFullBalanceAndDisplayInTransferAmount() {
+
+	availableBalance, err := walletdmanager.RequestAvailableBalanceToBeSpent()
+	if err == nil {
+		qmlBridge.DisplayFullBalanceInTransferAmount(humanize.FtoaWithDigits(availableBalance, 2))
+	}
+}
+
 func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
+
 	remoteDaemonAddress = daemonAddress
 	remoteDaemonPort = daemonPort
 	recordRemoteDaemonInfoToDB(remoteDaemonAddress, remoteDaemonPort)

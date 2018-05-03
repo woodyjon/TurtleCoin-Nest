@@ -702,6 +702,39 @@ Rectangle {
             visible: false
         }
 
+        Button {
+            id: buttonFullBalance
+            text: "full balance"
+            anchors.verticalCenter: rectangleTextInputTransferAmount.verticalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: 20
+            height: 25
+            enabled: true
+
+            contentItem: Text {
+                text: buttonFullBalance.text
+                font.pixelSize: 12
+                font.family: "Arial"
+                font.bold: true
+                opacity: enabled ? 1.0 : 0.3
+                color: buttonFullBalance.down ? "#dddddd" : "#ffffff"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            background: Rectangle {
+                implicitWidth: 100
+                height: buttonFullBalance.height
+                opacity: enabled ? 1 : 0.3
+                radius: 6
+                color: buttonFullBalance.down ? "#383838" : "#444444"
+            }
+
+            onClicked: {
+                QmlBridge.getFullBalanceAndDisplayInTransferAmount();
+            }
+        }
+
         Rectangle {
             id: rectangleTextInputTransferPaymentID
             color: "#555555"
@@ -1175,22 +1208,26 @@ Rectangle {
         }
 
         onDisplaySyncingInfo: {
-            textConnectionInfoSync.text = syncing
-            textConnectionInfoBlocks.text = blocks
-            textConnectionInfoPeers.text = peers
+            textConnectionInfoSync.text = syncing;
+            textConnectionInfoBlocks.text = blocks;
+            textConnectionInfoPeers.text = peers;
         }
 
         onDisplayTotalBalance: {
-            textBalanceValue.text = balance
-            textBalanceUSD.text = balanceUSD
+            textBalanceValue.text = balance;
+            textBalanceUSD.text = balanceUSD;
         }
 
         onDisplayAddress: {
-            textAddress.text = address
-            textWalletName.text = wallet
-            textUSD.visible = displayFiatConversion
-            textBalanceUSD.visible = displayFiatConversion
-            textTransferAmountUSD.visible = displayFiatConversion
+            textAddress.text = address;
+            textWalletName.text = wallet;
+            textUSD.visible = displayFiatConversion;
+            textBalanceUSD.visible = displayFiatConversion;
+            textTransferAmountUSD.visible = displayFiatConversion;
+        }
+
+        onDisplayFullBalanceInTransferAmount: {
+            textInputTransferAmount.text = fullBalance;
         }
     }
 
