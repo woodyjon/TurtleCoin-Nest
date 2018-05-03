@@ -246,6 +246,10 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
 	}
 
+	if isPlatformWindows {
+		cmdWalletd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	}
+
 	// setup all sessions log file
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -455,6 +459,10 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 	} else {
 		// import wallet from private view and spend keys
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--view-key", privateViewKey, "--spend-key", privateSpendKey, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
+	}
+
+	if isPlatformWindows {
+		cmdWalletd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	}
 
 	// setup all sessions log file
