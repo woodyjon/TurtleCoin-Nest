@@ -907,6 +907,7 @@ Rectangle {
         id: dialogPrivateKeys
         title: "Private Keys"
         standardButtons: StandardButton.Ok
+        width: Qt.platform.os == "osx" ? 900 : auto
 
         Text {
             id: textDescriptionPrivateKeys
@@ -1064,12 +1065,19 @@ Rectangle {
             }
         }
 
+        onAccepted: {
+            textWalletFilename.text = "";
+            textInputPrivateViewKey.text = "";
+            textInputPrivateSpendKey.text = "";
+            textInputAddress.text = "";
+        }
+
         function show(filename, privateViewKey, privateSpendKey, walletAddress) {
-            textWalletFilename.text = filename
-            textInputPrivateViewKey.text = privateViewKey
-            textInputPrivateSpendKey.text = privateSpendKey
-            textInputAddress.text = walletAddress
-            dialogPrivateKeys.open()
+            textWalletFilename.text = filename;
+            textInputPrivateViewKey.text = privateViewKey;
+            textInputPrivateSpendKey.text = privateSpendKey;
+            textInputAddress.text = walletAddress;
+            dialogPrivateKeys.open();
         }
     }
 
