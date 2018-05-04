@@ -64,51 +64,42 @@ Rectangle {
             Text {
                 id: textLockedUnit
                 color: "#cfcfcf"
-                text: qsTr("TRTL")
+                text: "TRTL"
                 anchors.right: parent.right
                 anchors.rightMargin: 18
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
                 verticalAlignment: Text.AlignBottom
                 font.family: "Arial"
                 font.pixelSize: 15
-                anchors.bottom: parent.bottom
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
-                font.bold: false
                 horizontalAlignment: Text.AlignLeft
-                anchors.bottomMargin: 10
             }
 
             Text {
                 id: textAvailableUnit
                 color: "#cfcfcf"
-                text: qsTr("TRTL")
+                text: "TRTL"
                 font.family: "Arial"
                 font.pixelSize: 15
                 anchors.right: textLockedUnit.right
-                anchors.bottom: textLockedUnit.top
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
                 anchors.rightMargin: 0
-                verticalAlignment: Text.AlignBottom
-                font.bold: false
-                horizontalAlignment: Text.AlignLeft
+                anchors.bottom: textLockedUnit.top
                 anchors.bottomMargin: 12
+                verticalAlignment: Text.AlignBottom
+                horizontalAlignment: Text.AlignLeft
             }
 
             Text {
                 id: textLockedValue
                 color: "#cfcfcf"
-                text: qsTr("0")
+                text: "0"
                 anchors.right: textLockedUnit.left
                 anchors.rightMargin: 10
                 anchors.bottom: textLockedUnit.bottom
                 anchors.bottomMargin: -1
                 font.family: "Arial"
                 font.pixelSize: 20
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
                 verticalAlignment: Text.AlignBottom
-                font.bold: false
                 horizontalAlignment: Text.AlignRight
 
                 Connections {
@@ -122,17 +113,14 @@ Rectangle {
             Text {
                 id: textAvailableValue
                 color: "#cfcfcf"
-                text: qsTr("0")
+                text: "0"
                 anchors.right: textLockedValue.right
                 anchors.rightMargin: 0
                 anchors.bottom: textAvailableUnit.bottom
                 anchors.bottomMargin: -1
                 font.family: "Arial"
                 font.pixelSize: 20
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
                 verticalAlignment: Text.AlignBottom
-                font.bold: false
                 horizontalAlignment: Text.AlignRight
 
                 Connections {
@@ -146,7 +134,7 @@ Rectangle {
             Text {
                 id: textLockedDescr
                 color: "#cfcfcf"
-                text: qsTr("Locked/Unconfirmed:")
+                text: "Locked/Unconfirmed:"
                 anchors.bottom: textLockedUnit.bottom
                 anchors.bottomMargin: 0
                 font.family: "Arial"
@@ -154,14 +142,13 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 10
                 verticalAlignment: Text.AlignBottom
-                font.bold: false
                 horizontalAlignment: Text.AlignLeft
             }
 
             Text {
                 id: textAvailableDescr
                 color: "#cfcfcf"
-                text: qsTr("Available:")
+                text: "Available:"
                 anchors.bottom: textAvailableUnit.bottom
                 anchors.bottomMargin: 0
                 anchors.left: textLockedDescr.left
@@ -169,7 +156,6 @@ Rectangle {
                 font.family: "Arial"
                 font.pixelSize: 15
                 verticalAlignment: Text.AlignBottom
-                font.bold: false
                 horizontalAlignment: Text.AlignLeft
             }
         }
@@ -177,7 +163,7 @@ Rectangle {
         Text {
             id: textBalance
             color: "#ffffff"
-            text: qsTr("BALANCE")
+            text: "BALANCE"
             verticalAlignment: Text.AlignBottom
             anchors.horizontalCenterOffset: 0
             anchors.horizontalCenter: parent.horizontalCenter
@@ -192,7 +178,7 @@ Rectangle {
         Text {
             id: textBalanceValue
             color: "#ffffff"
-            text: qsTr("0")
+            text: "0"
             verticalAlignment: Text.AlignBottom
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 10
@@ -207,7 +193,7 @@ Rectangle {
         Text {
             id: textBalanceUnit
             color: "#ffffff"
-            text: qsTr("TRTL")
+            text: "TRTL"
             verticalAlignment: Text.AlignBottom
             anchors.left: textBalanceValue.right
             anchors.leftMargin: 15
@@ -262,7 +248,7 @@ Rectangle {
         Text {
             id: textDescrWalletName
             color: "#858585"
-            text: qsTr("wallet: ")
+            text: "wallet: "
             verticalAlignment: Text.AlignBottom
             anchors.left: parent.left
             anchors.leftMargin: 40
@@ -270,7 +256,6 @@ Rectangle {
             anchors.topMargin: 0
             font.family: "Arial"
             font.pixelSize: 15
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
@@ -285,13 +270,12 @@ Rectangle {
             anchors.bottomMargin: 0
             font.family: "Arial"
             font.pixelSize: 15
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
         Button {
             id: buttonBackupKeys
-            text: qsTr("Backup keys")
+            text: "Backup keys"
             anchors.verticalCenter: textDescrWalletName.verticalCenter
             anchors.left: textWalletName.right
             anchors.leftMargin: 30
@@ -326,7 +310,7 @@ Rectangle {
         TextInput {
             id: textAddress
             color: "#ffffff"
-            text: qsTr("NO WALLET OPEN")
+            text: "NO WALLET OPEN"
             anchors.left: parent.left
             anchors.leftMargin: 0
             anchors.top: textDescrWalletName.bottom
@@ -369,7 +353,7 @@ Rectangle {
         Text {
             id: textDescrCopyAddress
             color: "#858585"
-            text: qsTr("Copy your address to receive TRTL")
+            text: "Copy your address to receive TRTL"
             anchors.verticalCenter: buttonCopy.verticalCenter
             anchors.right: buttonCopy.left
             anchors.rightMargin: 15
@@ -396,7 +380,7 @@ Rectangle {
         Text {
             id: textHistoryTitle
             color: "#ffffff"
-            text: qsTr("PREVIOUS TRANSACTIONS")
+            text: "PREVIOUS TRANSACTIONS"
             anchors.top: parent.top
             anchors.topMargin: 10
             anchors.horizontalCenter: parent.horizontalCenter
@@ -502,7 +486,7 @@ Rectangle {
         Text {
             id: textTransferTitle
             color: "#ffffff"
-            text: qsTr("TRANSFER")
+            text: "TRANSFER"
             font.pixelSize: 25
             horizontalAlignment: Text.AlignHCenter
             font.bold: true
@@ -516,7 +500,7 @@ Rectangle {
         Text {
             id: textTransferAddrDescr
             color: "#ffffff"
-            text: qsTr("Recipient address")
+            text: "Recipient address"
             anchors.top: textTransferTitle.bottom
             anchors.topMargin: 34
             anchors.left: parent.left
@@ -544,7 +528,7 @@ Rectangle {
                 id: textInputTransferAddress
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 padding: 2
@@ -566,7 +550,7 @@ Rectangle {
         Text {
             id: textTransferAmountDescr
             color: "#ffffff"
-            text: qsTr("Amount")
+            text: "Amount"
             anchors.top: rectangleTextInputTransferAddress.bottom
             anchors.topMargin: 13
             anchors.left: textTransferAddrDescr.left
@@ -593,7 +577,7 @@ Rectangle {
                 id: textInputTransferAmount
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 padding: 2
@@ -624,7 +608,7 @@ Rectangle {
         Text {
             id: textTransferAmountUnit
             color: "#999999"
-            text: qsTr("TRTL")
+            text: "TRTL"
             anchors.verticalCenter: rectangleTextInputTransferAmount.verticalCenter
             horizontalAlignment: Text.AlignLeft
             font.pixelSize: 14
@@ -684,7 +668,7 @@ Rectangle {
         Text {
             id: textTransferPaymentIDDescr
             color: "#ffffff"
-            text: qsTr("(optional) Payment ID")
+            text: "(optional) Payment ID"
             anchors.top: rectangleTextInputTransferAmount.bottom
             anchors.topMargin: 13
             anchors.left: textTransferAddrDescr.left
@@ -712,7 +696,7 @@ Rectangle {
                 id: textInputTransferPaymentID
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 padding: 2
@@ -730,7 +714,7 @@ Rectangle {
         Text {
             id: textTransferFeeDescr
             color: "#ffffff"
-            text: qsTr("Fee")
+            text: "Fee"
             anchors.top: rectangleTextInputTransferPaymentID.bottom
             anchors.topMargin: 13
             anchors.left: textTransferAddrDescr.left
@@ -757,7 +741,7 @@ Rectangle {
                 id: textInputTransferFee
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 padding: 2
@@ -775,7 +759,7 @@ Rectangle {
         Text {
             id: textTransferFeeUnit
             color: "#999999"
-            text: qsTr("TRTL")
+            text: "TRTL"
             anchors.verticalCenter: rectangleTextInputTransferFee.verticalCenter
             horizontalAlignment: Text.AlignLeft
             font.pixelSize: 14
@@ -789,7 +773,7 @@ Rectangle {
         Text {
             id: textTransferMixinDescr
             color: "#ffffff"
-            text: qsTr("Mixin count")
+            text: "Mixin count"
             anchors.top: textTransferFeeDescr.top
             anchors.topMargin: 0
             anchors.left: textTransferFeeUnit.right
@@ -816,7 +800,7 @@ Rectangle {
                 id: textInputTransferMixin
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 padding: 2
@@ -834,7 +818,7 @@ Rectangle {
         Text {
             id: textTransferFeeMixinDefaultDescr
             color: "#999999"
-            text: qsTr("It is advised not to modify")
+            text: "It is advised not to modify"
             anchors.top: textTransferMixinDescr.top
             anchors.topMargin: 0
             anchors.left: rectangleTextInputTransferMixin.right
@@ -881,7 +865,7 @@ Rectangle {
 
         Button {
             id: buttonSend
-            text: qsTr("SEND")
+            text: "SEND"
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 30
@@ -936,7 +920,7 @@ Rectangle {
         Text {
             id: textConnectionInfoPeersDescr
             color: "#cccccc"
-            text: qsTr("connected peers")
+            text: "connected peers"
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
             anchors.verticalCenter: parent.verticalCenter
@@ -948,7 +932,7 @@ Rectangle {
         Text {
             id: textConnectionInfoPeers
             color: "#ffffff"
-            text: qsTr("0")
+            text: "0"
             font.bold: true
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
@@ -961,7 +945,7 @@ Rectangle {
         Text {
             id: textConnectionInfoBlocksDescr
             color: "#cccccc"
-            text: qsTr("synced blocks")
+            text: "synced blocks"
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
             anchors.verticalCenter: parent.verticalCenter
@@ -973,7 +957,7 @@ Rectangle {
         Text {
             id: textConnectionInfoBlocks
             color: "#ffffff"
-            text: qsTr("0/0")
+            text: "0/0"
             font.bold: true
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
@@ -986,7 +970,7 @@ Rectangle {
         Text {
             id: textConnectionInfoSync
             color: "#ffffff"
-            text: qsTr("Blockchain syncing...")
+            text: "Blockchain syncing..."
             font.bold: true
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
@@ -1181,7 +1165,7 @@ Rectangle {
 
         Button {
             id: buttonCopyKeys
-            text: qsTr("Copy to clipboard")
+            text: "Copy to clipboard"
             anchors.bottom: textInputPrivateSpendKey.bottom
             anchors.bottomMargin: 40
             anchors.left: textInputPrivateSpendKey.right

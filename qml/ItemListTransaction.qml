@@ -30,7 +30,6 @@ Item {
         verticalAlignment: Text.AlignVCenter
         font.family: "Arial"
         font.pixelSize: 11
-        font.bold: false
     }
     
     Text {
@@ -44,7 +43,6 @@ Item {
         verticalAlignment: Text.AlignVCenter
         font.family: "Arial"
         font.pixelSize: 11
-        font.bold: false
     }
     
     Text {
@@ -57,7 +55,6 @@ Item {
         horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter
         font.pixelSize: 12
-        font.bold: false
         font.family: "Arial"
     }
     
@@ -71,7 +68,6 @@ Item {
         horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter
         font.pixelSize: 12
-        font.bold: false
         font.family: "Arial"
     }
 
@@ -83,7 +79,6 @@ Item {
         anchors.topMargin: 0
         anchors.left: parent.left
         anchors.leftMargin: 5
-        font.bold: false
         font.family: "Arial"
         font.pixelSize: 11
         verticalAlignment: Text.AlignVCenter
