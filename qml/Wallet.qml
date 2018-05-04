@@ -461,6 +461,57 @@ Rectangle {
             }
         }
 
+        Text {
+            id: textListTransactionLimitedDescr
+            color: "#cfcfcf"
+            text: "Show transactions:"
+            anchors.left: rectangleListTransactions.left
+            anchors.leftMargin: 5
+            anchors.top: rectangleListTransactions.bottom
+            anchors.topMargin: 11
+            font.family: "Arial"
+            font.pixelSize: 14
+            horizontalAlignment: Text.AlignRight
+        }
+
+        Text {
+            id: textListTransactionLimited
+            color: "#cfcfcf"
+            text: "Last 20"
+            anchors.right: switchNumberTransactions.left
+            anchors.rightMargin: 4
+            anchors.verticalCenter: textListTransactionLimitedDescr.verticalCenter
+            font.family: "Arial"
+            font.pixelSize: 14
+            font.bold: !switchNumberTransactions.checked
+            horizontalAlignment: Text.AlignRight
+        }
+
+        Switch {
+            id: switchNumberTransactions
+            anchors.left: textListTransactionLimitedDescr.right
+            anchors.leftMargin: 65
+            anchors.verticalCenter: textListTransactionLimitedDescr.verticalCenter
+            checked: false
+
+            onClicked: {
+                QmlBridge.limitDisplayTransactions(!checked)
+            }
+        }
+
+        Text {
+            id: textListTransactionAll
+            color: "#cfcfcf"
+            text: "All"
+            anchors.left: switchNumberTransactions.right
+            anchors.leftMargin: 4
+            anchors.verticalCenter: textListTransactionLimitedDescr.verticalCenter
+            font.family: "Arial"
+            font.pixelSize: 14
+            horizontalAlignment: Text.AlignLeft
+            font.bold: switchNumberTransactions.checked
+        }
+
         Connections {
             target: QmlBridge
             onClearListTransactions: {
@@ -1351,6 +1402,7 @@ Rectangle {
             textUSD.visible = displayFiatConversion;
             textBalanceUSD.visible = displayFiatConversion;
             textTransferAmountUSD.visible = displayFiatConversion;
+            switchNumberTransactions.checked = false;
         }
 
         onDisplayFullBalanceInTransferAmount: {

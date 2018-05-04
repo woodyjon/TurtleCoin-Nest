@@ -1,7 +1,7 @@
 import QtQuick.Window 2.2
 import QtQuick 2.7
 import QtQuick.Controls 2.3
-import QtQuick.Controls.Styles 1.4
+import QtQuick.Controls.Material 2.3
 import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
 
@@ -11,6 +11,8 @@ ApplicationWindow {
     property var windowWidth: 1060
     property var windowHeight: 755
     property var minWindowHeight: 500
+
+    Material.accent: Material.Grey
 
     width: windowWidth
     height: windowHeight

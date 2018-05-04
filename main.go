@@ -26,15 +26,6 @@ import (
 	"github.com/therecipe/qt/quickcontrols2"
 )
 
-const (
-	urlCryptoCompareTRTL       = "https://min-api.cryptocompare.com/data/price?fsym=TRTL&tsyms=USD"
-	defaultRemoteDaemonAddress = "public.turtlenode.io"
-	defaultRemoteDaemonPort    = "11898"
-	logFileFilename            = "turtlecoin-nest-logs.log"
-	urlBlockExplorer           = "https://blocks.turtle.link/"
-	dbFilename                 = "settings.db"
-)
-
 var (
 	// qmlObjects = make(map[string]*core.QObject)
 	qmlBridge                   *QmlBridge
@@ -48,6 +39,7 @@ var (
 	rateUSDTRTL                 float64 // USD value for 1 TRTL
 	remoteDaemonAddress         = defaultRemoteDaemonAddress
 	remoteDaemonPort            = defaultRemoteDaemonPort
+	limitDisplayedTransactions  = true
 )
 
 // QmlBridge is the bridge between qml and go
@@ -127,6 +119,7 @@ type QmlBridge struct {
 	_ func()                   `slot:"resetRemoteDaemonInfo"`
 	_ func(transferFee string) `slot:"getFullBalanceAndDisplayInTransferAmount"`
 	_ func()                   `slot:"getDefaultFeeAndMixinAndDisplay"`
+	_ func(limit bool)         `slot:"limitDisplayTransactions"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -307,13 +300,18 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectGetDefaultFeeAndMixinAndDisplay(func() {
 		getDefaultFeeAndMixinAndDisplay()
 	})
+
+	qmlBridge.ConnectLimitDisplayTransactions(func(limit bool) {
+		limitDisplayedTransactions = limit
+		getAndDisplayListTransactions(true)
+	})
 }
 
 func startDisplayWalletInfo() {
 
 	getAndDisplayBalances()
 	getAndDisplayAddress()
-	getAndDisplayListTransactions()
+	getAndDisplayListTransactions(false)
 	getAndDisplayConnectionInfo()
 	getDefaultFeeAndMixinAndDisplay()
 
@@ -321,7 +319,7 @@ func startDisplayWalletInfo() {
 		tickerRefreshWalletData = time.NewTicker(time.Second * 30)
 		for range tickerRefreshWalletData.C {
 			getAndDisplayBalances()
-			getAndDisplayListTransactions()
+			getAndDisplayListTransactions(false)
 		}
 	}()
 
@@ -361,12 +359,12 @@ func getAndDisplayConnectionInfo() {
 	}
 }
 
-func getAndDisplayListTransactions() {
+func getAndDisplayListTransactions(forceFullUpdate bool) {
 
 	newTransfers, err := walletdmanager.RequestListTransactions()
 	if err == nil {
 		needFullUpdate := false
-		if len(newTransfers) != len(transfers) {
+		if len(newTransfers) != len(transfers) || forceFullUpdate {
 			needFullUpdate = true
 		}
 		transfers = newTransfers
@@ -378,7 +376,10 @@ func getAndDisplayListTransactions() {
 
 			qmlBridge.ClearListTransactions()
 
-			for _, transfer := range transfers {
+			for index, transfer := range transfers {
+				if limitDisplayedTransactions && index >= numberTransactionsToDisplay {
+					break
+				}
 				amount := transfer.Amount
 				amountString := ""
 				if amount >= 0 {
@@ -398,6 +399,9 @@ func getAndDisplayListTransactions() {
 			}
 		} else { // just update the number of confirmations of transactions with less than 110 conf
 			for index, transfer := range transfers {
+				if limitDisplayedTransactions && index >= numberTransactionsToDisplay {
+					break
+				}
 				if transfer.Confirmations < 110 {
 					qmlBridge.UpdateConfirmationsOfTransaction(index, confirmationsStringRepresentation(transfer.Confirmations))
 				} else {
@@ -489,6 +493,7 @@ func closeWallet() {
 
 	stringBackupKeys = ""
 	transfers = nil
+	limitDisplayedTransactions = true
 
 	go func() {
 		walletdmanager.GracefullyQuitWalletd()
