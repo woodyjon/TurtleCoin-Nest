@@ -453,6 +453,10 @@ Rectangle {
                             transactionNumberValue: number
                         })
                     }
+
+                    onUpdateConfirmationsOfTransaction: {
+                        modelListViewTransactions.setProperty(index, "transactionConfirmationsValue", confirmations)
+                    }
                 }
             }
         }
