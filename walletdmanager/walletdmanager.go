@@ -21,19 +21,6 @@ import (
 	"github.com/mitchellh/go-ps"
 )
 
-const (
-	// TransferFee is the set fee
-	TransferFee float64 = 1 // TransferFee is expressed in TRTL
-	// TransferMixin is the set mixin
-	TransferMixin = 4
-
-	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
-	logWalletdAllSessionsFilename    = "walletd.log"
-	walletdLogLevel                  = "3" // should be at least 3 as I use some logs messages to confirm creation of wallet
-	walletdCommandName               = "walletd"
-	turtlecoindCommandName           = "TurtleCoind"
-)
-
 var (
 	// WalletAvailableBalance is the available balance
 	WalletAvailableBalance float64
@@ -93,14 +80,23 @@ func RequestBalance() (availableBalance float64, lockedBalance float64, totalBal
 }
 
 // RequestAvailableBalanceToBeSpent returns the available balance minus the fee
-func RequestAvailableBalanceToBeSpent() (availableBalance float64, err error) {
+func RequestAvailableBalanceToBeSpent(transferFeeString string) (availableBalance float64, err error) {
 
 	availableBalance, _, _, err = RequestBalance()
 	if err != nil {
 		return 0, err
 	}
 
-	availableBalance -= TransferFee
+	transferFee, err := strconv.ParseFloat(transferFeeString, 64) // transferFee is expressed in TRTL
+	if err != nil {
+		return 0, errors.New("fee is invalid")
+	}
+
+	if transferFee < 0 {
+		return 0, errors.New("fee should be positive")
+	}
+
+	availableBalance -= transferFee
 	if availableBalance < 0 {
 		availableBalance = 0
 	}
@@ -137,7 +133,7 @@ func RequestListTransactions() (transfers []turtlecoinwalletdrpcgo.Transfer, err
 }
 
 // SendTransaction makes a transfer with the provided information
-func SendTransaction(transferAddress string, transferAmountString string, transferPaymentID string) (transactionHash string, err error) {
+func SendTransaction(transferAddress string, transferAmountString string, transferPaymentID string, transferFeeString string, transferMixinString string) (transactionHash string, err error) {
 
 	if !WalletdSynced {
 		return "", errors.New("wallet and/or blockchain not fully synced yet")
@@ -160,7 +156,16 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("amount of TRTL to be sent should be greater than 0")
 	}
 
-	if transferAmount+TransferFee > WalletAvailableBalance {
+	transferFee, err := strconv.ParseFloat(transferFeeString, 64) // transferFee is expressed in TRTL
+	if err != nil {
+		return "", errors.New("fee is invalid")
+	}
+
+	if transferFee < 0 {
+		return "", errors.New("fee should be positive")
+	}
+
+	if transferAmount+transferFee > WalletAvailableBalance {
 		return "", errors.New("your available balance is insufficient")
 	}
 
@@ -168,10 +173,22 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("for sending more than 5,000,000 TRTL to one address, you should split in multiple transfers of smaller amounts")
 	}
 
-	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, TransferFee, TransferMixin, rpcPassword)
+	transferMixin, err := strconv.ParseInt(transferMixinString, 0, 0)
+	if err != nil {
+		return "", errors.New("mixin is invalid")
+	}
+
+	if transferMixin < 0 {
+		return "", errors.New("mixin should be positive")
+	}
+
+	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, int(transferMixin), rpcPassword)
 	if err != nil {
 		log.Error("error sending transaction. err: ", err)
-		errorMessage := err.Error() + "\nYou sometimes need to send a small amount less than your full balance to get the transfer to succeed. This is possibly due to dust in your wallet that is unable to be sent without a mixin of 0."
+		errorMessage := err.Error()
+		if errorMessage == "Wrong amount" {
+			errorMessage += "\nYou sometimes need to send a small amount less than your full balance to get the transfer to succeed. This is possibly due to dust in your wallet that is unable to be sent without a mixin of 0 (a mixin of 0 is possible but might compromise privacy.)"
+		}
 		return "", errors.New(errorMessage)
 	}
 	return transactionHash, nil
