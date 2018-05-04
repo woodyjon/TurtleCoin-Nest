@@ -26,27 +26,20 @@ import (
 	"github.com/therecipe/qt/quickcontrols2"
 )
 
-const (
-	urlCryptoCompareTRTL       = "https://min-api.cryptocompare.com/data/price?fsym=TRTL&tsyms=USD"
-	defaultRemoteDaemonAddress = "public.turtlenode.io"
-	defaultRemoteDaemonPort    = "11898"
-	logFileFilename            = "turtlecoin-nest-logs.log"
-	urlBlockExplorer           = "https://blocks.turtle.link/"
-	dbFilename                 = "settings.db"
-)
-
 var (
 	// qmlObjects = make(map[string]*core.QObject)
-	qmlBridge               *QmlBridge
-	transfers               []turtlecoinwalletdrpcgo.Transfer
-	tickerRefreshWalletData *time.Ticker
-	db                      *sql.DB
-	useRemoteNode           = true
-	displayFiatConversion   = false
-	stringBackupKeys        = ""
-	rateUSDTRTL             float64 // USD value for 1 TRTL
-	remoteDaemonAddress     = defaultRemoteDaemonAddress
-	remoteDaemonPort        = defaultRemoteDaemonPort
+	qmlBridge                   *QmlBridge
+	transfers                   []turtlecoinwalletdrpcgo.Transfer
+	tickerRefreshWalletData     *time.Ticker
+	tickerRefreshConnectionInfo *time.Ticker
+	db                          *sql.DB
+	useRemoteNode               = true
+	displayFiatConversion       = false
+	stringBackupKeys            = ""
+	rateUSDTRTL                 float64 // USD value for 1 TRTL
+	remoteDaemonAddress         = defaultRemoteDaemonAddress
+	remoteDaemonPort            = defaultRemoteDaemonPort
+	limitDisplayedTransactions  = true
 )
 
 // QmlBridge is the bridge between qml and go
@@ -90,8 +83,9 @@ type QmlBridge struct {
 	_ func(displayFiat bool) `signal:"displaySettingsValues"`
 	_ func(remoteNodeAddress string,
 		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
-	_ func(fullBalance string)       `signal:"displayFullBalanceInTransferAmount"`
-	_ func(fee string, mixin string) `signal:"displayDefaultFeeAndMixin"`
+	_ func(fullBalance string)              `signal:"displayFullBalanceInTransferAmount"`
+	_ func(fee string, mixin string)        `signal:"displayDefaultFeeAndMixin"`
+	_ func(index int, confirmations string) `signal:"updateConfirmationsOfTransaction"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -125,6 +119,7 @@ type QmlBridge struct {
 	_ func()                   `slot:"resetRemoteDaemonInfo"`
 	_ func(transferFee string) `slot:"getFullBalanceAndDisplayInTransferAmount"`
 	_ func()                   `slot:"getDefaultFeeAndMixinAndDisplay"`
+	_ func(limit bool)         `slot:"limitDisplayTransactions"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -305,21 +300,32 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectGetDefaultFeeAndMixinAndDisplay(func() {
 		getDefaultFeeAndMixinAndDisplay()
 	})
+
+	qmlBridge.ConnectLimitDisplayTransactions(func(limit bool) {
+		limitDisplayedTransactions = limit
+		getAndDisplayListTransactions(true)
+	})
 }
 
 func startDisplayWalletInfo() {
 
 	getAndDisplayBalances()
 	getAndDisplayAddress()
-	getAndDisplayListTransactions()
+	getAndDisplayListTransactions(false)
 	getAndDisplayConnectionInfo()
 	getDefaultFeeAndMixinAndDisplay()
 
 	go func() {
-		tickerRefreshWalletData = time.NewTicker(time.Second * 15)
+		tickerRefreshWalletData = time.NewTicker(time.Second * 30)
 		for range tickerRefreshWalletData.C {
 			getAndDisplayBalances()
-			getAndDisplayListTransactions()
+			getAndDisplayListTransactions(false)
+		}
+	}()
+
+	go func() {
+		tickerRefreshConnectionInfo = time.NewTicker(time.Second * 15)
+		for range tickerRefreshConnectionInfo.C {
 			getAndDisplayConnectionInfo()
 		}
 	}()
@@ -353,19 +359,27 @@ func getAndDisplayConnectionInfo() {
 	}
 }
 
-func getAndDisplayListTransactions() {
+func getAndDisplayListTransactions(forceFullUpdate bool) {
 
 	newTransfers, err := walletdmanager.RequestListTransactions()
 	if err == nil {
-		if len(newTransfers) != len(transfers) {
-			transfers = newTransfers
-			// sort starting by the most recent transaction
-			sort.Slice(transfers, func(i, j int) bool { return transfers[i].Timestamp.After(transfers[j].Timestamp) })
+		needFullUpdate := false
+		if len(newTransfers) != len(transfers) || forceFullUpdate {
+			needFullUpdate = true
+		}
+		transfers = newTransfers
+		// sort starting by the most recent transaction
+		sort.Slice(transfers, func(i, j int) bool { return transfers[i].Timestamp.After(transfers[j].Timestamp) })
+
+		if needFullUpdate {
 			transactionNumber := len(transfers)
 
 			qmlBridge.ClearListTransactions()
 
-			for _, transfer := range transfers {
+			for index, transfer := range transfers {
+				if limitDisplayedTransactions && index >= numberTransactionsToDisplay {
+					break
+				}
 				amount := transfer.Amount
 				amountString := ""
 				if amount >= 0 {
@@ -376,12 +390,23 @@ func getAndDisplayListTransactions() {
 					amountString += strconv.FormatFloat(-amount, 'f', -1, 64)
 				}
 				amountString += " TRTL (fee: " + strconv.FormatFloat(transfer.Fee, 'f', 2, 64) + ")"
-				confirmationsString := "(" + strconv.Itoa(transfer.Confirmations) + " conf.)"
+				confirmationsString := confirmationsStringRepresentation(transfer.Confirmations)
 				timeString := transfer.Timestamp.Format("2006-01-02 15:04:05")
 				transactionNumberString := strconv.Itoa(transactionNumber) + ")"
 				transactionNumber--
 
 				qmlBridge.AddTransactionToList(transfer.PaymentID, transfer.TxID, amountString, confirmationsString, timeString, transactionNumberString)
+			}
+		} else { // just update the number of confirmations of transactions with less than 110 conf
+			for index, transfer := range transfers {
+				if limitDisplayedTransactions && index >= numberTransactionsToDisplay {
+					break
+				}
+				if transfer.Confirmations < 110 {
+					qmlBridge.UpdateConfirmationsOfTransaction(index, confirmationsStringRepresentation(transfer.Confirmations))
+				} else {
+					break
+				}
 			}
 		}
 	}
@@ -464,8 +489,11 @@ func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, co
 func closeWallet() {
 
 	tickerRefreshWalletData.Stop()
+	tickerRefreshConnectionInfo.Stop()
 
 	stringBackupKeys = ""
+	transfers = nil
+	limitDisplayedTransactions = true
 
 	go func() {
 		walletdmanager.GracefullyQuitWalletd()
@@ -720,4 +748,15 @@ func amountStringUSDToTRTL(amountTRTLString string) string {
 	amountUSD := amountTRTL * rateUSDTRTL
 	amountUSDString := strconv.FormatFloat(amountUSD, 'f', 2, 64) + " $"
 	return amountUSDString
+}
+
+func confirmationsStringRepresentation(confirmations int) string {
+	confirmationsString := "("
+	if confirmations > 100 {
+		confirmationsString += ">100"
+	} else {
+		confirmationsString += strconv.Itoa(confirmations)
+	}
+	confirmationsString += " conf.)"
+	return confirmationsString
 }
