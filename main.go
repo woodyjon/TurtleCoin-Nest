@@ -311,7 +311,7 @@ func startDisplayWalletInfo() {
 
 	getAndDisplayBalances()
 	getAndDisplayAddress()
-	getAndDisplayListTransactions(false)
+	getAndDisplayListTransactions(true)
 	getAndDisplayConnectionInfo()
 	getDefaultFeeAndMixinAndDisplay()
 
