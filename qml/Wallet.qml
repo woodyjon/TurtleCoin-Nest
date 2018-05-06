@@ -64,51 +64,42 @@ Rectangle {
             Text {
                 id: textLockedUnit
                 color: "#cfcfcf"
-                text: qsTr("TRTL")
+                text: "TRTL"
                 anchors.right: parent.right
                 anchors.rightMargin: 18
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
                 verticalAlignment: Text.AlignBottom
                 font.family: "Arial"
                 font.pixelSize: 15
-                anchors.bottom: parent.bottom
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
-                font.bold: false
                 horizontalAlignment: Text.AlignLeft
-                anchors.bottomMargin: 10
             }
 
             Text {
                 id: textAvailableUnit
                 color: "#cfcfcf"
-                text: qsTr("TRTL")
+                text: "TRTL"
                 font.family: "Arial"
                 font.pixelSize: 15
                 anchors.right: textLockedUnit.right
-                anchors.bottom: textLockedUnit.top
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
                 anchors.rightMargin: 0
-                verticalAlignment: Text.AlignBottom
-                font.bold: false
-                horizontalAlignment: Text.AlignLeft
+                anchors.bottom: textLockedUnit.top
                 anchors.bottomMargin: 12
+                verticalAlignment: Text.AlignBottom
+                horizontalAlignment: Text.AlignLeft
             }
 
             Text {
                 id: textLockedValue
                 color: "#cfcfcf"
-                text: qsTr("0")
+                text: "0"
                 anchors.right: textLockedUnit.left
                 anchors.rightMargin: 10
                 anchors.bottom: textLockedUnit.bottom
                 anchors.bottomMargin: -1
                 font.family: "Arial"
                 font.pixelSize: 20
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
                 verticalAlignment: Text.AlignBottom
-                font.bold: false
                 horizontalAlignment: Text.AlignRight
 
                 Connections {
@@ -122,17 +113,14 @@ Rectangle {
             Text {
                 id: textAvailableValue
                 color: "#cfcfcf"
-                text: qsTr("0")
+                text: "0"
                 anchors.right: textLockedValue.right
                 anchors.rightMargin: 0
                 anchors.bottom: textAvailableUnit.bottom
                 anchors.bottomMargin: -1
                 font.family: "Arial"
                 font.pixelSize: 20
-                anchors.left: textBalanceValue.right
-                anchors.leftMargin: 15
                 verticalAlignment: Text.AlignBottom
-                font.bold: false
                 horizontalAlignment: Text.AlignRight
 
                 Connections {
@@ -146,7 +134,7 @@ Rectangle {
             Text {
                 id: textLockedDescr
                 color: "#cfcfcf"
-                text: qsTr("Locked/Unconfirmed:")
+                text: "Locked/Unconfirmed:"
                 anchors.bottom: textLockedUnit.bottom
                 anchors.bottomMargin: 0
                 font.family: "Arial"
@@ -154,14 +142,13 @@ Rectangle {
                 anchors.left: parent.left
                 anchors.leftMargin: 10
                 verticalAlignment: Text.AlignBottom
-                font.bold: false
                 horizontalAlignment: Text.AlignLeft
             }
 
             Text {
                 id: textAvailableDescr
                 color: "#cfcfcf"
-                text: qsTr("Available:")
+                text: "Available:"
                 anchors.bottom: textAvailableUnit.bottom
                 anchors.bottomMargin: 0
                 anchors.left: textLockedDescr.left
@@ -169,7 +156,6 @@ Rectangle {
                 font.family: "Arial"
                 font.pixelSize: 15
                 verticalAlignment: Text.AlignBottom
-                font.bold: false
                 horizontalAlignment: Text.AlignLeft
             }
         }
@@ -177,7 +163,7 @@ Rectangle {
         Text {
             id: textBalance
             color: "#ffffff"
-            text: qsTr("BALANCE")
+            text: "BALANCE"
             verticalAlignment: Text.AlignBottom
             anchors.horizontalCenterOffset: 0
             anchors.horizontalCenter: parent.horizontalCenter
@@ -192,7 +178,7 @@ Rectangle {
         Text {
             id: textBalanceValue
             color: "#ffffff"
-            text: qsTr("0")
+            text: "0"
             verticalAlignment: Text.AlignBottom
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 10
@@ -207,7 +193,7 @@ Rectangle {
         Text {
             id: textBalanceUnit
             color: "#ffffff"
-            text: qsTr("TRTL")
+            text: "TRTL"
             verticalAlignment: Text.AlignBottom
             anchors.left: textBalanceValue.right
             anchors.leftMargin: 15
@@ -262,7 +248,7 @@ Rectangle {
         Text {
             id: textDescrWalletName
             color: "#858585"
-            text: qsTr("wallet: ")
+            text: "wallet: "
             verticalAlignment: Text.AlignBottom
             anchors.left: parent.left
             anchors.leftMargin: 40
@@ -270,7 +256,6 @@ Rectangle {
             anchors.topMargin: 0
             font.family: "Arial"
             font.pixelSize: 15
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
@@ -285,13 +270,12 @@ Rectangle {
             anchors.bottomMargin: 0
             font.family: "Arial"
             font.pixelSize: 15
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
         Button {
             id: buttonBackupKeys
-            text: qsTr("Backup keys")
+            text: "Backup keys"
             anchors.verticalCenter: textDescrWalletName.verticalCenter
             anchors.left: textWalletName.right
             anchors.leftMargin: 30
@@ -326,11 +310,13 @@ Rectangle {
         TextInput {
             id: textAddress
             color: "#ffffff"
-            text: qsTr("NO WALLET OPEN")
-            anchors.left: textDescrWalletName.left
+            text: "NO WALLET OPEN"
+            anchors.left: parent.left
             anchors.leftMargin: 0
             anchors.top: textDescrWalletName.bottom
             anchors.topMargin: 20
+            anchors.right: parent.right
+            anchors.rightMargin: 0
             font.family: "Arial"
             font.pixelSize: 15
             horizontalAlignment: Text.AlignHCenter
@@ -345,9 +331,10 @@ Rectangle {
             id: buttonCopy
             width: 39
             height: 42
-            anchors.verticalCenter: textAddress.verticalCenter
+            anchors.top: textAddress.bottom
+            anchors.topMargin: 15
             anchors.right: parent.right
-            anchors.rightMargin: 30
+            anchors.rightMargin: 20
             color: "transparent"
             Image {
                 id: image_copy
@@ -366,11 +353,10 @@ Rectangle {
         Text {
             id: textDescrCopyAddress
             color: "#858585"
-            text: qsTr("Copy your address to receive TRTL")
-            anchors.top: buttonCopy.bottom
-            anchors.topMargin: 25
-            anchors.right: buttonCopy.right
-            anchors.rightMargin: 0
+            text: "Copy your address to receive TRTL"
+            anchors.verticalCenter: buttonCopy.verticalCenter
+            anchors.right: buttonCopy.left
+            anchors.rightMargin: 15
             font.family: "Arial"
             horizontalAlignment: Text.AlignRight
             font.weight: Font.Normal
@@ -394,7 +380,7 @@ Rectangle {
         Text {
             id: textHistoryTitle
             color: "#ffffff"
-            text: qsTr("PREVIOUS TRANSACTIONS")
+            text: "PREVIOUS TRANSACTIONS"
             anchors.top: parent.top
             anchors.topMargin: 10
             anchors.horizontalCenter: parent.horizontalCenter
@@ -467,8 +453,63 @@ Rectangle {
                             transactionNumberValue: number
                         })
                     }
+
+                    onUpdateConfirmationsOfTransaction: {
+                        modelListViewTransactions.setProperty(index, "transactionConfirmationsValue", confirmations)
+                    }
                 }
             }
+        }
+
+        Text {
+            id: textListTransactionLimitedDescr
+            color: "#cfcfcf"
+            text: "Show transactions:"
+            anchors.left: rectangleListTransactions.left
+            anchors.leftMargin: 5
+            anchors.top: rectangleListTransactions.bottom
+            anchors.topMargin: 11
+            font.family: "Arial"
+            font.pixelSize: 14
+            horizontalAlignment: Text.AlignRight
+        }
+
+        Text {
+            id: textListTransactionLimited
+            color: "#cfcfcf"
+            text: "Last 20"
+            anchors.right: switchNumberTransactions.left
+            anchors.rightMargin: 4
+            anchors.verticalCenter: textListTransactionLimitedDescr.verticalCenter
+            font.family: "Arial"
+            font.pixelSize: 14
+            font.bold: !switchNumberTransactions.checked
+            horizontalAlignment: Text.AlignRight
+        }
+
+        Switch {
+            id: switchNumberTransactions
+            anchors.left: textListTransactionLimitedDescr.right
+            anchors.leftMargin: 65
+            anchors.verticalCenter: textListTransactionLimitedDescr.verticalCenter
+            checked: false
+
+            onClicked: {
+                QmlBridge.limitDisplayTransactions(!checked)
+            }
+        }
+
+        Text {
+            id: textListTransactionAll
+            color: "#cfcfcf"
+            text: "All"
+            anchors.left: switchNumberTransactions.right
+            anchors.leftMargin: 4
+            anchors.verticalCenter: textListTransactionLimitedDescr.verticalCenter
+            font.family: "Arial"
+            font.pixelSize: 14
+            horizontalAlignment: Text.AlignLeft
+            font.bold: switchNumberTransactions.checked
         }
 
         Connections {
@@ -491,10 +532,16 @@ Rectangle {
         anchors.top: rectangleHistory.top
         anchors.topMargin: 0
 
+        property var transferRecipient: ""
+        property var transferAmount: ""
+        property var transferPaymentID: ""
+        property var transferFee: ""
+        property var transferMixin: ""
+
         Text {
             id: textTransferTitle
             color: "#ffffff"
-            text: qsTr("TRANSFER")
+            text: "TRANSFER"
             font.pixelSize: 25
             horizontalAlignment: Text.AlignHCenter
             font.bold: true
@@ -508,91 +555,372 @@ Rectangle {
         Text {
             id: textTransferAddrDescr
             color: "#ffffff"
-            text: qsTr("Recipient address")
+            text: "Recipient address"
             anchors.top: textTransferTitle.bottom
             anchors.topMargin: 34
             anchors.left: parent.left
-            anchors.bottomMargin: 0
+            anchors.leftMargin: 30
             font.pixelSize: 14
             verticalAlignment: Text.AlignBottom
-            anchors.leftMargin: 30
             font.family: "Arial"
             font.bold: true
             horizontalAlignment: Text.AlignLeft
-            anchors.bottom: textAvailableUnit.bottom
+        }
+
+        Rectangle {
+            id: rectangleTextInputTransferAddress
+            color: "#555555"
+            height: 25
+            anchors.right: parent.right
+            anchors.rightMargin: 5
+            anchors.top: textTransferAddrDescr.bottom
+            anchors.topMargin: 6
+            anchors.left: textTransferAddrDescr.left
+            anchors.leftMargin: 0
+            radius: 3
+
+            TextInput {
+                id: textInputTransferAddress
+                anchors.fill: parent
+                color: "#cfcfcf"
+                text: ""
+                rightPadding: 5
+                leftPadding: 5
+                padding: 2
+                selectionColor: "#eeeeee"
+                selectedTextColor: "#999999"
+                selectByMouse: true
+                clip: true
+                font.family: "Arial"
+                horizontalAlignment: Text.AlignLeft
+                font.pixelSize: 14
+                verticalAlignment: Text.AlignVCenter
+
+                onTextChanged: {
+                    buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != ""
+                }
+            }
         }
 
         Text {
             id: textTransferAmountDescr
             color: "#ffffff"
-            text: qsTr("Amount")
+            text: "Amount"
             anchors.top: rectangleTextInputTransferAddress.bottom
             anchors.topMargin: 13
             anchors.left: textTransferAddrDescr.left
-            anchors.bottomMargin: 0
+            anchors.leftMargin: 0
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
             horizontalAlignment: Text.AlignLeft
             font.bold: true
             font.family: "Arial"
+        }
+
+        Rectangle {
+            id: rectangleTextInputTransferAmount
+            color: "#555555"
+            anchors.left: textTransferAmountDescr.left
             anchors.leftMargin: 0
-            anchors.bottom: textAvailableUnit.bottom
+            anchors.top: textTransferAmountDescr.bottom
+            anchors.topMargin: 7
+            height: 25
+            width: 90
+            radius: 3
+
+            TextInput {
+                id: textInputTransferAmount
+                anchors.fill: parent
+                color: "#cfcfcf"
+                text: ""
+                rightPadding: 5
+                leftPadding: 5
+                padding: 2
+                selectionColor: "#eeeeee"
+                selectedTextColor: "#999999"
+                selectByMouse: true
+                clip: true
+                font.family: "Arial"
+                horizontalAlignment: Text.AlignRight
+                font.pixelSize: 16
+                verticalAlignment: Text.AlignVCenter
+
+                onTextChanged: {
+                    buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != "";
+                    textTransferAmountUSD.text = QmlBridge.getTransferAmountUSD(textInputTransferAmount.text);
+                }
+
+                Connections{
+                    target: QmlBridge
+                    onClearTransferAmount: {
+                        textInputTransferAmount.clear();
+                        transferAmount = "";
+                    }
+                }
+            }
+        }
+
+        Text {
+            id: textTransferAmountUnit
+            color: "#999999"
+            text: "TRTL"
+            anchors.verticalCenter: rectangleTextInputTransferAmount.verticalCenter
+            horizontalAlignment: Text.AlignLeft
+            font.pixelSize: 14
+            anchors.left: rectangleTextInputTransferAmount.right
+            font.family: "Arial"
+            verticalAlignment: Text.AlignBottom
+            anchors.leftMargin: 10
+            font.bold: true
+        }
+
+        Text {
+            id: textTransferAmountUSD
+            color: "#858585"
+            text: ""
+            anchors.left: textTransferAmountUnit.right
+            anchors.leftMargin: 25
+            anchors.bottom: textTransferAmountUnit.bottom
+            anchors.bottomMargin: 0
+            font.family: "Arial"
+            font.pixelSize: 15
+            horizontalAlignment: Text.AlignRight
+            visible: false
+        }
+
+        Button {
+            id: buttonFullBalance
+            text: "full balance"
+            anchors.verticalCenter: rectangleTextInputTransferAmount.verticalCenter
+            anchors.horizontalCenter: buttonFeeMixinDefaultValues.horizontalCenter
+            height: 25
+            enabled: true
+
+            contentItem: Text {
+                text: buttonFullBalance.text
+                font.pixelSize: 12
+                font.family: "Arial"
+                font.bold: true
+                opacity: enabled ? 1.0 : 0.3
+                color: buttonFullBalance.down ? "#dddddd" : "#ffffff"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            background: Rectangle {
+                implicitWidth: 100
+                height: buttonFullBalance.height
+                opacity: enabled ? 1 : 0.3
+                radius: 6
+                color: buttonFullBalance.down ? "#383838" : "#444444"
+            }
+
+            onClicked: {
+                QmlBridge.getFullBalanceAndDisplayInTransferAmount(textInputTransferFee.text);
+            }
         }
 
         Text {
             id: textTransferPaymentIDDescr
             color: "#ffffff"
-            text: qsTr("(optional) Payment ID")
+            text: "(optional) Payment ID"
             anchors.top: rectangleTextInputTransferAmount.bottom
             anchors.topMargin: 13
             anchors.left: textTransferAddrDescr.left
-            anchors.bottomMargin: 0
+            anchors.leftMargin: 0
             font.pixelSize: 14
             verticalAlignment: Text.AlignBottom
-            anchors.leftMargin: 0
             font.family: "Arial"
             font.bold: true
             horizontalAlignment: Text.AlignLeft
-            anchors.bottom: textAvailableUnit.bottom
+        }
+
+        Rectangle {
+            id: rectangleTextInputTransferPaymentID
+            color: "#555555"
+            anchors.right: parent.right
+            anchors.rightMargin: 5
+            anchors.top: textTransferPaymentIDDescr.bottom
+            anchors.topMargin: 6
+            anchors.left: textTransferPaymentIDDescr.left
+            anchors.leftMargin: 0
+            height: 25
+            radius: 3
+
+            TextInput {
+                id: textInputTransferPaymentID
+                anchors.fill: parent
+                color: "#cfcfcf"
+                text: ""
+                rightPadding: 5
+                leftPadding: 5
+                padding: 2
+                selectionColor: "#eeeeee"
+                selectedTextColor: "#999999"
+                selectByMouse: true
+                clip: true
+                font.family: "Arial"
+                horizontalAlignment: Text.AlignLeft
+                font.pixelSize: 16
+                verticalAlignment: Text.AlignVCenter
+            }
         }
 
         Text {
             id: textTransferFeeDescr
-            color: "#999999"
-            text: qsTr("The fee is currently fixed and set to 1 TRTL.")
-            anchors.top: textTransferPaymentIDDescr.bottom
-            anchors.topMargin: 45
+            color: "#ffffff"
+            text: "Fee"
+            anchors.top: rectangleTextInputTransferPaymentID.bottom
+            anchors.topMargin: 13
             anchors.left: textTransferAddrDescr.left
-            anchors.bottomMargin: 0
+            anchors.leftMargin: 0
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
             horizontalAlignment: Text.AlignLeft
-            font.bold: false
+            font.bold: true
             font.family: "Arial"
+        }
+
+        Rectangle {
+            id: rectangleTextInputTransferFee
+            color: "#555555"
+            anchors.left: textTransferFeeDescr.left
             anchors.leftMargin: 0
-            anchors.bottom: textAvailableUnit.bottom
+            anchors.top: textTransferFeeDescr.bottom
+            anchors.topMargin: 7
+            height: 25
+            width: 50
+            radius: 3
+
+            TextInput {
+                id: textInputTransferFee
+                anchors.fill: parent
+                color: "#cfcfcf"
+                text: ""
+                rightPadding: 5
+                leftPadding: 5
+                padding: 2
+                selectionColor: "#eeeeee"
+                selectedTextColor: "#999999"
+                selectByMouse: true
+                clip: true
+                font.family: "Arial"
+                horizontalAlignment: Text.AlignRight
+                font.pixelSize: 16
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        Text {
+            id: textTransferFeeUnit
+            color: "#999999"
+            text: "TRTL"
+            anchors.verticalCenter: rectangleTextInputTransferFee.verticalCenter
+            horizontalAlignment: Text.AlignLeft
+            font.pixelSize: 14
+            anchors.left: rectangleTextInputTransferFee.right
+            font.family: "Arial"
+            verticalAlignment: Text.AlignBottom
+            anchors.leftMargin: 10
+            font.bold: true
         }
 
         Text {
             id: textTransferMixinDescr
-            color: "#999999"
-            text: qsTr("The mixin count is currently fixed and set to 4.")
-            anchors.top: textTransferFeeDescr.bottom
-            anchors.topMargin: 5
-            anchors.left: textTransferAddrDescr.left
-            anchors.bottomMargin: 0
-            font.pixelSize: 14
+            color: "#ffffff"
+            text: "Mixin count"
+            anchors.top: textTransferFeeDescr.top
+            anchors.topMargin: 0
+            anchors.left: textTransferFeeUnit.right
+            anchors.leftMargin: 40
             verticalAlignment: Text.AlignBottom
-            anchors.leftMargin: 0
-            font.family: "Arial"
-            font.bold: false
+            font.pixelSize: 14
             horizontalAlignment: Text.AlignLeft
-            anchors.bottom: textAvailableUnit.bottom
+            font.bold: true
+            font.family: "Arial"
+        }
+
+        Rectangle {
+            id: rectangleTextInputTransferMixin
+            color: "#555555"
+            anchors.left: textTransferMixinDescr.left
+            anchors.leftMargin: 0
+            anchors.top: textTransferMixinDescr.bottom
+            anchors.topMargin: 7
+            height: 25
+            width: 50
+            radius: 3
+
+            TextInput {
+                id: textInputTransferMixin
+                anchors.fill: parent
+                color: "#cfcfcf"
+                text: ""
+                rightPadding: 5
+                leftPadding: 5
+                padding: 2
+                selectionColor: "#eeeeee"
+                selectedTextColor: "#999999"
+                selectByMouse: true
+                clip: true
+                font.family: "Arial"
+                horizontalAlignment: Text.AlignRight
+                font.pixelSize: 16
+                verticalAlignment: Text.AlignVCenter
+            }
+        }
+
+        Text {
+            id: textTransferFeeMixinDefaultDescr
+            color: "#999999"
+            text: "It is advised not to modify"
+            anchors.top: textTransferMixinDescr.top
+            anchors.topMargin: 0
+            anchors.left: rectangleTextInputTransferMixin.right
+            anchors.leftMargin: 55
+            anchors.right: parent.right
+            anchors.rightMargin: 0
+            font.pixelSize: 12
+            horizontalAlignment: Text.AlignHCenter
+            font.family: "Arial"
+        }
+
+        Button {
+            id: buttonFeeMixinDefaultValues
+            text: "default values"
+            anchors.horizontalCenter: textTransferFeeMixinDefaultDescr.horizontalCenter
+            anchors.top: textTransferFeeMixinDefaultDescr.bottom
+            anchors.topMargin: 8
+            height: 25
+            enabled: true
+
+            contentItem: Text {
+                text: buttonFeeMixinDefaultValues.text
+                font.pixelSize: 12
+                font.family: "Arial"
+                font.bold: true
+                opacity: enabled ? 1.0 : 0.3
+                color: buttonFeeMixinDefaultValues.down ? "#dddddd" : "#ffffff"
+                horizontalAlignment: Text.AlignHCenter
+                verticalAlignment: Text.AlignVCenter
+            }
+
+            background: Rectangle {
+                implicitWidth: 100
+                height: buttonFeeMixinDefaultValues.height
+                opacity: enabled ? 1 : 0.3
+                radius: 6
+                color: buttonFeeMixinDefaultValues.down ? "#383838" : "#444444"
+            }
+
+            onClicked: {
+                QmlBridge.getDefaultFeeAndMixinAndDisplay();
+            }
         }
 
         Button {
             id: buttonSend
-            text: qsTr("SEND")
+            text: "SEND"
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 30
@@ -619,144 +947,19 @@ Rectangle {
             }
 
             onClicked: {
-                QmlBridge.clickedButtonSend(textInputTransferAddress.text, textInputTransferAmount.text, textInputTransferPaymentID.text);
-            }
-        }
-            
-        Rectangle {
-            id: rectangleTextInputTransferAddress
-            color: "#555555"
-            height: 25
-            anchors.right: parent.right
-            anchors.rightMargin: 5
-            anchors.top: textTransferAddrDescr.bottom
-            anchors.topMargin: 6
-            anchors.left: textTransferAddrDescr.left
-            anchors.leftMargin: 0
-            radius: 3
-
-            TextInput {
-                id: textInputTransferAddress
-                anchors.fill: parent
-                color: "#cfcfcf"
-                text: qsTr("")
-                rightPadding: 5
-                leftPadding: 5
-                padding: 2
-                selectionColor: "#eeeeee"
-                selectedTextColor: "#999999"
-                selectByMouse: true
-                clip: true
-                font.family: "Arial"
-                horizontalAlignment: Text.AlignLeft
-                font.pixelSize: 14
-                verticalAlignment: Text.AlignVCenter
-
-                onTextChanged: {
-                    buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != ""
-                }
+                rectangleTransfer.transferRecipient = textInputTransferAddress.text
+                rectangleTransfer.transferAmount = textInputTransferAmount.text
+                rectangleTransfer.transferPaymentID = textInputTransferPaymentID.text
+                rectangleTransfer.transferFee = textInputTransferFee.text
+                rectangleTransfer.transferMixin = textInputTransferMixin.text
+                dialogConfirmTransfer.show(rectangleTransfer.transferRecipient, rectangleTransfer.transferAmount + " TRTL + " + rectangleTransfer.transferFee + " TRTL (fee)", rectangleTransfer.transferPaymentID, rectangleTransfer.transferMixin);
             }
         }
 
-        Rectangle {
-            id: rectangleTextInputTransferAmount
-            color: "#555555"
-            anchors.left: textTransferAmountDescr.left
-            anchors.leftMargin: 0
-            anchors.top: textTransferAmountDescr.bottom
-            anchors.topMargin: 7
-            height: 25
-            width: 90
-            radius: 3
-
-            TextInput {
-                id: textInputTransferAmount
-                anchors.fill: parent
-                color: "#cfcfcf"
-                text: qsTr("")
-                rightPadding: 5
-                leftPadding: 5
-                padding: 2
-                selectionColor: "#eeeeee"
-                selectedTextColor: "#999999"
-                selectByMouse: true
-                clip: true
-                font.family: "Arial"
-                horizontalAlignment: Text.AlignRight
-                font.pixelSize: 16
-                verticalAlignment: Text.AlignVCenter
-
-                onTextChanged: {
-                    buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != "";
-                    textTransferAmountUSD.text = QmlBridge.getTransferAmountUSD(textInputTransferAmount.text);
-                }
-
-                Connections{
-                    target: QmlBridge
-                    onClearTransferAmount: {
-                        textInputTransferAmount.clear()
-                    }
-                }
-            }
-        }
-
-        Text {
-            id: textTransferAmountUnit
-            color: "#999999"
-            text: qsTr("TRTL")
-            anchors.verticalCenter: rectangleTextInputTransferAmount.verticalCenter
-            horizontalAlignment: Text.AlignLeft
-            font.pixelSize: 14
-            anchors.left: rectangleTextInputTransferAmount.right
-            font.family: "Arial"
-            verticalAlignment: Text.AlignBottom
-            anchors.leftMargin: 10
-            font.bold: true
-        }
-
-        Text {
-            id: textTransferAmountUSD
-            color: "#858585"
-            text: ""
-            anchors.left: textTransferAmountUnit.right
-            anchors.leftMargin: 25
-            anchors.bottom: textTransferAmountUnit.bottom
-            anchors.bottomMargin: 0
-            font.family: "Arial"
-            font.pixelSize: 15
-            horizontalAlignment: Text.AlignRight
-            visible: false
-        }
-
-        Rectangle {
-            id: rectangleTextInputTransferPaymentID
-            color: "#555555"
-            anchors.right: parent.right
-            anchors.rightMargin: 5
-            anchors.top: textTransferPaymentIDDescr.bottom
-            anchors.topMargin: 6
-            anchors.left: textTransferPaymentIDDescr.left
-            anchors.leftMargin: 0
-            height: 25
-            radius: 3
-
-            TextInput {
-                id: textInputTransferPaymentID
-                anchors.fill: parent
-                color: "#cfcfcf"
-                text: qsTr("")
-                rightPadding: 5
-                leftPadding: 5
-                padding: 2
-                selectionColor: "#eeeeee"
-                selectedTextColor: "#999999"
-                selectByMouse: true
-                clip: true
-                font.family: "Arial"
-                horizontalAlignment: Text.AlignLeft
-                font.pixelSize: 16
-                verticalAlignment: Text.AlignVCenter
-            }
+        function transferConfirmed() {
+            QmlBridge.clickedButtonSend(transferRecipient, transferAmount, transferPaymentID, transferFee, transferMixin);
+            textInputTransferAmount.text = "";
+            transferAmount = "";
         }   
     }
 
@@ -772,7 +975,7 @@ Rectangle {
         Text {
             id: textConnectionInfoPeersDescr
             color: "#cccccc"
-            text: qsTr("connected peers")
+            text: "connected peers"
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
             anchors.verticalCenter: parent.verticalCenter
@@ -784,7 +987,7 @@ Rectangle {
         Text {
             id: textConnectionInfoPeers
             color: "#ffffff"
-            text: qsTr("0")
+            text: "0"
             font.bold: true
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
@@ -797,7 +1000,7 @@ Rectangle {
         Text {
             id: textConnectionInfoBlocksDescr
             color: "#cccccc"
-            text: qsTr("synced blocks")
+            text: "synced blocks"
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
             anchors.verticalCenter: parent.verticalCenter
@@ -809,7 +1012,7 @@ Rectangle {
         Text {
             id: textConnectionInfoBlocks
             color: "#ffffff"
-            text: qsTr("0/0")
+            text: "0/0"
             font.bold: true
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
@@ -822,7 +1025,7 @@ Rectangle {
         Text {
             id: textConnectionInfoSync
             color: "#ffffff"
-            text: qsTr("Blockchain syncing...")
+            text: "Blockchain syncing..."
             font.bold: true
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
@@ -897,6 +1100,7 @@ Rectangle {
             id: textDescriptionPrivateKeys
             text: "See below your public address and your 2 private (secret) keys. The 2 private keys can be used to re-generate your wallet.\nCopy them both and keep them in a safe place.\nIf you lose them and lose your password or wallet file, you will not be able to recover your TRTLs.\nIf anybody has access to those keys, he can steal your TRTLs."
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         Text {
@@ -907,6 +1111,7 @@ Rectangle {
             anchors.left: textDescriptionPrivateKeys.left
             anchors.leftMargin: 0
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         Text {
@@ -917,7 +1122,7 @@ Rectangle {
             anchors.left: textDescriptionWalletFilename.right
             anchors.leftMargin: 20
             font.family: "Arial"
-
+            font.pixelSize: 13
         }
 
         Text {
@@ -928,6 +1133,7 @@ Rectangle {
             anchors.left: textDescriptionWalletFilename.left
             anchors.leftMargin: 0
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         TextInput {
@@ -944,6 +1150,7 @@ Rectangle {
             selectedTextColor: "white"
             selectByMouse: true
             font.family: "Arial"
+            font.pixelSize: 13
             font.bold: true
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
@@ -957,6 +1164,7 @@ Rectangle {
             anchors.left: textInputAddress.left
             anchors.leftMargin: 0
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         TextInput {
@@ -973,6 +1181,7 @@ Rectangle {
             selectedTextColor: "white"
             selectByMouse: true
             font.family: "Arial"
+            font.pixelSize: 13
             font.bold: true
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
@@ -986,6 +1195,7 @@ Rectangle {
             anchors.left: textInputPrivateViewKey.left
             anchors.leftMargin: 0
             font.family: "Arial"
+            font.pixelSize: 13
         }
 
         TextInput {
@@ -1002,6 +1212,7 @@ Rectangle {
             selectedTextColor: "white"
             selectByMouse: true
             font.family: "Arial"
+            font.pixelSize: 13
             font.bold: true
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignVCenter
@@ -1009,7 +1220,7 @@ Rectangle {
 
         Button {
             id: buttonCopyKeys
-            text: qsTr("Copy to clipboard")
+            text: "Copy to clipboard"
             anchors.bottom: textInputPrivateSpendKey.bottom
             anchors.bottomMargin: 40
             anchors.left: textInputPrivateSpendKey.right
@@ -1041,12 +1252,129 @@ Rectangle {
             }
         }
 
+        onAccepted: {
+            textWalletFilename.text = "";
+            textInputPrivateViewKey.text = "";
+            textInputPrivateSpendKey.text = "";
+            textInputAddress.text = "";
+        }
+
         function show(filename, privateViewKey, privateSpendKey, walletAddress) {
-            textWalletFilename.text = filename
-            textInputPrivateViewKey.text = privateViewKey
-            textInputPrivateSpendKey.text = privateSpendKey
-            textInputAddress.text = walletAddress
-            dialogPrivateKeys.open()
+            textWalletFilename.text = filename;
+            textInputPrivateViewKey.text = privateViewKey;
+            textInputPrivateSpendKey.text = privateSpendKey;
+            textInputAddress.text = walletAddress;
+            dialogPrivateKeys.open();
+        }
+    }
+
+    Dialog {
+        id: dialogConfirmTransfer
+        title: "Confirm transfer"
+        standardButtons: StandardButton.Cancel | StandardButton.Ok
+        width: 400
+
+        Text {
+            id: textDescriptionConfirmRecipient
+            text: "To:"
+            font.family: "Arial"
+        }
+
+        Text {
+            id: textConfirmRecipient
+            text: ""
+            font.family: "Arial"
+            font.bold: true
+            elide: Text.ElideMiddle
+            anchors.bottom: textDescriptionConfirmRecipient.bottom
+            anchors.bottomMargin: 0
+            anchors.left: parent.left
+            anchors.leftMargin: 100
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+        }
+
+        Text {
+            id: textDescriptionConfirmAmount
+            text: "Amount:"
+            font.family: "Arial"
+            anchors.top: textDescriptionConfirmRecipient.bottom
+            anchors.topMargin: 12
+            anchors.left: textDescriptionConfirmRecipient.left
+            anchors.leftMargin: 0
+        }
+
+        Text {
+            id: textConfirmAmount
+            text: ""
+            font.family: "Arial"
+            font.bold: true
+            anchors.bottom: textDescriptionConfirmAmount.bottom
+            anchors.bottomMargin: 0
+            anchors.left: textConfirmRecipient.left
+            anchors.leftMargin: 0
+        }
+
+        Text {
+            id: textDescriptionConfirmPaymentID
+            text: "Payment ID:"
+            font.family: "Arial"
+            anchors.top: textDescriptionConfirmAmount.bottom
+            anchors.topMargin: 12
+            anchors.left: textDescriptionConfirmAmount.left
+            anchors.leftMargin: 0
+        }
+
+        Text {
+            id: textConfirmPaymentID
+            text: ""
+            font.family: "Arial"
+            font.bold: true
+            elide: Text.ElideMiddle
+            anchors.bottom: textDescriptionConfirmPaymentID.bottom
+            anchors.bottomMargin: 0
+            anchors.left: textConfirmRecipient.left
+            anchors.leftMargin: 0
+            anchors.right: textConfirmRecipient.right
+            anchors.rightMargin: 0
+        }
+
+        Text {
+            id: textDescriptionConfirmMixin
+            text: "Mixin count:"
+            font.family: "Arial"
+            anchors.top: textDescriptionConfirmPaymentID.bottom
+            anchors.topMargin: 12
+            anchors.left: textDescriptionConfirmPaymentID.left
+            anchors.leftMargin: 0
+        }
+
+        Text {
+            id: textConfirmMixin
+            text: ""
+            font.family: "Arial"
+            font.bold: true
+            anchors.bottom: textDescriptionConfirmMixin.bottom
+            anchors.bottomMargin: 0
+            anchors.left: textConfirmRecipient.left
+            anchors.leftMargin: 0
+        }
+
+        function show(recipient, amount, paymentID, mixin) {
+            textConfirmRecipient.text = recipient;
+            textConfirmAmount.text = amount;
+            textConfirmPaymentID.text = paymentID;
+            textConfirmMixin.text = mixin;
+            dialogConfirmTransfer.open();
+        }
+
+        onAccepted: {
+            rectangleTransfer.transferConfirmed();
+            textConfirmRecipient.text = "";
+            textConfirmAmount.text = "";
+            textConfirmPaymentID.text = "";
+            textConfirmFee.text = "";
+            textConfirmMixin.text = "";
         }
     }
 
@@ -1058,22 +1386,32 @@ Rectangle {
         }
 
         onDisplaySyncingInfo: {
-            textConnectionInfoSync.text = syncing
-            textConnectionInfoBlocks.text = blocks
-            textConnectionInfoPeers.text = peers
+            textConnectionInfoSync.text = syncing;
+            textConnectionInfoBlocks.text = blocks;
+            textConnectionInfoPeers.text = peers;
         }
 
         onDisplayTotalBalance: {
-            textBalanceValue.text = balance
-            textBalanceUSD.text = balanceUSD
+            textBalanceValue.text = balance;
+            textBalanceUSD.text = balanceUSD;
         }
 
         onDisplayAddress: {
-            textAddress.text = address
-            textWalletName.text = wallet
-            textUSD.visible = displayFiatConversion
-            textBalanceUSD.visible = displayFiatConversion
-            textTransferAmountUSD.visible = displayFiatConversion
+            textAddress.text = address;
+            textWalletName.text = wallet;
+            textUSD.visible = displayFiatConversion;
+            textBalanceUSD.visible = displayFiatConversion;
+            textTransferAmountUSD.visible = displayFiatConversion;
+            switchNumberTransactions.checked = false;
+        }
+
+        onDisplayFullBalanceInTransferAmount: {
+            textInputTransferAmount.text = fullBalance;
+        }
+
+        onDisplayDefaultFeeAndMixin: {
+            textInputTransferFee.text = fee;
+            textInputTransferMixin.text = mixin;
         }
     }
 
@@ -1081,10 +1419,6 @@ Rectangle {
         textInputTransferAddress.text = "";
         textInputTransferAmount.text = "";
         textInputTransferPaymentID.text = "";
-    }
-
-    function showDialogWarningCloseWallet() {
-        dialogWarningCloseWallet.show()
     }
 
     function show() {

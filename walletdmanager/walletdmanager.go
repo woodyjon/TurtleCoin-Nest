@@ -22,13 +22,6 @@ import (
 )
 
 var (
-	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
-	logWalletdAllSessionsFilename    = "walletd.log"
-	walletdLogLevel                  = "3" // should be at least 3 as I use some logs messages to confirm creation of wallet
-
-	walletdCommandName     = "walletd"
-	turtlecoindCommandName = "TurtleCoind"
-
 	// WalletAvailableBalance is the available balance
 	WalletAvailableBalance float64
 
@@ -86,6 +79,31 @@ func RequestBalance() (availableBalance float64, lockedBalance float64, totalBal
 	return availableBalance, lockedBalance, totalBalance, err
 }
 
+// RequestAvailableBalanceToBeSpent returns the available balance minus the fee
+func RequestAvailableBalanceToBeSpent(transferFeeString string) (availableBalance float64, err error) {
+
+	availableBalance, _, _, err = RequestBalance()
+	if err != nil {
+		return 0, err
+	}
+
+	transferFee, err := strconv.ParseFloat(transferFeeString, 64) // transferFee is expressed in TRTL
+	if err != nil {
+		return 0, errors.New("fee is invalid")
+	}
+
+	if transferFee < 0 {
+		return 0, errors.New("fee should be positive")
+	}
+
+	availableBalance -= transferFee
+	if availableBalance < 0 {
+		availableBalance = 0
+	}
+
+	return availableBalance, nil
+}
+
 // RequestAddress provides the address of the current wallet
 func RequestAddress() (address string, err error) {
 
@@ -115,7 +133,7 @@ func RequestListTransactions() (transfers []turtlecoinwalletdrpcgo.Transfer, err
 }
 
 // SendTransaction makes a transfer with the provided information
-func SendTransaction(transferAddress string, transferAmountString string, transferPaymentID string) (transactionHash string, err error) {
+func SendTransaction(transferAddress string, transferAmountString string, transferPaymentID string, transferFeeString string, transferMixinString string) (transactionHash string, err error) {
 
 	if !WalletdSynced {
 		return "", errors.New("wallet and/or blockchain not fully synced yet")
@@ -129,8 +147,6 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("sending to yourself is not supported")
 	}
 
-	var transferFee float64 = 1 // transferFee is expressed in TRTL
-	transferMixin := 4
 	transferAmount, err := strconv.ParseFloat(transferAmountString, 64) // transferAmount is expressed in TRTL
 	if err != nil {
 		return "", errors.New("amount is invalid")
@@ -138,6 +154,15 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 
 	if transferAmount <= 0 {
 		return "", errors.New("amount of TRTL to be sent should be greater than 0")
+	}
+
+	transferFee, err := strconv.ParseFloat(transferFeeString, 64) // transferFee is expressed in TRTL
+	if err != nil {
+		return "", errors.New("fee is invalid")
+	}
+
+	if transferFee < 0 {
+		return "", errors.New("fee should be positive")
 	}
 
 	if transferAmount+transferFee > WalletAvailableBalance {
@@ -148,11 +173,25 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("for sending more than 5,000,000 TRTL to one address, you should split in multiple transfers of smaller amounts")
 	}
 
-	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, transferMixin, rpcPassword)
+	transferMixin, err := strconv.ParseInt(transferMixinString, 0, 0)
+	if err != nil {
+		return "", errors.New("mixin is invalid")
+	}
+
+	if transferMixin < 0 {
+		return "", errors.New("mixin should be positive")
+	}
+
+	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, int(transferMixin), rpcPassword)
 	if err != nil {
 		log.Error("error sending transaction. err: ", err)
+		errorMessage := err.Error()
+		if errorMessage == "Wrong amount" {
+			errorMessage += "\nYou sometimes need to send a small amount less than your full balance to get the transfer to succeed. This is possibly due to dust in your wallet that is unable to be sent without a mixin of 0 (a mixin of 0 is possible but might compromise privacy.)"
+		}
+		return "", errors.New(errorMessage)
 	}
-	return transactionHash, err
+	return transactionHash, nil
 }
 
 // GetPrivateViewKeyAndSpendKey provides the private view and spend keys of the current wallet
@@ -246,6 +285,8 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
 	}
 
+	hideCmdWindowIfNeeded(cmdWalletd)
+
 	// setup all sessions log file
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
 	if err != nil {
@@ -283,12 +324,14 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		}
 	}
 
-	errorMessage := "Error opening the daemon walletd or communicating with it.\n"
+	errorMessage := ""
 
 	if len(listWalletdErrors) > 0 {
 		for _, line := range listWalletdErrors {
 			errorMessage = errorMessage + line
 		}
+	} else {
+		errorMessage = "Unknown error opening the daemon walletd or communicating with it"
 	}
 
 	// check rpc connection with walletd
@@ -378,9 +421,10 @@ func killWalletd() {
 // CreateWallet calls walletd to create a new wallet. If privateViewKey and privateSpendKey are empty strings, a new wallet will be generated. If they are not empty, a wallet will be generated from those keys (import)
 // walletFilename is the filename chosen by the user. The created wallet file will be located in the same folder as walletd.
 // walletPassword is the password of the new wallet.
+// walletPasswordConfirmation is the repeat of the password for confirmation that the password was correctly entered.
 // privateViewKey is the private view key of the wallet.
 // privateSpendKey is the private spend key of the wallet.
-func CreateWallet(walletFilename string, walletPassword string, privateViewKey string, privateSpendKey string) (err error) {
+func CreateWallet(walletFilename string, walletPassword string, walletPasswordConfirmation string, privateViewKey string, privateSpendKey string) (err error) {
 
 	if WalletdOpenAndRunning {
 		return errors.New("walletd is already running. It should be stopped before being able to generate a new wallet")
@@ -430,6 +474,15 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 		pathToWallet = pathToHomeDir + "/" + walletFilename
 	}
 
+	// check file with same filename does not already exist
+	if _, err := os.Stat(pathToWallet); err == nil {
+		return errors.New("a file with the same filename already exists")
+	}
+
+	if walletPassword != walletPasswordConfirmation {
+		return errors.New("passwords do not match")
+	}
+
 	// setup current session log file (logs are added real time in this file)
 	walletdCurrentSessionLogFile, err := os.Create(pathToLogWalletdCurrentSession)
 	if err != nil {
@@ -444,6 +497,8 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 		// import wallet from private view and spend keys
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--view-key", privateViewKey, "--spend-key", privateSpendKey, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
 	}
+
+	hideCmdWindowIfNeeded(cmdWalletd)
 
 	// setup all sessions log file
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -493,22 +548,24 @@ func CreateWallet(walletFilename string, walletPassword string, privateViewKey s
 			successCreatingWallet = true
 			break
 		}
-
-		killWalletd()
-		time.Sleep(1 * time.Second)
 	}
 
-	errorMessage := "Error opening walletd and/or creating a wallet. More info in the file " + logWalletdCurrentSessionFilename + "\n"
+	errorMessage := ""
 
 	if !successCreatingWallet {
 		if len(listWalletdErrors) > 0 {
 			for _, line := range listWalletdErrors {
 				errorMessage = errorMessage + line
 			}
+		} else {
+			errorMessage = "unknow error"
 		}
 		killWalletd()
 		return errors.New(errorMessage)
 	}
+
+	killWalletd()
+	time.Sleep(1 * time.Second)
 
 	return nil
 }

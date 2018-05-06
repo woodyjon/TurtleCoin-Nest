@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/atotto/clipboard"
+	"github.com/dustin/go-humanize"
 	_ "github.com/mattn/go-sqlite3"
 	log "github.com/sirupsen/logrus"
 	"github.com/therecipe/qt/core"
@@ -25,27 +26,20 @@ import (
 	"github.com/therecipe/qt/quickcontrols2"
 )
 
-const (
-	urlCryptoCompareTRTL       = "https://min-api.cryptocompare.com/data/price?fsym=TRTL&tsyms=USD"
-	defaultRemoteDaemonAddress = "public.turtlenode.io"
-	defaultRemoteDaemonPort    = "11898"
-	logFileFilename            = "turtlecoin-nest-logs.log"
-	urlBlockExplorer           = "https://blocks.turtle.link/"
-	dbFilename                 = "settings.db"
-)
-
 var (
 	// qmlObjects = make(map[string]*core.QObject)
-	qmlBridge               *QmlBridge
-	transfers               []turtlecoinwalletdrpcgo.Transfer
-	tickerRefreshWalletData *time.Ticker
-	db                      *sql.DB
-	useRemoteNode           = true
-	displayFiatConversion   = false
-	stringBackupKeys        = ""
-	rateUSDTRTL             float64 // USD value for 1 TRTL
-	remoteDaemonAddress     = defaultRemoteDaemonAddress
-	remoteDaemonPort        = defaultRemoteDaemonPort
+	qmlBridge                   *QmlBridge
+	transfers                   []turtlecoinwalletdrpcgo.Transfer
+	tickerRefreshWalletData     *time.Ticker
+	tickerRefreshConnectionInfo *time.Ticker
+	db                          *sql.DB
+	useRemoteNode               = true
+	displayFiatConversion       = false
+	stringBackupKeys            = ""
+	rateUSDTRTL                 float64 // USD value for 1 TRTL
+	remoteDaemonAddress         = defaultRemoteDaemonAddress
+	remoteDaemonPort            = defaultRemoteDaemonPort
+	limitDisplayedTransactions  = true
 )
 
 // QmlBridge is the bridge between qml and go
@@ -68,9 +62,10 @@ type QmlBridge struct {
 		number string) `signal:"addTransactionToList"`
 	_ func(text string, time int)                       `signal:"displayPopup"`
 	_ func(syncing string, blocks string, peers string) `signal:"displaySyncingInfo"`
-	_ func(errorMessage string)                         `signal:"displayErrorDialog"`
-	_ func()                                            `signal:"clearTransferAmount"`
-	_ func()                                            `signal:"clearListTransactions"`
+	_ func(errorText string,
+		errorInformativeText string) `signal:"displayErrorDialog"`
+	_ func() `signal:"clearTransferAmount"`
+	_ func() `signal:"clearListTransactions"`
 	_ func(filename string,
 		privateViewKey string,
 		privateSpendKey string,
@@ -88,6 +83,9 @@ type QmlBridge struct {
 	_ func(displayFiat bool) `signal:"displaySettingsValues"`
 	_ func(remoteNodeAddress string,
 		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
+	_ func(fullBalance string)              `signal:"displayFullBalanceInTransferAmount"`
+	_ func(fee string, mixin string)        `signal:"displayDefaultFeeAndMixin"`
+	_ func(index int, confirmations string) `signal:"updateConfirmationsOfTransaction"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -97,15 +95,20 @@ type QmlBridge struct {
 	_ func()                     `slot:"clickedButtonCopyKeys"`
 	_ func(transferAddress string,
 		transferAmount string,
-		transferPaymentID string) `slot:"clickedButtonSend"`
-	_ func()                                             `slot:"clickedButtonBackupWallet"`
-	_ func()                                             `slot:"clickedCloseWallet"`
-	_ func(pathToWallet string, passwordWallet string)   `slot:"clickedButtonOpen"`
-	_ func(filenameWallet string, passwordWallet string) `slot:"clickedButtonCreate"`
+		transferPaymentID string,
+		transferFee string,
+		transferMixin string) `slot:"clickedButtonSend"`
+	_ func()                                           `slot:"clickedButtonBackupWallet"`
+	_ func()                                           `slot:"clickedCloseWallet"`
+	_ func(pathToWallet string, passwordWallet string) `slot:"clickedButtonOpen"`
+	_ func(filenameWallet string,
+		passwordWallet string,
+		confirmPasswordWallet string) `slot:"clickedButtonCreate"`
 	_ func(filenameWallet string,
 		passwordWallet string,
 		privateViewKey string,
-		privateSpendKey string) `slot:"clickedButtonImport"`
+		privateSpendKey string,
+		confirmPasswordWallet string) `slot:"clickedButtonImport"`
 	_ func(remote bool)              `slot:"choseRemote"`
 	_ func(amountTRTL string) string `slot:"getTransferAmountUSD"`
 	_ func()                         `slot:"clickedCloseSettings"`
@@ -113,7 +116,10 @@ type QmlBridge struct {
 	_ func(displayFiat bool)         `slot:"choseDisplayFiat"`
 	_ func(daemonAddress string,
 		daemonPort string) `slot:"saveRemoteDaemonInfo"`
-	_ func() `slot:"resetRemoteDaemonInfo"`
+	_ func()                   `slot:"resetRemoteDaemonInfo"`
+	_ func(transferFee string) `slot:"getFullBalanceAndDisplayInTransferAmount"`
+	_ func()                   `slot:"getDefaultFeeAndMixinAndDisplay"`
+	_ func(limit bool)         `slot:"limitDisplayTransactions"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -169,12 +175,9 @@ func main() {
 	}
 	walletdmanager.Setup(platform)
 
-	gui.NewQGuiApplication(len(os.Args), os.Args)
+	app := gui.NewQGuiApplication(len(os.Args), os.Args)
+	app.SetWindowIcon(gui.NewQIcon5("qrc:/qml/images/icon.png"))
 
-	// Enable high DPI scaling
-	// app.SetAttribute(core.Qt__AA_EnableHighDpiScaling, true)
-
-	// Use the material style for qml
 	quickcontrols2.QQuickStyle_SetStyle("material")
 
 	engine := qml.NewQQmlApplicationEngine(nil)
@@ -228,8 +231,8 @@ func connectQMLToGOFunctions() {
 		}
 	})
 
-	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string) {
-		transfer(transferAddress, transferAmount, transferPaymentID)
+	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string, transferFee string, transferMixin string) {
+		transfer(transferAddress, transferAmount, transferPaymentID, transferFee, transferMixin)
 	})
 
 	qmlBridge.ConnectGetTransferAmountUSD(func(amountTRTL string) string {
@@ -247,15 +250,15 @@ func connectQMLToGOFunctions() {
 		}()
 	})
 
-	qmlBridge.ConnectClickedButtonCreate(func(filenameWallet string, passwordWallet string) {
+	qmlBridge.ConnectClickedButtonCreate(func(filenameWallet string, passwordWallet string, confirmPasswordWallet string) {
 		go func() {
-			createWalletWithWalletInfo(filenameWallet, passwordWallet)
+			createWalletWithWalletInfo(filenameWallet, passwordWallet, confirmPasswordWallet)
 		}()
 	})
 
-	qmlBridge.ConnectClickedButtonImport(func(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string) {
+	qmlBridge.ConnectClickedButtonImport(func(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string, confirmPasswordWallet string) {
 		go func() {
-			importWalletWithWalletInfo(filenameWallet, passwordWallet, privateViewKey, privateSpendKey)
+			importWalletWithWalletInfo(filenameWallet, passwordWallet, confirmPasswordWallet, privateViewKey, privateSpendKey)
 		}()
 	})
 
@@ -289,20 +292,40 @@ func connectQMLToGOFunctions() {
 		saveRemoteDaemonInfo(defaultRemoteDaemonAddress, defaultRemoteDaemonPort)
 		qmlBridge.DisplaySettingsRemoteDaemonInfo(defaultRemoteDaemonAddress, defaultRemoteDaemonPort)
 	})
+
+	qmlBridge.ConnectGetFullBalanceAndDisplayInTransferAmount(func(transferFee string) {
+		getFullBalanceAndDisplayInTransferAmount(transferFee)
+	})
+
+	qmlBridge.ConnectGetDefaultFeeAndMixinAndDisplay(func() {
+		getDefaultFeeAndMixinAndDisplay()
+	})
+
+	qmlBridge.ConnectLimitDisplayTransactions(func(limit bool) {
+		limitDisplayedTransactions = limit
+		getAndDisplayListTransactions(true)
+	})
 }
 
 func startDisplayWalletInfo() {
 
 	getAndDisplayBalances()
 	getAndDisplayAddress()
-	getAndDisplayListTransactions()
+	getAndDisplayListTransactions(true)
 	getAndDisplayConnectionInfo()
+	getDefaultFeeAndMixinAndDisplay()
 
 	go func() {
-		tickerRefreshWalletData = time.NewTicker(time.Second * 15)
+		tickerRefreshWalletData = time.NewTicker(time.Second * 30)
 		for range tickerRefreshWalletData.C {
 			getAndDisplayBalances()
-			getAndDisplayListTransactions()
+			getAndDisplayListTransactions(false)
+		}
+	}()
+
+	go func() {
+		tickerRefreshConnectionInfo = time.NewTicker(time.Second * 15)
+		for range tickerRefreshConnectionInfo.C {
 			getAndDisplayConnectionInfo()
 		}
 	}()
@@ -312,10 +335,10 @@ func getAndDisplayBalances() {
 
 	walletAvailableBalance, walletLockedBalance, walletTotalBalance, err := walletdmanager.RequestBalance()
 	if err == nil {
-		qmlBridge.DisplayAvailableBalance(strconv.FormatFloat(walletAvailableBalance, 'f', -1, 64))
-		qmlBridge.DisplayLockedBalance(strconv.FormatFloat(walletLockedBalance, 'f', -1, 64))
+		qmlBridge.DisplayAvailableBalance(humanize.FormatFloat("#,###.##", walletAvailableBalance))
+		qmlBridge.DisplayLockedBalance(humanize.FormatFloat("#,###.##", walletLockedBalance))
 		balanceUSD := walletTotalBalance * rateUSDTRTL
-		qmlBridge.DisplayTotalBalance(strconv.FormatFloat(walletTotalBalance, 'f', -1, 64), strconv.FormatFloat(balanceUSD, 'f', 2, 64))
+		qmlBridge.DisplayTotalBalance(humanize.FormatFloat("#,###.##", walletTotalBalance), humanize.FormatFloat("#,###.##", balanceUSD))
 	}
 }
 
@@ -336,19 +359,27 @@ func getAndDisplayConnectionInfo() {
 	}
 }
 
-func getAndDisplayListTransactions() {
+func getAndDisplayListTransactions(forceFullUpdate bool) {
 
 	newTransfers, err := walletdmanager.RequestListTransactions()
 	if err == nil {
-		if len(newTransfers) != len(transfers) {
-			transfers = newTransfers
-			// sort starting by the most recent transaction
-			sort.Slice(transfers, func(i, j int) bool { return transfers[i].Timestamp.After(transfers[j].Timestamp) })
+		needFullUpdate := false
+		if len(newTransfers) != len(transfers) || forceFullUpdate {
+			needFullUpdate = true
+		}
+		transfers = newTransfers
+		// sort starting by the most recent transaction
+		sort.Slice(transfers, func(i, j int) bool { return transfers[i].Timestamp.After(transfers[j].Timestamp) })
+
+		if needFullUpdate {
 			transactionNumber := len(transfers)
 
 			qmlBridge.ClearListTransactions()
 
-			for _, transfer := range transfers {
+			for index, transfer := range transfers {
+				if limitDisplayedTransactions && index >= numberTransactionsToDisplay {
+					break
+				}
 				amount := transfer.Amount
 				amountString := ""
 				if amount >= 0 {
@@ -359,25 +390,36 @@ func getAndDisplayListTransactions() {
 					amountString += strconv.FormatFloat(-amount, 'f', -1, 64)
 				}
 				amountString += " TRTL (fee: " + strconv.FormatFloat(transfer.Fee, 'f', 2, 64) + ")"
-				confirmationsString := "(" + strconv.Itoa(transfer.Confirmations) + " conf.)"
+				confirmationsString := confirmationsStringRepresentation(transfer.Confirmations)
 				timeString := transfer.Timestamp.Format("2006-01-02 15:04:05")
 				transactionNumberString := strconv.Itoa(transactionNumber) + ")"
 				transactionNumber--
 
 				qmlBridge.AddTransactionToList(transfer.PaymentID, transfer.TxID, amountString, confirmationsString, timeString, transactionNumberString)
 			}
+		} else { // just update the number of confirmations of transactions with less than 110 conf
+			for index, transfer := range transfers {
+				if limitDisplayedTransactions && index >= numberTransactionsToDisplay {
+					break
+				}
+				if transfer.Confirmations < 110 {
+					qmlBridge.UpdateConfirmationsOfTransaction(index, confirmationsStringRepresentation(transfer.Confirmations))
+				} else {
+					break
+				}
+			}
 		}
 	}
 }
 
-func transfer(transferAddress string, transferAmount string, transferPaymentID string) bool {
+func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string, transferMixin string) bool {
 
-	log.Info("SEND: ", transferAddress, transferAmount, transferPaymentID)
+	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  fee: ", transferFee, "  mixin: ", transferMixin)
 
-	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID)
+	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, transferMixin)
 	if err != nil {
 		log.Warn("error transfer: ", err)
-		qmlBridge.DisplayErrorDialog(err.Error())
+		qmlBridge.DisplayErrorDialog("Error transfer.", err.Error())
 		return false
 	}
 
@@ -396,7 +438,7 @@ func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool 
 	if err != nil {
 		log.Warn("error starting walletd with provided wallet info. error: ", err)
 		qmlBridge.FinishedLoadingWalletd()
-		qmlBridge.DisplayErrorDialog(err.Error())
+		qmlBridge.DisplayErrorDialog("Error opening wallet.", err.Error())
 		return false
 	}
 
@@ -409,13 +451,13 @@ func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool 
 	return true
 }
 
-func createWalletWithWalletInfo(filenameWallet string, passwordWallet string) bool {
+func createWalletWithWalletInfo(filenameWallet string, passwordWallet string, confirmPasswordWallet string) bool {
 
-	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, "", "")
+	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, confirmPasswordWallet, "", "")
 	if err != nil {
 		log.Warn("error creating wallet. error: ", err)
 		qmlBridge.FinishedCreatingWallet()
-		qmlBridge.DisplayErrorDialog(err.Error())
+		qmlBridge.DisplayErrorDialog("Error creating the wallet.", err.Error())
 		return false
 	}
 
@@ -427,13 +469,13 @@ func createWalletWithWalletInfo(filenameWallet string, passwordWallet string) bo
 	return true
 }
 
-func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string) bool {
+func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, confirmPasswordWallet string, privateViewKey string, privateSpendKey string) bool {
 
-	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, privateViewKey, privateSpendKey)
+	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, confirmPasswordWallet, privateViewKey, privateSpendKey)
 	if err != nil {
 		log.Warn("error importing wallet. error: ", err)
 		qmlBridge.FinishedCreatingWallet()
-		qmlBridge.DisplayErrorDialog(err.Error())
+		qmlBridge.DisplayErrorDialog("Error importing the wallet.", err.Error())
 		return false
 	}
 
@@ -447,8 +489,11 @@ func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, pr
 func closeWallet() {
 
 	tickerRefreshWalletData.Stop()
+	tickerRefreshConnectionInfo.Stop()
 
 	stringBackupKeys = ""
+	transfers = nil
+	limitDisplayedTransactions = true
 
 	go func() {
 		walletdmanager.GracefullyQuitWalletd()
@@ -469,7 +514,22 @@ func showWalletPrivateInfo() {
 	}
 }
 
+func getFullBalanceAndDisplayInTransferAmount(transferFee string) {
+
+	availableBalance, err := walletdmanager.RequestAvailableBalanceToBeSpent(transferFee)
+	if err != nil {
+		qmlBridge.DisplayErrorDialog("Error calculating full balance minus fee.", err.Error())
+	}
+	qmlBridge.DisplayFullBalanceInTransferAmount(humanize.FtoaWithDigits(availableBalance, 2))
+}
+
+func getDefaultFeeAndMixinAndDisplay() {
+
+	qmlBridge.DisplayDefaultFeeAndMixin(humanize.FtoaWithDigits(walletdmanager.DefaultTransferFee, 2), humanize.FormatInteger("#.", walletdmanager.DefaultTransferMixin))
+}
+
 func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
+
 	remoteDaemonAddress = daemonAddress
 	remoteDaemonPort = daemonPort
 	recordRemoteDaemonInfoToDB(remoteDaemonAddress, remoteDaemonPort)
@@ -688,4 +748,15 @@ func amountStringUSDToTRTL(amountTRTLString string) string {
 	amountUSD := amountTRTL * rateUSDTRTL
 	amountUSDString := strconv.FormatFloat(amountUSD, 'f', 2, 64) + " $"
 	return amountUSDString
+}
+
+func confirmationsStringRepresentation(confirmations int) string {
+	confirmationsString := "("
+	if confirmations > 100 {
+		confirmationsString += ">100"
+	} else {
+		confirmationsString += strconv.Itoa(confirmations)
+	}
+	confirmationsString += " conf.)"
+	return confirmationsString
 }

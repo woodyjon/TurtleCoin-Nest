@@ -14,7 +14,7 @@ Rectangle {
     Text {
         id: textOpenWalletDescr
         color: "#ffffff"
-        text: qsTr("If you are new to TurtleCoin, choose \"Create a new wallet\".")
+        text: "If you are new to TurtleCoin, choose \"Create a new wallet\"."
         anchors.right: parent.right
         anchors.rightMargin: 15
         anchors.left: parent.left
@@ -109,7 +109,7 @@ Rectangle {
         Text {
             id: textOpenExistingWalletDescr
             color: "#ffffff"
-            text: qsTr("Open an existing wallet")
+            text: "Open an existing wallet"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.bold: true
@@ -124,7 +124,7 @@ Rectangle {
         Text {
             id: textExistingWalletPathDescr
             color: "#ffffff"
-            text: qsTr("Path to wallet file")
+            text: "Path to wallet file"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -151,7 +151,7 @@ Rectangle {
                 readOnly: true
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 selectionColor: "#eeeeee"
@@ -180,7 +180,7 @@ Rectangle {
         Text {
             id: textExistingWalletPasswordDescr
             color: "#ffffff"
-            text: qsTr("Password")
+            text: "Password"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -207,7 +207,7 @@ Rectangle {
                 echoMode: TextInput.Password
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 selectionColor: "#eeeeee"
@@ -222,13 +222,19 @@ Rectangle {
                 onTextChanged: {
                     buttonOpenWallet.enabled = textInputExistingWalletPath.text != "" && textInputExistingWalletPassword.text != ""
                 }
+
+                Keys.onReturnPressed: {
+                    if (buttonOpenWallet.enabled) {
+                        buttonOpenWallet.clicked();
+                    }
+                }
             }
 
         }
 
         Button {
             id: buttonOpenWallet
-            text: qsTr("OPEN")
+            text: "OPEN"
             anchors.right: parent.right
             anchors.rightMargin: 60
             anchors.bottom: parent.bottom
@@ -291,7 +297,7 @@ Rectangle {
         Text {
             id: textCreateWalletDescr
             color: "#ffffff"
-            text: qsTr("Create a new wallet")
+            text: "Create a new wallet"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.bold: true
@@ -306,7 +312,7 @@ Rectangle {
         Text {
             id: textCreateWalletFilenameDescr
             color: "#ffffff"
-            text: qsTr("Choose a filename for your new wallet file")
+            text: "Choose a filename for your new wallet file"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -332,7 +338,7 @@ Rectangle {
                 id: textInputCreateWalletFilename
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("myFirstTRTLWallet")
+                text: "myFirstTRTLWallet"
                 rightPadding: 5
                 leftPadding: 5
                 selectionColor: "#eeeeee"
@@ -360,14 +366,13 @@ Rectangle {
             font.pixelSize: 13
             verticalAlignment: Text.AlignBottom
             font.family: "Arial"
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
         Text {
             id: textCreateWalletExtensionDescr
             color: "#999999"
-            text: qsTr("Do not include any extension. Avoid spaces.")
+            text: "Do not include any extension. Avoid spaces."
             anchors.top: rectangleTextInputCreateWalletFilename.bottom
             anchors.topMargin: 8
             anchors.left: rectangleTextInputCreateWalletFilename.left
@@ -375,7 +380,6 @@ Rectangle {
             font.pixelSize: 13
             verticalAlignment: Text.AlignBottom
             font.family: "Arial"
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
@@ -390,14 +394,13 @@ Rectangle {
             font.pixelSize: 13
             verticalAlignment: Text.AlignBottom
             font.family: "Arial"
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
         Text {
             id: textCreateWalletPasswordDescr
             color: "#ffffff"
-            text: qsTr("Choose a strong password")
+            text: "Choose a strong password"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -424,7 +427,7 @@ Rectangle {
                 echoMode: TextInput.Password
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 selectionColor: "#eeeeee"
@@ -439,12 +442,18 @@ Rectangle {
                 onTextChanged: {
                     buttonCreateWallet.enabled = textInputCreateWalletFilename.text != "" && textInputCreateWalletPassword.text != ""
                 }
+
+                Keys.onReturnPressed: {
+                    if (buttonCreateWallet.enabled) {
+                        buttonCreateWallet.clicked();
+                    }
+                }
             }
         }
 
         Button {
             id: buttonCreateWallet
-            text: qsTr("CREATE")
+            text: "CREATE"
             anchors.right: parent.right
             anchors.rightMargin: 60
             anchors.bottom: parent.bottom
@@ -472,10 +481,14 @@ Rectangle {
             }
 
             onClicked: {
-                busyIndicator.running = true
-                QmlBridge.clickedButtonCreate(textCreateWalletFilename.text, textInputCreateWalletPassword.text);
-                textInputCreateWalletPassword.text = ""
+                dialogConfirmPassword.show(false);
             }
+        }
+
+        function enteredPasswordConfirmation(passwordConfirmation) {
+            busyIndicator.running = true;
+            QmlBridge.clickedButtonCreate(textCreateWalletFilename.text, textInputCreateWalletPassword.text, passwordConfirmation);
+            textInputCreateWalletPassword.text = "";
         }
     }
 
@@ -508,7 +521,7 @@ Rectangle {
         Text {
             id: textImportWalletDescr
             color: "#ffffff"
-            text: qsTr("Import wallet from keys")
+            text: "Import wallet from keys"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.bold: true
@@ -523,7 +536,7 @@ Rectangle {
         Text {
             id: textImportWalletFilenameDescr
             color: "#ffffff"
-            text: qsTr("Choose a filename for your new wallet file")
+            text: "Choose a filename for your new wallet file"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -549,7 +562,7 @@ Rectangle {
                 id: textInputImportWalletFilename
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("myTRTLWallet")
+                text: "myTRTLWallet"
                 rightPadding: 5
                 leftPadding: 5
                 selectionColor: "#eeeeee"
@@ -577,14 +590,13 @@ Rectangle {
             font.pixelSize: 13
             verticalAlignment: Text.AlignBottom
             font.family: "Arial"
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
         Text {
             id: textImportWalletExtensionDescr
             color: "#999999"
-            text: qsTr("Do not include any extension. Avoid spaces.")
+            text: "Do not include any extension. Avoid spaces."
             anchors.top: rectangleTextInputImportWalletFilename.bottom
             anchors.topMargin: 8
             anchors.left: rectangleTextInputImportWalletFilename.left
@@ -592,7 +604,6 @@ Rectangle {
             font.pixelSize: 13
             verticalAlignment: Text.AlignBottom
             font.family: "Arial"
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
@@ -607,14 +618,13 @@ Rectangle {
             font.pixelSize: 13
             verticalAlignment: Text.AlignBottom
             font.family: "Arial"
-            font.bold: false
             horizontalAlignment: Text.AlignLeft
         }
 
         Text {
             id: textImportWalletPasswordDescr
             color: "#ffffff"
-            text: qsTr("Choose a strong password")
+            text: "Choose a strong password"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -641,7 +651,7 @@ Rectangle {
                 echoMode: TextInput.Password
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 selectionColor: "#eeeeee"
@@ -662,7 +672,7 @@ Rectangle {
         Text {
             id: textImportWalletPrivateViewKeyDescr
             color: "#ffffff"
-            text: qsTr("Private view key")
+            text: "Private view key"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -689,7 +699,7 @@ Rectangle {
                 id: textInputImportWalletPrivateViewKey
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 selectionColor: "#eeeeee"
@@ -710,7 +720,7 @@ Rectangle {
         Text {
             id: textImportWalletPrivateSpendKeyDescr
             color: "#ffffff"
-            text: qsTr("Private spend key")
+            text: "Private spend key"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -737,7 +747,7 @@ Rectangle {
                 id: textInputImportWalletPrivateSpendKey
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: qsTr("")
+                text: ""
                 rightPadding: 5
                 leftPadding: 5
                 selectionColor: "#eeeeee"
@@ -757,7 +767,7 @@ Rectangle {
 
         Button {
             id: buttonImportWallet
-            text: qsTr("IMPORT")
+            text: "IMPORT"
             anchors.right: parent.right
             anchors.rightMargin: 60
             anchors.bottom: rectangleTextInputImportWalletPrivateSpendKey.bottom
@@ -785,14 +795,18 @@ Rectangle {
             }
 
             onClicked: {
-                busyIndicator.running = true
-                QmlBridge.clickedButtonImport(textImportWalletFilename.text, textInputImportWalletPassword.text, textInputImportWalletPrivateViewKey.text, textInputImportWalletPrivateSpendKey.text);
-                textInputImportWalletPassword.text = ""
+                dialogConfirmPassword.show(true);
             }
         }
 
         function checkEnableButton() {
             buttonImportWallet.enabled = textInputImportWalletFilename.text != "" && textInputImportWalletPassword.text != "" && textInputImportWalletPrivateViewKey.text != "" && textInputImportWalletPrivateSpendKey.text != ""
+        }
+
+        function enteredPasswordConfirmation(passwordConfirmation) {
+            busyIndicator.running = true;
+            QmlBridge.clickedButtonImport(textImportWalletFilename.text, textInputImportWalletPassword.text, textInputImportWalletPrivateViewKey.text, textInputImportWalletPrivateSpendKey.text, passwordConfirmation);
+            textInputImportWalletPassword.text = "";
         }
     }
 
@@ -806,6 +820,63 @@ Rectangle {
         
         function show() {
             dialogChooseWalletFile.open()
+        }
+    }
+
+    Dialog {
+        id: dialogConfirmPassword
+        title: "Confirm password"
+        standardButtons: StandardButton.Cancel | StandardButton.Ok
+        width: 250
+        height: 120
+
+        property var walletIsImporting: false
+
+        Text {
+            id: textDescriptionConfirmPassword
+            text: "Re-type your new password:"
+            font.family: "Arial"
+        }
+
+        Rectangle {
+            id: rectangleTextInputConfirmPassword
+            color: "#bbbbbb"
+            height: 25
+            anchors.top: textDescriptionConfirmPassword.bottom
+            anchors.topMargin: 12
+            anchors.left: textDescriptionConfirmPassword.left
+            anchors.leftMargin: 0
+            anchors.right: parent.right
+            anchors.rightMargin: 10
+            radius: 3
+
+            TextInput {
+                id: textInputConfirmPassword
+                echoMode: TextInput.Password
+                anchors.fill: parent
+                color: "#444444"
+                text: ""
+                rightPadding: 5
+                leftPadding: 5
+                verticalAlignment: Text.AlignVCenter
+                clip: true
+                font.family: "Arial"
+            }
+        }
+
+        function show(isImporting) {
+            walletIsImporting = isImporting;
+            dialogConfirmPassword.open();
+            textInputConfirmPassword.text = "";
+            textInputConfirmPassword.focus = true;
+        }
+
+        onAccepted: {
+            if (walletIsImporting) {
+                rectangleImportWalletFromKeys.enteredPasswordConfirmation(textInputConfirmPassword.text)
+            } else {
+                rectangleCreateWallet.enteredPasswordConfirmation(textInputConfirmPassword.text)
+            }
         }
     }
 

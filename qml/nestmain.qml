@@ -1,7 +1,7 @@
 import QtQuick.Window 2.2
 import QtQuick 2.7
 import QtQuick.Controls 2.3
-import QtQuick.Controls.Styles 1.4
+import QtQuick.Controls.Material 2.3
 import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
 
@@ -12,12 +12,12 @@ ApplicationWindow {
     property var windowHeight: 755
     property var minWindowHeight: 500
 
+    Material.accent: Material.Grey
+
     width: windowWidth
     height: windowHeight
     minimumWidth: windowWidth
     minimumHeight: minWindowHeight
-    maximumWidth: windowWidth
-    maximumHeight: windowHeight
     color: "#333333"
     title: "TurtleCoin Nest"
     visible: true
@@ -26,7 +26,7 @@ ApplicationWindow {
         interactive: true
         boundsBehavior: Flickable.StopAtBounds
         contentWidth: windowWidth
-        contentHeight: windowHeight // minus height of menu
+        contentHeight: windowHeight
         width: parent.width
         height: parent.height
 
@@ -44,40 +44,37 @@ ApplicationWindow {
         }
     }
 
-    Dialog {
+    MessageDialog {
         id: dialogInfo
-        title: "Info"
+        title: ""
+        text: ""
         standardButtons: StandardButton.Ok
-        width: 800
-        height: 150
-        modality: Qt.WindowModal
 
-        Text {
-            id: textDialogInfo
-            text: ""
-            font.family: "Arial"
+        onAccepted: {
+            dialogInfo.title = "";
+            dialogInfo.text = "";
+            dialogInfo.informativeText = "";
         }
 
-        function show(title, msg) {
-            dialogInfo.title = title
-            textDialogInfo.text = msg
-            dialogInfo.open()
+        function show(title, errorText, errorInformativeText) {
+            dialogInfo.title = title;
+            dialogInfo.text = errorText;
+            dialogInfo.informativeText = errorInformativeText;
+            dialogInfo.open();
         }
 
-        function showError(msg) {
-            dialogInfo.show("Error", msg)
-        }
-
-        Connections{
-            target: QmlBridge
-            onDisplayErrorDialog: {
-                dialogInfo.showError(errorMessage)
-            }
+        function showError(errorText, errorInformativeText) {
+            dialogInfo.icon = StandardIcon.Warning;
+            dialogInfo.show("Error", errorText, errorInformativeText);
         }
     }
 
     Connections {
         target: QmlBridge
+
+        onDisplayErrorDialog: {
+            dialogInfo.showError(errorText, errorInformativeText);
+        }
 
         onDisplayOpenWalletScreen: {
             openWalletScreen.clearData();
