@@ -49,3 +49,4 @@ Functional tests to be done on windows, mac and linux before merging to master a
 40 | Modify transfer fee and mixin, then click "default values" | Default values should be displayed in corresponding field
 41 | List transactions | 20 transactions are displayed
 42 | Switch to display "all transactions" then switch back | Proper number of transactions are displayed
+43 | Start application and check log file | version of Nest in "application started" log should be correct

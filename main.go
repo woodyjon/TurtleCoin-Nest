@@ -161,7 +161,7 @@ func main() {
 
 	setupDB(pathToDB)
 
-	log.Info("Application started")
+	log.WithField("version", versionNest).Info("Application started")
 
 	go func() {
 		requestRateTRTL()
