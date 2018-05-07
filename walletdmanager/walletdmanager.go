@@ -571,11 +571,11 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 }
 
 // RequestConnectionInfo provides the blockchain sync status and the number of connected peers
-func RequestConnectionInfo() (syncing string, blockCountString string, knownBlockCountString string, peerCountString string, err error) {
+func RequestConnectionInfo() (syncing string, blockCount int, knownBlockCount int, peerCount int, err error) {
 
-	blockCount, knownBlockCount, peerCount, err := turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
+	blockCount, knownBlockCount, peerCount, err = turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
 	if err != nil {
-		return "", "", "", "", err
+		return "", 0, 0, 0, err
 	}
 
 	stringWait := " (No transfers allowed until synced)"
@@ -591,7 +591,7 @@ func RequestConnectionInfo() (syncing string, blockCountString string, knownBloc
 		syncing = "Wallet synced"
 	}
 
-	return syncing, strconv.Itoa(blockCount), strconv.Itoa(knownBlockCount), strconv.Itoa(peerCount), nil
+	return syncing, blockCount, knownBlockCount, peerCount, nil
 }
 
 // generate a random string with n characters. from https://stackoverflow.com/a/31832326/1668837
