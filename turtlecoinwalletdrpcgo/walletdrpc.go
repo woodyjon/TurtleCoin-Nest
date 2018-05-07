@@ -4,10 +4,11 @@ package turtlecoinwalletdrpcgo
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/pkg/errors"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -36,15 +37,15 @@ func RequestBalance(rpcPassword string) (availableBalance float64, lockedBalance
 	payload := rpcPayloadGetBalance(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
-
-	if err == nil {
-		availableBalance = responseMap["result"].(map[string]interface{})["availableBalance"].(float64) / 100
-		lockedBalance = responseMap["result"].(map[string]interface{})["lockedAmount"].(float64) / 100
-		totalBalance = availableBalance + lockedBalance
-
-		return availableBalance, lockedBalance, totalBalance, nil
+	if err != nil {
+		return 0, 0, 0, errors.Wrap(err, "httpRequest failed")
 	}
-	return 0, 0, 0, err
+
+	availableBalance = responseMap["result"].(map[string]interface{})["availableBalance"].(float64) / 100
+	lockedBalance = responseMap["result"].(map[string]interface{})["lockedAmount"].(float64) / 100
+	totalBalance = availableBalance + lockedBalance
+
+	return availableBalance, lockedBalance, totalBalance, nil
 }
 
 // RequestAddress provides the address of the current wallet
@@ -54,13 +55,13 @@ func RequestAddress(rpcPassword string) (address string, err error) {
 	payload := rpcPayloadGetAddresses(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
-
-	if err == nil {
-		walletAddresses := responseMap["result"].(map[string]interface{})["addresses"].([]interface{})
-		address = walletAddresses[0].(string)
-		return address, nil
+	if err != nil {
+		return "", errors.Wrap(err, "httpRequest failed")
 	}
-	return "", err
+
+	walletAddresses := responseMap["result"].(map[string]interface{})["addresses"].([]interface{})
+	address = walletAddresses[0].(string)
+	return address, nil
 }
 
 // RequestListTransactions provides the list of transactions of current wallet
@@ -73,34 +74,34 @@ func RequestListTransactions(blockCount int, firstBlockIndex int, addresses []st
 	payload := rpcPayloadGetTransactions(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
-
-	if err == nil {
-		blocks := responseMap["result"].(map[string]interface{})["items"].([]interface{})
-
-		for _, block := range blocks {
-
-			transactions := block.(map[string]interface{})["transactions"].([]interface{})
-
-			for _, transaction := range transactions {
-
-				mapTransaction := transaction.(map[string]interface{})
-
-				var transfer Transfer
-				transfer.PaymentID = mapTransaction["paymentId"].(string)
-				transfer.TxID = mapTransaction["transactionHash"].(string)
-				transfer.Timestamp = time.Unix(int64(mapTransaction["timestamp"].(float64)), 0)
-				transfer.Amount = mapTransaction["amount"].(float64) / 100
-				transfer.Fee = mapTransaction["fee"].(float64) / 100
-				transfer.Block = int(mapTransaction["blockIndex"].(float64))
-				transfer.Confirmations = blockCount - transfer.Block + 1
-				transfer.IsRecievingTransaction = transfer.Amount >= 0
-
-				transfers = append(transfers, transfer)
-			}
-		}
-		return transfers, nil
+	if err != nil {
+		return nil, errors.Wrap(err, "httpRequest failed")
 	}
-	return nil, err
+
+	blocks := responseMap["result"].(map[string]interface{})["items"].([]interface{})
+
+	for _, block := range blocks {
+
+		transactions := block.(map[string]interface{})["transactions"].([]interface{})
+
+		for _, transaction := range transactions {
+
+			mapTransaction := transaction.(map[string]interface{})
+
+			var transfer Transfer
+			transfer.PaymentID = mapTransaction["paymentId"].(string)
+			transfer.TxID = mapTransaction["transactionHash"].(string)
+			transfer.Timestamp = time.Unix(int64(mapTransaction["timestamp"].(float64)), 0)
+			transfer.Amount = mapTransaction["amount"].(float64) / 100
+			transfer.Fee = mapTransaction["fee"].(float64) / 100
+			transfer.Block = int(mapTransaction["blockIndex"].(float64))
+			transfer.Confirmations = blockCount - transfer.Block + 1
+			transfer.IsRecievingTransaction = transfer.Amount >= 0
+
+			transfers = append(transfers, transfer)
+		}
+	}
+	return transfers, nil
 }
 
 // RequestStatus requests walletd connection and sync status
@@ -110,15 +111,15 @@ func RequestStatus(rpcPassword string) (blockCount int, knownBlockCount int, pee
 	payload := rpcPayloadGetStatus(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
-
-	if err == nil {
-		blockCount = int(responseMap["result"].(map[string]interface{})["blockCount"].(float64))
-		knownBlockCount = int(responseMap["result"].(map[string]interface{})["knownBlockCount"].(float64))
-		peerCount = int(responseMap["result"].(map[string]interface{})["peerCount"].(float64))
-
-		return blockCount, knownBlockCount, peerCount, nil
+	if err != nil {
+		return 0, 0, 0, errors.Wrap(err, "httpRequest failed")
 	}
-	return 0, 0, 0, err
+
+	blockCount = int(responseMap["result"].(map[string]interface{})["blockCount"].(float64))
+	knownBlockCount = int(responseMap["result"].(map[string]interface{})["knownBlockCount"].(float64))
+	peerCount = int(responseMap["result"].(map[string]interface{})["peerCount"].(float64))
+
+	return blockCount, knownBlockCount, peerCount, nil
 }
 
 // SendTransaction makes a transfer with the provided information.
@@ -142,16 +143,15 @@ func SendTransaction(addressRecipient string, amount float64, paymentID string, 
 	payload := rpcPayloadSendTransaction(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
-
-	if err == nil {
-		responseError := responseMap["error"]
-		if responseError != nil {
-			return "", errors.New(responseError.(map[string]interface{})["message"].(string))
-		}
-		return responseMap["result"].(map[string]interface{})["transactionHash"].(string), nil
+	if err != nil {
+		return "", errors.Wrap(err, "httpRequest failed")
 	}
 
-	return "", err
+	responseError := responseMap["error"]
+	if responseError != nil {
+		return "", errors.Wrap(errors.New(responseError.(map[string]interface{})["message"].(string)), "response with error")
+	}
+	return responseMap["result"].(map[string]interface{})["transactionHash"].(string), nil
 }
 
 // GetViewKey provides the private view key
@@ -161,13 +161,12 @@ func GetViewKey(rpcPassword string) (privateViewKey string, err error) {
 	payload := rpcPayloadGetViewKey(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
-
-	if err == nil {
-		privateViewKey = responseMap["result"].(map[string]interface{})["viewSecretKey"].(string)
-		return privateViewKey, nil
+	if err != nil {
+		return "", errors.Wrap(err, "httpRequest failed")
 	}
 
-	return "", err
+	privateViewKey = responseMap["result"].(map[string]interface{})["viewSecretKey"].(string)
+	return privateViewKey, nil
 }
 
 // GetSpendKeys provides the private and public spend keys
@@ -178,14 +177,13 @@ func GetSpendKeys(address string, rpcPassword string) (spendSecretKey string, sp
 	payload := rpcPayloadGetSpendKeys(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
-
-	if err == nil {
-		spendSecretKey = responseMap["result"].(map[string]interface{})["spendSecretKey"].(string)
-		spendPublicKey = responseMap["result"].(map[string]interface{})["spendSecretKey"].(string)
-		return spendSecretKey, spendPublicKey, nil
+	if err != nil {
+		return "", "", err
 	}
 
-	return "", "", err
+	spendSecretKey = responseMap["result"].(map[string]interface{})["spendSecretKey"].(string)
+	spendPublicKey = responseMap["result"].(map[string]interface{})["spendSecretKey"].(string)
+	return spendSecretKey, spendPublicKey, nil
 }
 
 // SaveWallet saves the sync info in the wallet
@@ -195,8 +193,11 @@ func SaveWallet(rpcPassword string) (err error) {
 	payload := rpcPayloadSave(0, rpcPassword, args)
 
 	_, err = httpRequest(payload)
+	if err != nil {
+		return errors.Wrap(err, "httpRequest failed")
+	}
 
-	return err
+	return nil
 }
 
 func httpRequest(payload rpcPayload) (responseMap map[string]interface{}, err error) {
@@ -207,17 +208,18 @@ func httpRequest(payload rpcPayload) (responseMap map[string]interface{}, err er
 	}
 
 	req, err := http.NewRequest("POST", rpcURL, bytes.NewBuffer(payloadjson))
+	if err != nil {
+		log.Fatal("error creating http request: ", err)
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error("error http request: ", err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	responseBody, err := ioutil.ReadAll(resp.Body)
-
 	if err != nil {
 		log.Fatal("error reading result from rpc request getSpendKey:", err)
 	} else {
@@ -226,10 +228,9 @@ func httpRequest(payload rpcPayload) (responseMap map[string]interface{}, err er
 			log.Fatal("JSON unmarshaling with interface failed:", err)
 		} else {
 			responseMap := responseBodyInterface.(map[string]interface{})
-
 			return responseMap, nil
 		}
 	}
 
-	return nil, errors.New("unknown error in function httpRequest")
+	return nil, errors.New("unknown error")
 }
