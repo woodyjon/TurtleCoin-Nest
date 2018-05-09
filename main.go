@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
@@ -131,6 +132,10 @@ func main() {
 	pathToLogFile := logFileFilename
 	pathToDB := dbFilename
 	pathToHomeDir := ""
+	pathToAppDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal("error finding current directory. Error: ", err)
+	}
 
 	if isPlatformDarwin {
 		usr, err := user.Current()
@@ -142,6 +147,9 @@ func main() {
 		os.Mkdir(pathToAppFolder, os.ModePerm)
 		pathToLogFile = pathToAppFolder + "/" + logFileFilename
 		pathToDB = pathToAppFolder + "/" + pathToDB
+	} else if isPlatformLinux {
+		pathToLogFile = pathToAppDirectory + "/" + logFileFilename
+		pathToDB = pathToAppDirectory + "/" + pathToDB
 	}
 
 	logFile, err := os.OpenFile(pathToLogFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)

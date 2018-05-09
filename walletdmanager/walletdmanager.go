@@ -240,6 +240,11 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 	WalletFilename = filepath.Base(walletPath)
 	pathToWallet := filepath.Clean(walletPath)
 
+	pathToAppDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal("error finding current directory. Error: ", err)
+	}
+
 	if isPlatformWindows {
 		pathToWallet = strings.Replace(pathToWallet, "file:\\", "", 1)
 	} else {
@@ -247,11 +252,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 	}
 
 	if isPlatformDarwin {
-		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
-		if err != nil {
-			log.Fatal("error finding current directory. Error: ", err)
-		}
-		pathToAppContents := filepath.Dir(currentDirectory)
+		pathToAppContents := filepath.Dir(pathToAppDirectory)
 		pathToWalletd = pathToAppContents + "/" + walletdCommandName
 
 		usr, err := user.Current()
@@ -268,6 +269,10 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 			// if comes from createWallet, so it is not a full path, just a filename
 			pathToWallet = pathToHomeDir + "/" + pathToWallet
 		}
+	} else if isPlatformLinux {
+		pathToWalletd = pathToAppDirectory + "/" + walletdCommandName
+		pathToLogWalletdCurrentSession = pathToAppDirectory + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppDirectory + "/" + logWalletdAllSessionsFilename
 	}
 
 	// setup current session log file (logs are added real time in this file)
@@ -454,12 +459,13 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 	pathToWalletd := "./" + walletdCommandName
 	pathToWallet := walletFilename
 
+	pathToAppDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal("error finding current directory. Error: ", err)
+	}
+
 	if isPlatformDarwin {
-		currentDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
-		if err != nil {
-			log.Fatal("error finding current directory. Error: ", err)
-		}
-		pathToAppContents := filepath.Dir(currentDirectory)
+		pathToAppContents := filepath.Dir(pathToAppDirectory)
 		pathToWalletd = pathToAppContents + "/" + walletdCommandName
 
 		usr, err := user.Current()
@@ -472,6 +478,11 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 		pathToLogWalletdCurrentSession = pathToAppLibDir + "/" + logWalletdCurrentSessionFilename
 		pathToLogWalletdAllSessions = pathToAppLibDir + "/" + logWalletdAllSessionsFilename
 		pathToWallet = pathToHomeDir + "/" + walletFilename
+	} else if isPlatformLinux {
+		pathToWalletd = pathToAppDirectory + "/" + walletdCommandName
+		pathToLogWalletdCurrentSession = pathToAppDirectory + "/" + logWalletdCurrentSessionFilename
+		pathToLogWalletdAllSessions = pathToAppDirectory + "/" + logWalletdAllSessionsFilename
+		pathToWallet = pathToAppDirectory + "/" + walletFilename
 	}
 
 	// check file with same filename does not already exist
