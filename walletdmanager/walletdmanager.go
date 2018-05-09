@@ -273,6 +273,10 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		pathToWalletd = pathToAppDirectory + "/" + walletdCommandName
 		pathToLogWalletdCurrentSession = pathToAppDirectory + "/" + logWalletdCurrentSessionFilename
 		pathToLogWalletdAllSessions = pathToAppDirectory + "/" + logWalletdAllSessionsFilename
+		if pathToWallet == WalletFilename {
+			// if comes from createWallet, so it is not a full path, just a filename
+			pathToWallet = pathToAppDirectory + "/" + pathToWallet
+		}
 	}
 
 	// setup current session log file (logs are added real time in this file)
