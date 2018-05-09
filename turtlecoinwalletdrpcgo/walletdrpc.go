@@ -78,6 +78,10 @@ func RequestListTransactions(blockCount int, firstBlockIndex int, addresses []st
 		return nil, errors.Wrap(err, "httpRequest failed")
 	}
 
+	if responseMap["result"] == nil {
+		return nil, nil
+	}
+
 	blocks := responseMap["result"].(map[string]interface{})["items"].([]interface{})
 
 	for _, block := range blocks {
