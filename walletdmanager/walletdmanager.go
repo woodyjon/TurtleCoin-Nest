@@ -305,52 +305,69 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 	defer walletdAllSessionsLogFile.Close()
 
 	err = cmdWalletd.Start()
-
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	time.Sleep(5 * time.Second)
-
-	reader := bufio.NewReader(walletdCurrentSessionLogFile)
-
+	timesCheckLog := 0
+	timeBetweenChecks := 100 * time.Millisecond
+	maxWaitingTime := 15 * time.Second
+	successLaunchingWalletd := false
 	var listWalletdErrors []string
 
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			if err != io.EOF {
-				log.Error("Failed reading log file line by line: ", err)
+	readerLog := bufio.NewReader(walletdCurrentSessionLogFile)
+
+	for !successLaunchingWalletd && time.Duration(timesCheckLog)*timeBetweenChecks < maxWaitingTime {
+		timesCheckLog++
+		time.Sleep(timeBetweenChecks)
+		for {
+			line, err := readerLog.ReadString('\n')
+			if err != nil {
+				if err != io.EOF {
+					log.Error("Failed reading log file line by line: ", err)
+				}
+				break
 			}
-			break
-		}
+			if strings.Contains(line, "Wallet loading is finished.") {
+				successLaunchingWalletd = true
+				break
+			}
+			if strings.Contains(line, "[Core] Imported block with index") {
+				timesCheckLog = 0
+			}
+			if strings.Contains(line, "INFO    Stopped") {
+				errorMessage := ""
 
-		identifierErrorMessage := " ERROR  "
-		if strings.Contains(line, identifierErrorMessage) {
-			splitLine := strings.Split(line, identifierErrorMessage)
-			listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
-		}
-	}
+				if len(listWalletdErrors) > 0 {
+					for _, line := range listWalletdErrors {
+						errorMessage = errorMessage + line
+					}
+				} else {
+					errorMessage = "walletd stopped with unknown error"
+				}
 
-	errorMessage := ""
-
-	if len(listWalletdErrors) > 0 {
-		for _, line := range listWalletdErrors {
-			errorMessage = errorMessage + line
+				killWalletd()
+				return errors.New(errorMessage)
+			}
+			identifierErrorMessage := " ERROR  "
+			if strings.Contains(line, identifierErrorMessage) {
+				splitLine := strings.Split(line, identifierErrorMessage)
+				listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
+			}
 		}
-	} else {
-		errorMessage = "Unknown error opening the daemon walletd or communicating with it"
 	}
 
 	// check rpc connection with walletd
 	_, _, _, err = turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
 	if err != nil {
 		killWalletd()
-		return errors.New(errorMessage)
+		return errors.New("error communicating with walletd via rpc")
 	}
 
 	WalletdOpenAndRunning = true
+
+	// time.Sleep(5 * time.Second)
 
 	return nil
 }
@@ -358,7 +375,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 // GracefullyQuitWalletd stops the walletd daemon
 func GracefullyQuitWalletd() {
 
-	if WalletdOpenAndRunning && cmdWalletd != nil {
+	if WalletdOpenAndRunning || cmdWalletd != nil {
 		var err error
 
 		if isPlatformWindows {
@@ -524,61 +541,64 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 	defer walletdAllSessionsLogFile.Close()
 
 	err = cmdWalletd.Start()
-
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 
-	time.Sleep(5 * time.Second)
-
-	reader := bufio.NewReader(walletdCurrentSessionLogFile)
-
-	var listWalletdErrors []string
-
 	successCreatingWallet := false
 
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			if err != io.EOF {
-				log.Error("Failed reading log file line by line: ", err)
-			}
-			break
-		}
+	timesCheckLog := 0
+	timeBetweenChecks := 100 * time.Millisecond
+	maxWaitingTime := 5 * time.Second
+	var listWalletdErrors []string
 
-		identifierErrorMessage := " ERROR  "
-		if strings.Contains(line, identifierErrorMessage) {
-			splitLine := strings.Split(line, identifierErrorMessage)
-			listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
-		} else {
-			identifierErrorMessage = "error: "
+	readerLog := bufio.NewReader(walletdCurrentSessionLogFile)
+
+	for !successCreatingWallet && time.Duration(timesCheckLog)*timeBetweenChecks < maxWaitingTime {
+		timesCheckLog++
+		time.Sleep(timeBetweenChecks)
+		for {
+			line, err := readerLog.ReadString('\n')
+			if err != nil {
+				if err != io.EOF {
+					log.Error("Failed reading log file line by line: ", err)
+				}
+				break
+			}
+			if strings.Contains(line, "New wallet is generated. Address:") || strings.Contains(line, "New wallet added") {
+				successCreatingWallet = true
+				break
+			}
+			if strings.Contains(line, "INFO    Stopped") {
+				errorMessage := ""
+
+				if len(listWalletdErrors) > 0 {
+					for _, line := range listWalletdErrors {
+						errorMessage = errorMessage + line
+					}
+				} else {
+					errorMessage = "walletd stopped with unknown error"
+				}
+
+				killWalletd()
+				return errors.New(errorMessage)
+			}
+			identifierErrorMessage := " ERROR  "
 			if strings.Contains(line, identifierErrorMessage) {
 				splitLine := strings.Split(line, identifierErrorMessage)
 				listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
+			} else {
+				identifierErrorMessage = "error: "
+				if strings.Contains(line, identifierErrorMessage) {
+					splitLine := strings.Split(line, identifierErrorMessage)
+					listWalletdErrors = append(listWalletdErrors, splitLine[len(splitLine)-1])
+				}
 			}
-		}
-
-		if strings.Contains(line, "New wallet is generated. Address:") || strings.Contains(line, "New wallet added") {
-			successCreatingWallet = true
-			break
 		}
 	}
 
-	errorMessage := ""
-
-	if !successCreatingWallet {
-		if len(listWalletdErrors) > 0 {
-			for _, line := range listWalletdErrors {
-				errorMessage = errorMessage + line
-			}
-		} else {
-			errorMessage = "unknow error"
-		}
-		killWalletd()
-		return errors.New(errorMessage)
-	}
-
+	time.Sleep(500 * time.Millisecond)
 	killWalletd()
 	time.Sleep(1 * time.Second)
 
