@@ -333,7 +333,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 				successLaunchingWalletd = true
 				break
 			}
-			if strings.Contains(line, "[Core] Imported block with index") {
+			if strings.Contains(line, "Imported block with index") {
 				timesCheckLog = 0
 			}
 			if strings.Contains(line, "INFO    Stopped") {
