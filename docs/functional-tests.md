@@ -40,7 +40,7 @@ Functional tests to be done on windows, mac and linux before merging to master a
 31 | Display in USD enabled -> type an amount to be transfered| Value is displayed in USD
 32 | Settings: change remote node address and port -> click save -> close and reopen Nest | new address in remote node radio button and in settings
 33 | Settings: click remote node reset to default -> close and reopen Nest | default address in remote node radio button and in settings
-34 | Win only: open an wallet | no black window (walletd) should open next to the nest window
+34 | Win only: open a wallet | no black window (walletd) should open next to the nest window
 35 | Win & Mac only: check executable file | its icon is the nest icon
 36 | Win & Mac only: launch nest | icon in taskbar should be nest icon
 37 | launch on a small screen or resolution (800 x 600) | possibility to click full screen and to scroll in the full window
