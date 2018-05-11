@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strconv"
@@ -40,6 +41,7 @@ var (
 	remoteDaemonAddress         = defaultRemoteDaemonAddress
 	remoteDaemonPort            = defaultRemoteDaemonPort
 	limitDisplayedTransactions  = true
+	countConnectionProblem      = 0
 )
 
 // QmlBridge is the bridge between qml and go
@@ -130,6 +132,10 @@ func main() {
 	pathToLogFile := logFileFilename
 	pathToDB := dbFilename
 	pathToHomeDir := ""
+	pathToAppDirectory, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal("error finding current directory. Error: ", err)
+	}
 
 	if isPlatformDarwin {
 		usr, err := user.Current()
@@ -141,6 +147,9 @@ func main() {
 		os.Mkdir(pathToAppFolder, os.ModePerm)
 		pathToLogFile = pathToAppFolder + "/" + logFileFilename
 		pathToDB = pathToAppFolder + "/" + pathToDB
+	} else if isPlatformLinux {
+		pathToLogFile = pathToAppDirectory + "/" + logFileFilename
+		pathToDB = pathToAppDirectory + "/" + pathToDB
 	}
 
 	logFile, err := os.OpenFile(pathToLogFile, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -161,7 +170,7 @@ func main() {
 
 	setupDB(pathToDB)
 
-	log.Info("Application started")
+	log.WithField("version", versionNest).Info("Application started")
 
 	go func() {
 		requestRateTRTL()
@@ -353,9 +362,25 @@ func getAndDisplayAddress() {
 func getAndDisplayConnectionInfo() {
 
 	syncing, blockCount, knownBlockCount, peers, err := walletdmanager.RequestConnectionInfo()
-	if err == nil {
-		blocks := blockCount + " / " + knownBlockCount
-		qmlBridge.DisplaySyncingInfo(syncing, blocks, peers)
+	if err != nil {
+		log.Info("error getting connection info: ", err)
+		return
+	}
+
+	blocks := strconv.Itoa(blockCount) + " / " + strconv.Itoa(knownBlockCount)
+	qmlBridge.DisplaySyncingInfo(syncing, blocks, strconv.Itoa(peers))
+
+	// when not connected to remote node, the knownBlockCount stays at 1. So inform users if there seems to be a connection problem
+	if useRemoteNode {
+		if knownBlockCount == 1 {
+			countConnectionProblem++
+		} else {
+			countConnectionProblem = 0
+		}
+		if countConnectionProblem > 2 {
+			countConnectionProblem = 0
+			qmlBridge.DisplayErrorDialog("Error connecting to remote node", "Check your internet connection, the remote node address and the remote node status. If you cannot connect to a remote node, choose the \"local blockchain\" option.")
+		}
 	}
 }
 
@@ -494,6 +519,7 @@ func closeWallet() {
 	stringBackupKeys = ""
 	transfers = nil
 	limitDisplayedTransactions = true
+	countConnectionProblem = 0
 
 	go func() {
 		walletdmanager.GracefullyQuitWalletd()
