@@ -1,3 +1,24 @@
+## 0.22
+
+### Release notes
+
+- uses walletd 0.5.0
+- logs nest version in log file
+- error message when connection problem with remote node
+- fix a path problem when creating a shortcut to Nest on Linux
+- fix crash when creating or importing a wallet
+
+### Sha256
+
+TurtleCoin-Nest-0.22-Windows.zip:
+``
+
+TurtleCoin-Nest-0.22-Mac.zip:
+``
+
+TurtleCoin-Nest-0.22-Linux.tar.gz:
+``
+
 ## 0.21
 
 ### Release notes

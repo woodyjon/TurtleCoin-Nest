@@ -50,3 +50,4 @@ Functional tests to be done on windows, mac and linux before merging to master a
 41 | List transactions | 20 transactions are displayed
 42 | Switch to display "all transactions" then switch back | Proper number of transactions are displayed
 43 | Start application and check log file | version of Nest in "application started" log should be correct
+44 | Connect to wrong remote node | error message about connection problem
