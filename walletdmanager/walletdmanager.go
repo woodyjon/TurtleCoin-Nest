@@ -212,6 +212,18 @@ func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey stri
 	return privateViewKey, privateSpendKey, nil
 }
 
+// SaveWallet saves the sync status of the wallet. To be done regularly so when walletd crashes, sync is not lost
+func SaveWallet() (err error) {
+
+	err = turtlecoinwalletdrpcgo.SaveWallet(rpcPassword)
+	if err != nil {
+		log.Error("error saving wallet. err: ", err)
+		return err
+	}
+
+	return nil
+}
+
 // StartWalletd starts the walletd daemon with the set wallet info
 // walletPath is the full path to the wallet
 // walletPassword is the wallet password

@@ -33,6 +33,7 @@ var (
 	transfers                   []turtlecoinwalletdrpcgo.Transfer
 	tickerRefreshWalletData     *time.Ticker
 	tickerRefreshConnectionInfo *time.Ticker
+	tickerSaveWallet            *time.Ticker
 	db                          *sql.DB
 	useRemoteNode               = true
 	displayFiatConversion       = false
@@ -338,6 +339,13 @@ func startDisplayWalletInfo() {
 			getAndDisplayConnectionInfo()
 		}
 	}()
+
+	go func() {
+		tickerSaveWallet = time.NewTicker(time.Second * 289) // every 5 or so minutes
+		for range tickerSaveWallet.C {
+			walletdmanager.SaveWallet()
+		}
+	}()
 }
 
 func getAndDisplayBalances() {
@@ -515,6 +523,7 @@ func closeWallet() {
 
 	tickerRefreshWalletData.Stop()
 	tickerRefreshConnectionInfo.Stop()
+	tickerSaveWallet.Stop()
 
 	stringBackupKeys = ""
 	transfers = nil
