@@ -723,7 +723,7 @@ Rectangle {
         Text {
             id: textTransferPaymentIDDescr
             color: "#ffffff"
-            text: "(optional) Payment ID"
+            text: "Payment ID (optional)"
             anchors.top: rectangleTextInputTransferAmount.bottom
             anchors.topMargin: 13
             anchors.left: textTransferAddrDescr.left
@@ -735,14 +735,29 @@ Rectangle {
             horizontalAlignment: Text.AlignLeft
         }
 
+        Text {
+            id: textTransferPaymentIDWarning
+            color: "#999999"
+            text: "(WARNING: include a payment ID if you were asked to by your recipient)"
+            anchors.right: parent.right
+            anchors.rightMargin: 5
+            anchors.top: textTransferPaymentIDDescr.bottom
+            anchors.topMargin: 4
+            anchors.left: textTransferPaymentIDDescr.left
+            anchors.leftMargin: 0
+            font.pixelSize: 12
+            horizontalAlignment: Text.AlignLeft
+            font.family: "Arial"
+        }
+
         Rectangle {
             id: rectangleTextInputTransferPaymentID
             color: "#555555"
             anchors.right: parent.right
             anchors.rightMargin: 5
-            anchors.top: textTransferPaymentIDDescr.bottom
-            anchors.topMargin: 6
-            anchors.left: textTransferPaymentIDDescr.left
+            anchors.top: textTransferPaymentIDWarning.bottom
+            anchors.topMargin: 8
+            anchors.left: textTransferPaymentIDWarning.left
             anchors.leftMargin: 0
             height: 25
             radius: 3
@@ -923,7 +938,7 @@ Rectangle {
             text: "SEND"
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 30
+            anchors.bottomMargin: 15
             enabled: false
 
             contentItem: Text {
