@@ -649,14 +649,6 @@ Rectangle {
                     buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != "";
                     textTransferAmountUSD.text = QmlBridge.getTransferAmountUSD(textInputTransferAmount.text);
                 }
-
-                Connections{
-                    target: QmlBridge
-                    onClearTransferAmount: {
-                        textInputTransferAmount.clear();
-                        transferAmount = "";
-                    }
-                }
             }
         }
 
@@ -973,8 +965,6 @@ Rectangle {
 
         function transferConfirmed() {
             QmlBridge.clickedButtonSend(transferRecipient, transferAmount, transferPaymentID, transferFee, transferMixin);
-            textInputTransferAmount.text = "";
-            transferAmount = "";
         }   
     }
 
@@ -1388,7 +1378,6 @@ Rectangle {
             textConfirmRecipient.text = "";
             textConfirmAmount.text = "";
             textConfirmPaymentID.text = "";
-            textConfirmFee.text = "";
             textConfirmMixin.text = "";
         }
     }
@@ -1427,6 +1416,11 @@ Rectangle {
         onDisplayDefaultFeeAndMixin: {
             textInputTransferFee.text = fee;
             textInputTransferMixin.text = mixin;
+        }
+
+        onClearTransferAmount: {
+            textInputTransferAmount.clear();
+            rectangleTransfer.transferAmount = "";
         }
     }
 
