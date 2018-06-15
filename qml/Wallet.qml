@@ -98,7 +98,7 @@ Rectangle {
                 anchors.bottom: textLockedUnit.bottom
                 anchors.bottomMargin: -1
                 font.family: "Arial"
-                font.pixelSize: 20
+                font.pixelSize: 19
                 verticalAlignment: Text.AlignBottom
                 horizontalAlignment: Text.AlignRight
 
@@ -119,7 +119,7 @@ Rectangle {
                 anchors.bottom: textAvailableUnit.bottom
                 anchors.bottomMargin: -1
                 font.family: "Arial"
-                font.pixelSize: 20
+                font.pixelSize: 19
                 verticalAlignment: Text.AlignBottom
                 horizontalAlignment: Text.AlignRight
 
