@@ -78,12 +78,14 @@ ApplicationWindow {
 
         onDisplayOpenWalletScreen: {
             openWalletScreen.clearData();
+            openWalletScreen.enabled = true;
             walletScreen.hide();
         }
 
         onDisplayMainWalletScreen: {
             walletScreen.clearData();
             walletScreen.show();
+            openWalletScreen.enabled = false;
         }
 
         onDisplaySettingsScreen: {
