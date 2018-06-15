@@ -4,7 +4,7 @@ const (
 	// DefaultTransferFee is the default fee. It is expressed in TRTL
 	DefaultTransferFee float64 = 0.1
 	// DefaultTransferMixin is the default mixin
-	DefaultTransferMixin = 5
+	DefaultTransferMixin = 7
 
 	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
 	logWalletdAllSessionsFilename    = "walletd.log"
