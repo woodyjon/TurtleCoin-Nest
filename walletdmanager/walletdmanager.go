@@ -169,10 +169,6 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("your available balance is insufficient")
 	}
 
-	if transferAmount > 5000000 {
-		return "", errors.New("for sending more than 5,000,000 TRTL to one address, you should split in multiple transfers of smaller amounts")
-	}
-
 	transferMixin, err := strconv.ParseInt(transferMixinString, 0, 0)
 	if err != nil {
 		return "", errors.New("mixin is invalid")
