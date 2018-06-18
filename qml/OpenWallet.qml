@@ -31,7 +31,7 @@ Rectangle {
     Rectangle {
         id: rectangleRadioButtonRemote
         anchors.right: buttonSettings.right
-        anchors.rightMargin: 80
+        anchors.rightMargin: 60
         anchors.top: parent.top
         anchors.topMargin: 20
         width: 300
@@ -57,12 +57,35 @@ Rectangle {
     }
 
     Rectangle {
-        id: buttonSettings
+        id: buttonInfo
         width: 33
         height: 33
         anchors.top: parent.top
         anchors.topMargin: 15
         anchors.right: parent.right
+        anchors.rightMargin: 15
+        color: "transparent"
+        Image {
+            id: imageButtonInfo
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectFit
+            source: "images/info.svg"
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                infoDialog.show();
+            }
+        }
+    }
+
+    Rectangle {
+        id: buttonSettings
+        width: 33
+        height: 33
+        anchors.top: buttonInfo.top
+        anchors.topMargin: 0
+        anchors.right: buttonInfo.left
         anchors.rightMargin: 15
         color: "transparent"
         Image {
@@ -878,6 +901,10 @@ Rectangle {
                 rectangleCreateWallet.enteredPasswordConfirmation(textInputConfirmPassword.text)
             }
         }
+    }
+
+    InfoDialog {
+        id: infoDialog
     }
 
     BusyIndicator {

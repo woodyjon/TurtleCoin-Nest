@@ -93,9 +93,11 @@ type QmlBridge struct {
 	// qml to go
 	_ func(msg string)           `slot:"log"`
 	_ func(transactionID string) `slot:"clickedButtonExplorer"`
+	_ func(url string)           `slot:"goToWebsite"`
 	_ func(transactionID string) `slot:"clickedButtonCopyTx"`
 	_ func()                     `slot:"clickedButtonCopyAddress"`
 	_ func()                     `slot:"clickedButtonCopyKeys"`
+	_ func(stringToCopy string)  `slot:"clickedButtonCopy"`
 	_ func(transferAddress string,
 		transferAmount string,
 		transferPaymentID string,
@@ -123,6 +125,7 @@ type QmlBridge struct {
 	_ func(transferFee string) `slot:"getFullBalanceAndDisplayInTransferAmount"`
 	_ func()                   `slot:"getDefaultFeeAndMixinAndDisplay"`
 	_ func(limit bool)         `slot:"limitDisplayTransactions"`
+	_ func() string            `slot:"getVersion"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -228,6 +231,10 @@ func connectQMLToGOFunctions() {
 		clipboard.WriteAll(stringBackupKeys)
 	})
 
+	qmlBridge.ConnectClickedButtonCopy(func(stringToCopy string) {
+		clipboard.WriteAll(stringToCopy)
+	})
+
 	qmlBridge.ConnectClickedButtonCopyTx(func(transactionID string) {
 		clipboard.WriteAll(transactionID)
 		qmlBridge.DisplayPopup("Copied!", 1500)
@@ -235,6 +242,13 @@ func connectQMLToGOFunctions() {
 
 	qmlBridge.ConnectClickedButtonExplorer(func(transactionID string) {
 		url := urlBlockExplorer + "?hash=" + transactionID + "#blockchain_transaction"
+		successOpenBrowser := openBrowser(url)
+		if !successOpenBrowser {
+			log.Error("failure opening browser, url: " + url)
+		}
+	})
+
+	qmlBridge.ConnectGoToWebsite(func(url string) {
 		successOpenBrowser := openBrowser(url)
 		if !successOpenBrowser {
 			log.Error("failure opening browser, url: " + url)
@@ -314,6 +328,10 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectLimitDisplayTransactions(func(limit bool) {
 		limitDisplayedTransactions = limit
 		getAndDisplayListTransactions(true)
+	})
+
+	qmlBridge.ConnectGetVersion(func() string {
+		return versionNest
 	})
 }
 

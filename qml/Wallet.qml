@@ -38,6 +38,29 @@ Rectangle {
     }
 
     Rectangle {
+        id: buttonInfo
+        width: 33
+        height: 33
+        anchors.top: parent.top
+        anchors.topMargin: 15
+        anchors.right: parent.right
+        anchors.rightMargin: 15
+        color: "transparent"
+        Image {
+            id: imageButtonInfo
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectFit
+            source: "images/info.svg"
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                infoDialog.show()
+            }
+        }
+    }
+
+    Rectangle {
         id: rectangleTop
         height: 110
         color: "transparent"
@@ -1380,6 +1403,10 @@ Rectangle {
             textConfirmPaymentID.text = "";
             textConfirmMixin.text = "";
         }
+    }
+
+    InfoDialog {
+        id: infoDialog
     }
 
     Connections {
