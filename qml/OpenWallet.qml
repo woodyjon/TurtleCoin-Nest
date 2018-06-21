@@ -63,7 +63,7 @@ Rectangle {
         Text {
             id: textLimitationRemoteNode
             color: "#999999"
-            text: "Local blockchain option is temporary unavailable. Use the CLI if you need to\nsync locally. Sorry for the inconvenience. We are working on bringing it back."
+            text: "Local blockchain option is temporarily unavailable. Use the CLI if you need to\nsync locally. Sorry for the inconvenience. We are working on bringing it back."
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 0
             anchors.left: radioButtonUseRemoteNode.left
