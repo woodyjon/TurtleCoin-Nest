@@ -46,3 +46,4 @@ moc.h
 *windows_386.go
 walletd
 settings.db
+\.vs/
