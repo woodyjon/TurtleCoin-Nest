@@ -30,11 +30,14 @@ Rectangle {
 
     Rectangle {
         id: rectangleRadioButtonRemote
+        color: "transparent"
         anchors.right: buttonSettings.right
-        anchors.rightMargin: 80
+        anchors.rightMargin: 60
         anchors.top: parent.top
         anchors.topMargin: 20
-        width: 300
+        width: 400
+        height: 74
+        enabled: false
 
         ColumnLayout {
             OldControls.ExclusiveGroup { id: tabPositionGroup }
@@ -42,8 +45,9 @@ Rectangle {
                 id: radioButtonUseLocal
                 text: "Local blockchain"
                 exclusiveGroup: tabPositionGroup
-                style: radioButtonStyle
+                style: radioButtonStyleGreyedOut
                 onClicked: QmlBridge.choseRemote(false)
+                enabled: false
             }
             OldControls.RadioButton {
                 id: radioButtonUseRemoteNode
@@ -52,6 +56,43 @@ Rectangle {
                 exclusiveGroup: tabPositionGroup
                 style: radioButtonStyle
                 onClicked: QmlBridge.choseRemote(true)
+                enabled: false
+            }
+        }
+
+        Text {
+            id: textLimitationRemoteNode
+            color: "#999999"
+            text: "Local blockchain option is temporarily unavailable. Use the CLI if you need to\nsync locally. Sorry for the inconvenience. We are working on bringing it back."
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 0
+            anchors.left: radioButtonUseRemoteNode.left
+            anchors.leftMargin: 0
+            font.pixelSize: 13
+            font.family: "Arial"
+            horizontalAlignment: Text.AlignLeft
+        }
+    }
+
+    Rectangle {
+        id: buttonInfo
+        width: 33
+        height: 33
+        anchors.top: parent.top
+        anchors.topMargin: 15
+        anchors.right: parent.right
+        anchors.rightMargin: 15
+        color: "transparent"
+        Image {
+            id: imageButtonInfo
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectFit
+            source: "images/info.svg"
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                infoDialog.show();
             }
         }
     }
@@ -60,9 +101,9 @@ Rectangle {
         id: buttonSettings
         width: 33
         height: 33
-        anchors.top: parent.top
-        anchors.topMargin: 15
-        anchors.right: parent.right
+        anchors.top: buttonInfo.top
+        anchors.topMargin: 0
+        anchors.right: buttonInfo.left
         anchors.rightMargin: 15
         color: "transparent"
         Image {
@@ -86,6 +127,21 @@ Rectangle {
                 color: "#ffffff"
                 font.pixelSize: 14
                 font.family: "Arial"
+                text: control.text
+                leftPadding: 10
+                font.bold: control.checked
+            }
+        }
+    }
+
+    Component {
+        id: radioButtonStyleGreyedOut
+        RadioButtonStyle {
+            label: Text {
+                color: "#cccccc"
+                font.pixelSize: 14
+                font.family: "Arial"
+                font.strikeout : true
                 text: control.text
                 leftPadding: 10
                 font.bold: control.checked
@@ -878,6 +934,10 @@ Rectangle {
                 rectangleCreateWallet.enteredPasswordConfirmation(textInputConfirmPassword.text)
             }
         }
+    }
+
+    InfoDialog {
+        id: infoDialog
     }
 
     BusyIndicator {

@@ -169,10 +169,6 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("your available balance is insufficient")
 	}
 
-	if transferAmount > 5000000 {
-		return "", errors.New("for sending more than 5,000,000 TRTL to one address, you should split in multiple transfers of smaller amounts")
-	}
-
 	transferMixin, err := strconv.ParseInt(transferMixinString, 0, 0)
 	if err != nil {
 		return "", errors.New("mixin is invalid")
@@ -210,6 +206,18 @@ func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey stri
 	}
 
 	return privateViewKey, privateSpendKey, nil
+}
+
+// SaveWallet saves the sync status of the wallet. To be done regularly so when walletd crashes, sync is not lost
+func SaveWallet() (err error) {
+
+	err = turtlecoinwalletdrpcgo.SaveWallet(rpcPassword)
+	if err != nil {
+		log.Error("error saving wallet. err: ", err)
+		return err
+	}
+
+	return nil
 }
 
 // StartWalletd starts the walletd daemon with the set wallet info

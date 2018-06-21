@@ -33,6 +33,7 @@ var (
 	transfers                   []turtlecoinwalletdrpcgo.Transfer
 	tickerRefreshWalletData     *time.Ticker
 	tickerRefreshConnectionInfo *time.Ticker
+	tickerSaveWallet            *time.Ticker
 	db                          *sql.DB
 	useRemoteNode               = true
 	displayFiatConversion       = false
@@ -92,9 +93,11 @@ type QmlBridge struct {
 	// qml to go
 	_ func(msg string)           `slot:"log"`
 	_ func(transactionID string) `slot:"clickedButtonExplorer"`
+	_ func(url string)           `slot:"goToWebsite"`
 	_ func(transactionID string) `slot:"clickedButtonCopyTx"`
 	_ func()                     `slot:"clickedButtonCopyAddress"`
 	_ func()                     `slot:"clickedButtonCopyKeys"`
+	_ func(stringToCopy string)  `slot:"clickedButtonCopy"`
 	_ func(transferAddress string,
 		transferAmount string,
 		transferPaymentID string,
@@ -122,6 +125,7 @@ type QmlBridge struct {
 	_ func(transferFee string) `slot:"getFullBalanceAndDisplayInTransferAmount"`
 	_ func()                   `slot:"getDefaultFeeAndMixinAndDisplay"`
 	_ func(limit bool)         `slot:"limitDisplayTransactions"`
+	_ func() string            `slot:"getVersion"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -227,6 +231,10 @@ func connectQMLToGOFunctions() {
 		clipboard.WriteAll(stringBackupKeys)
 	})
 
+	qmlBridge.ConnectClickedButtonCopy(func(stringToCopy string) {
+		clipboard.WriteAll(stringToCopy)
+	})
+
 	qmlBridge.ConnectClickedButtonCopyTx(func(transactionID string) {
 		clipboard.WriteAll(transactionID)
 		qmlBridge.DisplayPopup("Copied!", 1500)
@@ -234,6 +242,13 @@ func connectQMLToGOFunctions() {
 
 	qmlBridge.ConnectClickedButtonExplorer(func(transactionID string) {
 		url := urlBlockExplorer + "?hash=" + transactionID + "#blockchain_transaction"
+		successOpenBrowser := openBrowser(url)
+		if !successOpenBrowser {
+			log.Error("failure opening browser, url: " + url)
+		}
+	})
+
+	qmlBridge.ConnectGoToWebsite(func(url string) {
 		successOpenBrowser := openBrowser(url)
 		if !successOpenBrowser {
 			log.Error("failure opening browser, url: " + url)
@@ -276,7 +291,7 @@ func connectQMLToGOFunctions() {
 	})
 
 	qmlBridge.ConnectChoseRemote(func(remote bool) {
-		useRemoteNode = remote
+		// useRemoteNode = remote
 		recordUseRemoteToDB(useRemoteNode)
 	})
 
@@ -314,6 +329,10 @@ func connectQMLToGOFunctions() {
 		limitDisplayedTransactions = limit
 		getAndDisplayListTransactions(true)
 	})
+
+	qmlBridge.ConnectGetVersion(func() string {
+		return versionNest
+	})
 }
 
 func startDisplayWalletInfo() {
@@ -336,6 +355,13 @@ func startDisplayWalletInfo() {
 		tickerRefreshConnectionInfo = time.NewTicker(time.Second * 15)
 		for range tickerRefreshConnectionInfo.C {
 			getAndDisplayConnectionInfo()
+		}
+	}()
+
+	go func() {
+		tickerSaveWallet = time.NewTicker(time.Second * 289) // every 5 or so minutes
+		for range tickerSaveWallet.C {
+			walletdmanager.SaveWallet()
 		}
 	}()
 }
@@ -515,6 +541,7 @@ func closeWallet() {
 
 	tickerRefreshWalletData.Stop()
 	tickerRefreshConnectionInfo.Stop()
+	tickerSaveWallet.Stop()
 
 	stringBackupKeys = ""
 	transfers = nil
@@ -637,33 +664,35 @@ func recordPathWalletToDB(path string) {
 
 func getUseRemoteFromDB() bool {
 
-	rows, err := db.Query("SELECT useRemote FROM remoteNode ORDER BY id DESC LIMIT 1")
-	if err != nil {
-		log.Fatal("error querying useRemote from remoteNode table. err: ", err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		useRemote := true
-		err = rows.Scan(&useRemote)
-		if err != nil {
-			log.Fatal("error reading item from remoteNode table. err: ", err)
-		}
-		useRemoteNode = useRemote
-	}
+	return true
 
-	return useRemoteNode
+	// rows, err := db.Query("SELECT useRemote FROM remoteNode ORDER BY id DESC LIMIT 1")
+	// if err != nil {
+	// 	log.Fatal("error querying useRemote from remoteNode table. err: ", err)
+	// }
+	// defer rows.Close()
+	// for rows.Next() {
+	// 	useRemote := true
+	// 	err = rows.Scan(&useRemote)
+	// 	if err != nil {
+	// 		log.Fatal("error reading item from remoteNode table. err: ", err)
+	// 	}
+	// 	useRemoteNode = useRemote
+	// }
+
+	// return useRemoteNode
 }
 
 func recordUseRemoteToDB(useRemote bool) {
 
-	stmt, err := db.Prepare(`INSERT INTO remoteNode(useRemote) VALUES(?)`)
-	if err != nil {
-		log.Fatal("error preparing to insert useRemoteNode into db. err: ", err)
-	}
-	_, err = stmt.Exec(useRemote)
-	if err != nil {
-		log.Fatal("error inserting useRemoteNode into db. err: ", err)
-	}
+	// stmt, err := db.Prepare(`INSERT INTO remoteNode(useRemote) VALUES(?)`)
+	// if err != nil {
+	// 	log.Fatal("error preparing to insert useRemoteNode into db. err: ", err)
+	// }
+	// _, err = stmt.Exec(useRemote)
+	// if err != nil {
+	// 	log.Fatal("error inserting useRemoteNode into db. err: ", err)
+	// }
 }
 
 func getRemoteDaemonInfoFromDB() (daemonAddress string, daemonPort string) {

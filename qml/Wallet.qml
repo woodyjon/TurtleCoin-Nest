@@ -38,6 +38,29 @@ Rectangle {
     }
 
     Rectangle {
+        id: buttonInfo
+        width: 33
+        height: 33
+        anchors.top: parent.top
+        anchors.topMargin: 15
+        anchors.right: parent.right
+        anchors.rightMargin: 15
+        color: "transparent"
+        Image {
+            id: imageButtonInfo
+            anchors.fill: parent
+            fillMode: Image.PreserveAspectFit
+            source: "images/info.svg"
+        }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                infoDialog.show()
+            }
+        }
+    }
+
+    Rectangle {
         id: rectangleTop
         height: 110
         color: "transparent"
@@ -98,7 +121,7 @@ Rectangle {
                 anchors.bottom: textLockedUnit.bottom
                 anchors.bottomMargin: -1
                 font.family: "Arial"
-                font.pixelSize: 20
+                font.pixelSize: 19
                 verticalAlignment: Text.AlignBottom
                 horizontalAlignment: Text.AlignRight
 
@@ -119,7 +142,7 @@ Rectangle {
                 anchors.bottom: textAvailableUnit.bottom
                 anchors.bottomMargin: -1
                 font.family: "Arial"
-                font.pixelSize: 20
+                font.pixelSize: 19
                 verticalAlignment: Text.AlignBottom
                 horizontalAlignment: Text.AlignRight
 
@@ -649,14 +672,6 @@ Rectangle {
                     buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != "";
                     textTransferAmountUSD.text = QmlBridge.getTransferAmountUSD(textInputTransferAmount.text);
                 }
-
-                Connections{
-                    target: QmlBridge
-                    onClearTransferAmount: {
-                        textInputTransferAmount.clear();
-                        transferAmount = "";
-                    }
-                }
             }
         }
 
@@ -723,7 +738,7 @@ Rectangle {
         Text {
             id: textTransferPaymentIDDescr
             color: "#ffffff"
-            text: "(optional) Payment ID"
+            text: "Payment ID (optional)"
             anchors.top: rectangleTextInputTransferAmount.bottom
             anchors.topMargin: 13
             anchors.left: textTransferAddrDescr.left
@@ -735,14 +750,29 @@ Rectangle {
             horizontalAlignment: Text.AlignLeft
         }
 
+        Text {
+            id: textTransferPaymentIDWarning
+            color: "#999999"
+            text: "(WARNING: include a payment ID if you were asked to by your recipient)"
+            anchors.right: parent.right
+            anchors.rightMargin: 5
+            anchors.top: textTransferPaymentIDDescr.bottom
+            anchors.topMargin: 4
+            anchors.left: textTransferPaymentIDDescr.left
+            anchors.leftMargin: 0
+            font.pixelSize: 12
+            horizontalAlignment: Text.AlignLeft
+            font.family: "Arial"
+        }
+
         Rectangle {
             id: rectangleTextInputTransferPaymentID
             color: "#555555"
             anchors.right: parent.right
             anchors.rightMargin: 5
-            anchors.top: textTransferPaymentIDDescr.bottom
-            anchors.topMargin: 6
-            anchors.left: textTransferPaymentIDDescr.left
+            anchors.top: textTransferPaymentIDWarning.bottom
+            anchors.topMargin: 8
+            anchors.left: textTransferPaymentIDWarning.left
             anchors.leftMargin: 0
             height: 25
             radius: 3
@@ -923,7 +953,7 @@ Rectangle {
             text: "SEND"
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 30
+            anchors.bottomMargin: 15
             enabled: false
 
             contentItem: Text {
@@ -958,8 +988,6 @@ Rectangle {
 
         function transferConfirmed() {
             QmlBridge.clickedButtonSend(transferRecipient, transferAmount, transferPaymentID, transferFee, transferMixin);
-            textInputTransferAmount.text = "";
-            transferAmount = "";
         }   
     }
 
@@ -1373,9 +1401,12 @@ Rectangle {
             textConfirmRecipient.text = "";
             textConfirmAmount.text = "";
             textConfirmPaymentID.text = "";
-            textConfirmFee.text = "";
             textConfirmMixin.text = "";
         }
+    }
+
+    InfoDialog {
+        id: infoDialog
     }
 
     Connections {
@@ -1412,6 +1443,11 @@ Rectangle {
         onDisplayDefaultFeeAndMixin: {
             textInputTransferFee.text = fee;
             textInputTransferMixin.text = mixin;
+        }
+
+        onClearTransferAmount: {
+            textInputTransferAmount.clear();
+            rectangleTransfer.transferAmount = "";
         }
     }
 
