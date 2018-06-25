@@ -133,7 +133,7 @@ func RequestListTransactions() (transfers []turtlecoinwalletdrpcgo.Transfer, err
 }
 
 // SendTransaction makes a transfer with the provided information
-func SendTransaction(transferAddress string, transferAmountString string, transferPaymentID string, transferFeeString string, transferMixinString string) (transactionHash string, err error) {
+func SendTransaction(transferAddress string, transferAmountString string, transferPaymentID string, transferFeeString string) (transactionHash string, err error) {
 
 	if !WalletdSynced {
 		return "", errors.New("wallet and/or blockchain not fully synced yet")
@@ -169,23 +169,10 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("your available balance is insufficient")
 	}
 
-	transferMixin, err := strconv.ParseInt(transferMixinString, 0, 0)
-	if err != nil {
-		return "", errors.New("mixin is invalid")
-	}
-
-	if transferMixin < 0 {
-		return "", errors.New("mixin should be positive")
-	}
-
-	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, int(transferMixin), rpcPassword)
+	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, DefaultTransferMixin, rpcPassword)
 	if err != nil {
 		log.Error("error sending transaction. err: ", err)
-		errorMessage := err.Error()
-		if errorMessage == "Wrong amount" {
-			errorMessage += "\nYou sometimes need to send a small amount less than your full balance to get the transfer to succeed. This is possibly due to dust in your wallet that is unable to be sent without a mixin of 0 (a mixin of 0 is possible but might compromise privacy.)"
-		}
-		return "", errors.New(errorMessage)
+		return "", err
 	}
 	return transactionHash, nil
 }

@@ -87,7 +87,7 @@ type QmlBridge struct {
 	_ func(remoteNodeAddress string,
 		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
 	_ func(fullBalance string)              `signal:"displayFullBalanceInTransferAmount"`
-	_ func(fee string, mixin string)        `signal:"displayDefaultFeeAndMixin"`
+	_ func(fee string)                      `signal:"displayDefaultFee"`
 	_ func(index int, confirmations string) `signal:"updateConfirmationsOfTransaction"`
 
 	// qml to go
@@ -101,8 +101,7 @@ type QmlBridge struct {
 	_ func(transferAddress string,
 		transferAmount string,
 		transferPaymentID string,
-		transferFee string,
-		transferMixin string) `slot:"clickedButtonSend"`
+		transferFee string) `slot:"clickedButtonSend"`
 	_ func()                                           `slot:"clickedButtonBackupWallet"`
 	_ func()                                           `slot:"clickedCloseWallet"`
 	_ func(pathToWallet string, passwordWallet string) `slot:"clickedButtonOpen"`
@@ -123,7 +122,7 @@ type QmlBridge struct {
 		daemonPort string) `slot:"saveRemoteDaemonInfo"`
 	_ func()                   `slot:"resetRemoteDaemonInfo"`
 	_ func(transferFee string) `slot:"getFullBalanceAndDisplayInTransferAmount"`
-	_ func()                   `slot:"getDefaultFeeAndMixinAndDisplay"`
+	_ func()                   `slot:"getDefaultFeeAndDisplay"`
 	_ func(limit bool)         `slot:"limitDisplayTransactions"`
 	_ func() string            `slot:"getVersion"`
 
@@ -255,8 +254,8 @@ func connectQMLToGOFunctions() {
 		}
 	})
 
-	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string, transferFee string, transferMixin string) {
-		transfer(transferAddress, transferAmount, transferPaymentID, transferFee, transferMixin)
+	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) {
+		transfer(transferAddress, transferAmount, transferPaymentID, transferFee)
 	})
 
 	qmlBridge.ConnectGetTransferAmountUSD(func(amountTRTL string) string {
@@ -321,8 +320,8 @@ func connectQMLToGOFunctions() {
 		getFullBalanceAndDisplayInTransferAmount(transferFee)
 	})
 
-	qmlBridge.ConnectGetDefaultFeeAndMixinAndDisplay(func() {
-		getDefaultFeeAndMixinAndDisplay()
+	qmlBridge.ConnectGetDefaultFeeAndDisplay(func() {
+		getDefaultFeeAndDisplay()
 	})
 
 	qmlBridge.ConnectLimitDisplayTransactions(func(limit bool) {
@@ -341,7 +340,7 @@ func startDisplayWalletInfo() {
 	getAndDisplayAddress()
 	getAndDisplayListTransactions(true)
 	getAndDisplayConnectionInfo()
-	getDefaultFeeAndMixinAndDisplay()
+	getDefaultFeeAndDisplay()
 
 	go func() {
 		tickerRefreshWalletData = time.NewTicker(time.Second * 30)
@@ -463,11 +462,11 @@ func getAndDisplayListTransactions(forceFullUpdate bool) {
 	}
 }
 
-func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string, transferMixin string) bool {
+func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) bool {
 
-	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  fee: ", transferFee, "  mixin: ", transferMixin)
+	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  fee: ", transferFee)
 
-	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, transferMixin)
+	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee)
 	if err != nil {
 		log.Warn("error transfer: ", err)
 		qmlBridge.DisplayErrorDialog("Error transfer.", err.Error())
@@ -576,9 +575,9 @@ func getFullBalanceAndDisplayInTransferAmount(transferFee string) {
 	qmlBridge.DisplayFullBalanceInTransferAmount(humanize.FtoaWithDigits(availableBalance, 2))
 }
 
-func getDefaultFeeAndMixinAndDisplay() {
+func getDefaultFeeAndDisplay() {
 
-	qmlBridge.DisplayDefaultFeeAndMixin(humanize.FtoaWithDigits(walletdmanager.DefaultTransferFee, 2), humanize.FormatInteger("#.", walletdmanager.DefaultTransferMixin))
+	qmlBridge.DisplayDefaultFee(humanize.FtoaWithDigits(walletdmanager.DefaultTransferFee, 2))
 }
 
 func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {

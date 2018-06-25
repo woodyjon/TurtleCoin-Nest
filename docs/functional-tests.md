@@ -45,7 +45,7 @@ Functional tests to be done on windows, mac and linux before merging to master a
 |  <ul><li>[ ] </li></ul> | Launch on a small screen or resolution (800 x 600) | possibility to click full screen and to scroll in the full window
 |  <ul><li>[ ] </li></ul> | Click button to send full balance | Full balance - fee is automatically displayed in transfer amount field
 |  <ul><li>[ ] </li></ul> | Transfer with different fee | Check transfer was made with proper fee
-|  <ul><li>[ ] </li></ul> | Modify transfer fee and mixin, then click "default values" | Default values should be displayed in corresponding field
+|  <ul><li>[ ] </li></ul> | Modify transfer fee, then click "default values" | Default value should be displayed in corresponding field
 |  <ul><li>[ ] </li></ul> | List transactions | 20 transactions are displayed
 |  <ul><li>[ ] </li></ul> | Switch to display "all transactions" then switch back | Proper number of transactions are displayed
 |  <ul><li>[ ] </li></ul> | Start application and check log file | version of Nest in "application started" log should be correct
