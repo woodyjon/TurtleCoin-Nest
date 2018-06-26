@@ -119,8 +119,6 @@ func RequestStatus(rpcPassword string) (blockCount int, knownBlockCount int, pee
 		return 0, 0, 0, errors.Wrap(err, "httpRequest failed")
 	}
 
-	log.Debug("get status: ", responseMap)
-
 	blockCount = int(responseMap["result"].(map[string]interface{})["blockCount"].(float64))
 	knownBlockCount = int(responseMap["result"].(map[string]interface{})["knownBlockCount"].(float64))
 	peerCount = int(responseMap["result"].(map[string]interface{})["peerCount"].(float64))

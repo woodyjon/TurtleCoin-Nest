@@ -43,6 +43,8 @@ var (
 	remoteDaemonPort            = defaultRemoteDaemonPort
 	limitDisplayedTransactions  = true
 	countConnectionProblem      = 0
+	newVersionAvailable         = ""
+	urlNewVersion               = ""
 )
 
 // QmlBridge is the bridge between qml and go
@@ -89,6 +91,7 @@ type QmlBridge struct {
 	_ func(fullBalance string)              `signal:"displayFullBalanceInTransferAmount"`
 	_ func(fee string)                      `signal:"displayDefaultFee"`
 	_ func(index int, confirmations string) `signal:"updateConfirmationsOfTransaction"`
+	_ func()                                `signal:"displayInfoDialog"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -125,6 +128,8 @@ type QmlBridge struct {
 	_ func()                   `slot:"getDefaultFeeAndDisplay"`
 	_ func(limit bool)         `slot:"limitDisplayTransactions"`
 	_ func() string            `slot:"getVersion"`
+	_ func() string            `slot:"getNewVersion"`
+	_ func() string            `slot:"getNewVersionURL"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -207,6 +212,13 @@ func main() {
 	}
 
 	getAndDisplayStartInfoFromDB()
+
+	go func() {
+		newVersionAvailable, urlNewVersion = checkIfNewReleaseAvailableOnGithub(versionNest)
+		if newVersionAvailable != "" {
+			qmlBridge.DisplayInfoDialog()
+		}
+	}()
 
 	gui.QGuiApplication_Exec()
 
@@ -331,6 +343,14 @@ func connectQMLToGOFunctions() {
 
 	qmlBridge.ConnectGetVersion(func() string {
 		return versionNest
+	})
+
+	qmlBridge.ConnectGetNewVersion(func() string {
+		return newVersionAvailable
+	})
+
+	qmlBridge.ConnectGetNewVersionURL(func() string {
+		return urlNewVersion
 	})
 }
 

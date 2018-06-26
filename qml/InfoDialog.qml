@@ -14,6 +14,8 @@ Dialog {
     property var addressDev: "TRTLv3jzutiQwqHL3qFwsu5EVLWesxZr1AFQ4AuMR3SD56n3rkHDkwj79eKwvaiU1nYQWGydKoXM6fXyiiGKsPDnVCNXzNdusxx"
     property var websiteChat: "http://chat.turtlecoin.lol"
     property var versionNest: ""
+    property var newVersionNestAvailable: ""
+    property var urlNewVersionNest: ""
 
     Text {
         id: textNest
@@ -34,13 +36,55 @@ Dialog {
         anchors.topMargin: 5
     }
 
+    Rectangle {
+        id: rectangleNewVersion
+        width: parent.width
+        height: 30
+        anchors.horizontalCenter: textNest.horizontalCenter
+        anchors.top: textVersion.bottom
+        anchors.topMargin: 10
+        color: "transparent"
+
+        Text {
+            id: textNewVersion
+            text: "New version (v. " + newVersionNestAvailable + ") is available. Download here"
+            font.family: "Arial"
+            font.pixelSize: 13
+            font.bold: true
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: parent.top
+            anchors.topMargin: 0
+        }
+
+        Rectangle {
+            id: buttonGoToNewVersion
+            width: 25
+            height: 28
+            anchors.verticalCenter: textNewVersion.verticalCenter
+            anchors.left: textNewVersion.right
+            anchors.leftMargin: 15
+            color: "transparent"
+            Image {
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectFit
+                source: "images/openLink_dark_grey.svg"
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    QmlBridge.goToWebsite(urlNewVersionNest);
+                }
+            }
+        }
+    }
+
     Text {
         id: textDescriptionHelp
         text: "Need help?"
         font.family: "Arial"
         font.pixelSize: 13
-        anchors.top: textVersion.bottom
-        anchors.topMargin: 35
+        anchors.top: rectangleNewVersion.bottom
+        anchors.topMargin: 30
     }
 
     Text {
@@ -131,6 +175,13 @@ Dialog {
 
     function show() {
         versionNest = QmlBridge.getVersion();
+        newVersionNestAvailable = QmlBridge.getNewVersion();
+        if (newVersionNestAvailable != "") {
+            rectangleNewVersion.visible = true;
+            urlNewVersionNest = QmlBridge.getNewVersionURL();
+        } else {
+            rectangleNewVersion.visible = false;
+        }
         dialogInfo.open();
     }
 }

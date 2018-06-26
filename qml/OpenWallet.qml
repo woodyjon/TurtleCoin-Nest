@@ -971,6 +971,10 @@ Rectangle {
             radioButtonUseRemoteNode.checked = useRemote;
             radioButtonUseRemoteNode.text = remoteNodeDescr;
         }
+
+        onDisplayInfoDialog: {
+            infoDialog.show();
+        }
     }
 
     function clearData() {
