@@ -5,6 +5,7 @@ import QtQuick.Controls 1.4 as OldControls
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
+import QtGraphicalEffects 1.0
 
 Rectangle {
     id: rectangleOpenWallet
@@ -110,7 +111,14 @@ Rectangle {
             id: imageButtonSettings
             anchors.fill: parent
             fillMode: Image.PreserveAspectFit
-            source: "images/settings.png"
+            source: "images/settings.svg"
+            antialiasing: true
+        }
+        ColorOverlay {
+            anchors.fill: imageButtonSettings
+            source:imageButtonSettings
+            color:"white"
+            antialiasing: true
         }
         MouseArea {
             anchors.fill: parent

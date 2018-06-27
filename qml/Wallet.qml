@@ -4,6 +4,7 @@ import QtQuick.Controls 2.3
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
+import QtGraphicalEffects 1.0
 
 Rectangle {
     id: rectangleMainWallet
@@ -24,10 +25,17 @@ Rectangle {
         anchors.leftMargin: 15
         color: "transparent"
         Image {
-            id: image_close
+            id: imageButtonClose
             anchors.fill: parent
             fillMode: Image.PreserveAspectFit
-            source: "images/close.png"
+            source: "images/close.svg"
+            antialiasing: true
+        }
+        ColorOverlay {
+            anchors.fill: imageButtonClose
+            source:imageButtonClose
+            color:"white"
+            antialiasing: true
         }
         MouseArea {
             anchors.fill: parent
@@ -360,10 +368,17 @@ Rectangle {
             anchors.rightMargin: 20
             color: "transparent"
             Image {
-                id: image_copy
+                id: imageButtonCopy
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
-                source: "images/copy_white.png"
+                source: "images/copy.svg"
+                antialiasing: true
+            }
+            ColorOverlay {
+                anchors.fill: imageButtonCopy
+                source:imageButtonCopy
+                color:"white"
+                antialiasing: true
             }
             MouseArea {
                 anchors.fill: parent

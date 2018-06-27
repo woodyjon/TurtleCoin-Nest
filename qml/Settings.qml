@@ -5,6 +5,7 @@ import QtQuick.Controls 1.4 as OldControls
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
+import QtGraphicalEffects 1.0
 
 Rectangle {
     id: rectangleSettings
@@ -25,11 +26,19 @@ Rectangle {
         anchors.leftMargin: 15
         color: "transparent"
         Image {
-            id: image_close
+            id: imageButtonClose
             anchors.fill: parent
             fillMode: Image.PreserveAspectFit
-            source: "images/close.png"
+            source: "images/close.svg"
+            antialiasing: true
         }
+        ColorOverlay {
+            anchors.fill: imageButtonClose
+            source:imageButtonClose
+            color:"white"
+            antialiasing: true
+        }
+
         MouseArea {
             anchors.fill: parent
             onClicked: {

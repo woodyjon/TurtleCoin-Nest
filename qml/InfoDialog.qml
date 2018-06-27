@@ -4,6 +4,7 @@ import QtQuick.Controls 2.3
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.1
+import QtGraphicalEffects 1.0
 
 Dialog {
     id: dialogInfo
@@ -65,9 +66,17 @@ Dialog {
             anchors.leftMargin: 15
             color: "transparent"
             Image {
+                id: imageButtonGoToNewVersion
                 anchors.fill: parent
                 fillMode: Image.PreserveAspectFit
-                source: "images/openLink_dark_grey.svg"
+                source: "images/openLink.svg"
+                antialiasing: true
+            }
+            ColorOverlay {
+                anchors.fill: imageButtonGoToNewVersion
+                source:imageButtonGoToNewVersion
+                color:"#444444"
+                antialiasing: true
             }
             MouseArea {
                 anchors.fill: parent
@@ -109,9 +118,17 @@ Dialog {
         anchors.leftMargin: 15
         color: "transparent"
         Image {
+            id: imageButtonGoToChat
             anchors.fill: parent
             fillMode: Image.PreserveAspectFit
-            source: "images/openLink_dark_grey.svg"
+            source: "images/openLink.svg"
+            antialiasing: true
+        }
+        ColorOverlay {
+            anchors.fill: imageButtonGoToChat
+            source:imageButtonGoToChat
+            color:"#444444"
+            antialiasing: true
         }
         MouseArea {
             anchors.fill: parent
@@ -161,9 +178,17 @@ Dialog {
         anchors.leftMargin: 15
         color: "transparent"
         Image {
+            id: imageButtonCopyAddressDev
             anchors.fill: parent
             fillMode: Image.PreserveAspectFit
-            source: "images/copy_dark_grey.svg"
+            source: "images/copy.svg"
+            antialiasing: true
+        }
+        ColorOverlay {
+            anchors.fill: imageButtonCopyAddressDev
+            source:imageButtonCopyAddressDev
+            color:"#444444"
+            antialiasing: true
         }
         MouseArea {
             anchors.fill: parent

@@ -1,5 +1,6 @@
 import QtQuick 2.7
 import QtQuick.Controls 2.1
+import QtGraphicalEffects 1.0
 
 Item {
     id: itemListTransaction
@@ -86,8 +87,8 @@ Item {
 
     Rectangle {
         id: buttonCopyTxID
-        width: 13
-        height: 14
+        width: 17
+        height: 17
         anchors.verticalCenter: transactionID.verticalCenter
         anchors.left: transactionID.right
         anchors.leftMargin: 10
@@ -96,7 +97,14 @@ Item {
             id: imageButtonCopyTxID
             anchors.fill: parent
             fillMode: Image.PreserveAspectFit
-            source: "images/copy_white.png"
+            source: "images/copy.svg"
+            antialiasing: true
+        }
+        ColorOverlay {
+            anchors.fill: imageButtonCopyTxID
+            source:imageButtonCopyTxID
+            color:"white"
+            antialiasing: true
         }
         MouseArea {
             anchors.fill: parent
@@ -109,8 +117,8 @@ Item {
 
     Rectangle {
         id: buttonExplorerTxID
-        width: 13
-        height: 14
+        width: 17
+        height: 17
         anchors.verticalCenter: buttonCopyTxID.verticalCenter
         anchors.left: buttonCopyTxID.right
         anchors.leftMargin: 10
@@ -119,7 +127,14 @@ Item {
             id: imageButtonExplorerTxID
             anchors.fill: parent
             fillMode: Image.PreserveAspectFit
-            source: "images/search_white.png"
+            source: "images/search.svg"
+            antialiasing: true
+        }
+        ColorOverlay {
+            anchors.fill: imageButtonExplorerTxID
+            source:imageButtonExplorerTxID
+            color:"white"
+            antialiasing: true
         }
         MouseArea {
             anchors.fill: parent
