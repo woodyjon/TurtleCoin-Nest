@@ -585,7 +585,7 @@ Rectangle {
         Text {
             id: textImportWalletDescr
             color: "#ffffff"
-            text: "Import wallet from keys"
+            text: "Import wallet"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.bold: true
@@ -595,6 +595,44 @@ Rectangle {
             anchors.topMargin: 10
             anchors.left: parent.left
             anchors.leftMargin: 40
+        }
+
+        Text {
+            id: textSwitchImportFromSeed
+            color: !switchImportFrom.checked ? "#ffffff" : "#cfcfcf"
+            text: "from seed"
+            anchors.right: switchImportFrom.left
+            anchors.rightMargin: 4
+            anchors.verticalCenter: textImportWalletDescr.verticalCenter
+            font.family: "Arial"
+            font.pixelSize: 14
+            font.bold: !switchImportFrom.checked
+            horizontalAlignment: Text.AlignRight
+        }
+
+        Switch {
+            id: switchImportFrom
+            anchors.left: textImportWalletDescr.right
+            anchors.leftMargin: 105
+            anchors.verticalCenter: textImportWalletDescr.verticalCenter
+            checked: false
+
+            onClicked: {
+                rectangleImportWalletFromKeys.displayOrHideSeedAndPrivateKeys(!checked);
+            }
+        }
+
+        Text {
+            id: textSwitchImportFromKeys
+            color: switchImportFrom.checked ? "#ffffff" : "#cfcfcf"
+            text: "from private keys"
+            anchors.left: switchImportFrom.right
+            anchors.leftMargin: 4
+            anchors.verticalCenter: textImportWalletDescr.verticalCenter
+            font.family: "Arial"
+            font.pixelSize: 14
+            horizontalAlignment: Text.AlignLeft
+            font.bold: switchImportFrom.checked
         }
 
         Text {
@@ -734,9 +772,9 @@ Rectangle {
         }
 
         Text {
-            id: textImportWalletPrivateViewKeyDescr
+            id: textImportWalletSeedDescr
             color: "#ffffff"
-            text: "Private view key"
+            text: "Seed (25 words)"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -748,19 +786,19 @@ Rectangle {
         }
 
         Rectangle {
-            id: rectangleTextInputImportWalletPrivateViewKey
+            id: rectangleTextInputImportWalletSeed
             color: "#555555"
             height: 25
-            anchors.top: textImportWalletPrivateViewKeyDescr.bottom
+            anchors.top: textImportWalletSeedDescr.bottom
             anchors.topMargin: 15
-            anchors.left: textImportWalletPrivateViewKeyDescr.left
+            anchors.left: textImportWalletSeedDescr.left
             anchors.leftMargin: 0
             anchors.right: rectangleTextInputImportWalletPassword.right
             anchors.rightMargin: 0
             radius: 3
 
             TextInput {
-                id: textInputImportWalletPrivateViewKey
+                id: textInputImportWalletSeed
                 anchors.fill: parent
                 color: "#cfcfcf"
                 text: ""
@@ -782,6 +820,57 @@ Rectangle {
         }
 
         Text {
+            id: textImportWalletPrivateViewKeyDescr
+            color: "#ffffff"
+            text: "Private view key"
+            horizontalAlignment: Text.AlignLeft
+            verticalAlignment: Text.AlignBottom
+            font.pixelSize: 14
+            font.family: "Arial"
+            anchors.top: textImportWalletExtensionDescr.bottom
+            anchors.topMargin: 30
+            anchors.left: textImportWalletExtensionDescr.left
+            anchors.leftMargin: 0
+            visible: false
+        }
+
+        Rectangle {
+            id: rectangleTextInputImportWalletPrivateViewKey
+            color: "#555555"
+            height: 25
+            anchors.top: textImportWalletPrivateViewKeyDescr.bottom
+            anchors.topMargin: 15
+            anchors.left: textImportWalletPrivateViewKeyDescr.left
+            anchors.leftMargin: 0
+            anchors.right: rectangleTextInputImportWalletPassword.right
+            anchors.rightMargin: 0
+            visible: false
+            radius: 3
+
+            TextInput {
+                id: textInputImportWalletPrivateViewKey
+                anchors.fill: parent
+                color: "#cfcfcf"
+                text: ""
+                rightPadding: 5
+                leftPadding: 5
+                selectionColor: "#eeeeee"
+                selectedTextColor: "#999999"
+                selectByMouse: true
+                clip: true
+                font.family: "Arial"
+                horizontalAlignment: Text.AlignLeft
+                font.pixelSize: 14
+                verticalAlignment: Text.AlignVCenter
+                enabled: false
+
+                onTextChanged: {
+                    rectangleImportWalletFromKeys.checkEnableButton()
+                }
+            }
+        }
+
+        Text {
             id: textImportWalletPrivateSpendKeyDescr
             color: "#ffffff"
             text: "Private spend key"
@@ -793,6 +882,7 @@ Rectangle {
             anchors.topMargin: 20
             anchors.left: rectangleTextInputImportWalletPrivateViewKey.left
             anchors.leftMargin: 0
+            visible: false
         }
 
         Rectangle {
@@ -805,6 +895,7 @@ Rectangle {
             anchors.leftMargin: 0
             anchors.right: rectangleTextInputImportWalletPrivateViewKey.right
             anchors.rightMargin: 0
+            visible: false
             radius: 3
 
             TextInput {
@@ -822,6 +913,7 @@ Rectangle {
                 horizontalAlignment: Text.AlignLeft
                 font.pixelSize: 14
                 verticalAlignment: Text.AlignVCenter
+                enabled: false
 
                 onTextChanged: {
                     rectangleImportWalletFromKeys.checkEnableButton()
@@ -864,14 +956,35 @@ Rectangle {
         }
 
         function checkEnableButton() {
-            buttonImportWallet.enabled = textInputImportWalletFilename.text != "" && textInputImportWalletPassword.text != "" && textInputImportWalletPrivateViewKey.text != "" && textInputImportWalletPrivateSpendKey.text != ""
+            if (!switchImportFrom.checked) {
+                buttonImportWallet.enabled = textInputImportWalletFilename.text != "" && textInputImportWalletPassword.text != "" && textInputImportWalletSeed.text != ""
+            } else {
+                buttonImportWallet.enabled = textInputImportWalletFilename.text != "" && textInputImportWalletPassword.text != "" && textInputImportWalletPrivateViewKey.text != "" && textInputImportWalletPrivateSpendKey.text != ""
+            }
         }
 
         function enteredPasswordConfirmation(passwordConfirmation) {
             busyIndicator.running = true;
-            QmlBridge.clickedButtonImport(textImportWalletFilename.text, textInputImportWalletPassword.text, textInputImportWalletPrivateViewKey.text, textInputImportWalletPrivateSpendKey.text, passwordConfirmation);
+            QmlBridge.clickedButtonImport(textImportWalletFilename.text, textInputImportWalletPassword.text, textInputImportWalletPrivateViewKey.text, textInputImportWalletPrivateSpendKey.text, textInputImportWalletSeed.text, passwordConfirmation);
             textInputImportWalletPassword.text = "";
         }
+
+        function displayOrHideSeedAndPrivateKeys(displaySeed) {
+            textImportWalletSeedDescr.visible = displaySeed
+            rectangleTextInputImportWalletSeed.visible = displaySeed
+            textInputImportWalletSeed.text = ""
+            textInputImportWalletSeed.enabled = displaySeed
+
+            textImportWalletPrivateViewKeyDescr.visible = !displaySeed
+            rectangleTextInputImportWalletPrivateViewKey.visible = !displaySeed
+            textInputImportWalletPrivateViewKey.text = ""
+            textInputImportWalletPrivateViewKey.enabled = !displaySeed
+
+            textImportWalletPrivateSpendKeyDescr.visible = !displaySeed
+            rectangleTextInputImportWalletPrivateSpendKey.visible = !displaySeed
+            textInputImportWalletPrivateSpendKey.text = ""
+            textInputImportWalletPrivateSpendKey.enabled = !displaySeed
+        } 
     }
 
     FileDialog {
