@@ -177,22 +177,28 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 	return transactionHash, nil
 }
 
-// GetPrivateViewKeyAndSpendKey provides the private view and spend keys of the current wallet
-func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey string, err error) {
+// GetPrivateKeys provides the private view and spend keys of the current wallet, and the mnemonic seed if the wallet is deterministic
+func GetPrivateKeys() (isDeterministicWallet bool, mnemonicSeed string, privateViewKey string, privateSpendKey string, err error) {
+
+	isDeterministicWallet, mnemonicSeed, err = turtlecoinwalletdrpcgo.GetMnemonicSeed(WalletAddress, rpcPassword)
+	if err != nil {
+		log.Error("error requesting mnemonic seed. err: ", err)
+		return false, "", "", "", err
+	}
 
 	privateViewKey, err = turtlecoinwalletdrpcgo.GetViewKey(rpcPassword)
 	if err != nil {
 		log.Error("error requesting view key. err: ", err)
-		return "", "", err
+		return false, "", "", "", err
 	}
 
 	privateSpendKey, _, err = turtlecoinwalletdrpcgo.GetSpendKeys(WalletAddress, rpcPassword)
 	if err != nil {
 		log.Error("error requesting spend keys. err: ", err)
-		return "", "", err
+		return false, "", "", "", err
 	}
 
-	return privateViewKey, privateSpendKey, nil
+	return isDeterministicWallet, mnemonicSeed, privateViewKey, privateSpendKey, nil
 }
 
 // SaveWallet saves the sync status of the wallet. To be done regularly so when walletd crashes, sync is not lost

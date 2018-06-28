@@ -75,6 +75,9 @@ type QmlBridge struct {
 		privateViewKey string,
 		privateSpendKey string,
 		walletAddress string) `signal:"displayPrivateKeys"`
+	_ func(filename string,
+		mnemonicSeed string,
+		walletAddress string) `signal:"displaySeed"`
 	_ func()                            `signal:"displayOpenWalletScreen"`
 	_ func()                            `signal:"displayMainWalletScreen"`
 	_ func()                            `signal:"finishedLoadingWalletd"`
@@ -576,13 +579,20 @@ func closeWallet() {
 
 func showWalletPrivateInfo() {
 
-	privateViewKey, privateSpendKey, err := walletdmanager.GetPrivateViewKeyAndSpendKey()
+	isDeterministicWallet, mnemonicSeed, privateViewKey, privateSpendKey, err := walletdmanager.GetPrivateKeys()
 	if err != nil {
-		log.Error("Error getting view and spend key: ", err)
+		log.Error("Error getting private keys: ", err)
 	} else {
-		qmlBridge.DisplayPrivateKeys(walletdmanager.WalletFilename, privateViewKey, privateSpendKey, walletdmanager.WalletAddress)
+		stringBackupKeys = "Wallet: " + walletdmanager.WalletFilename + "\n\nAddress: " + walletdmanager.WalletAddress + "\n\n"
+		if isDeterministicWallet {
+			qmlBridge.DisplaySeed(walletdmanager.WalletFilename, mnemonicSeed, walletdmanager.WalletAddress)
 
-		stringBackupKeys = "Wallet: " + walletdmanager.WalletFilename + "\nAddress: " + walletdmanager.WalletAddress + "\nPrivate view key: " + privateViewKey + "\nPrivate spend key: " + privateSpendKey
+			stringBackupKeys += "Seed: " + mnemonicSeed
+		} else {
+			qmlBridge.DisplayPrivateKeys(walletdmanager.WalletFilename, privateViewKey, privateSpendKey, walletdmanager.WalletAddress)
+
+			stringBackupKeys += "Private view key: " + privateViewKey + "\n\nPrivate spend key: " + privateSpendKey
+		}
 	}
 }
 

@@ -190,6 +190,27 @@ func GetSpendKeys(address string, rpcPassword string) (spendSecretKey string, sp
 	return spendSecretKey, spendPublicKey, nil
 }
 
+// GetMnemonicSeed provides the mnemonic seed.
+func GetMnemonicSeed(address string, rpcPassword string) (isDeterministicWallet bool, mnemonicSeed string, err error) {
+
+	args := make(map[string]interface{})
+	args["address"] = address
+	payload := rpcPayloadGetMnemonicSeed(0, rpcPassword, args)
+
+	responseMap, err := httpRequest(payload)
+	if err != nil {
+		return false, "", err
+	}
+
+	if responseMap["result"] == nil { // wallet is not deterministic. error in the response is: application_code:6 message:"Keys not deterministic"
+		return false, "", nil
+	}
+
+	mnemonicSeed = responseMap["result"].(map[string]interface{})["mnemonicSeed"].(string)
+
+	return true, mnemonicSeed, nil
+}
+
 // SaveWallet saves the sync info in the wallet
 func SaveWallet(rpcPassword string) (err error) {
 
