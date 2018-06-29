@@ -225,6 +225,57 @@ func SaveWallet(rpcPassword string) (err error) {
 	return nil
 }
 
+// EstimateFusion counts the number of unspent outputs of the specified addresses and returns how many of those outputs can be optimized. This method is used to understand if a fusion transaction can be created. If fusionReadyCount returns a value = 0, then a fusion transaction cannot be created.
+// threshold is the value that determines which outputs will be optimized. Only the outputs, lesser than the threshold value, will be included into a fusion transaction (threshold is expressed in TRTL, not 0.01 TRTL).
+// fusionReadyCount is the number of outputs that can be optimized.
+// totalOutputCount is the total number of unspent outputs of the specified addresses.
+func EstimateFusion(threshold int, addresses []string, rpcPassword string) (fusionReadyCount int, totalOutputCount int, err error) {
+
+	threshold *= 100 // expressed in hundredth of TRTL
+
+	args := make(map[string]interface{})
+	args["threshold"] = threshold
+	args["addresses"] = addresses
+	payload := rpcPayloadEstimateFusion(0, rpcPassword, args)
+
+	responseMap, err := httpRequest(payload)
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "httpRequest failed")
+	}
+
+	fusionReadyCount = int(responseMap["result"].(map[string]interface{})["fusionReadyCount"].(float64))
+	totalOutputCount = int(responseMap["result"].(map[string]interface{})["totalOutputCount"].(float64))
+
+	return fusionReadyCount, totalOutputCount, nil
+}
+
+// SendFusionTransaction allows you to send a fusion transaction, by taking funds from selected addresses and transferring them to the destination address.
+// threshold is the value that determines which outputs will be optimized. Only the outputs, lesser than the threshold value, will be included into a fusion transaction (threshold is expressed in TRTL, not 0.01 TRTL).
+// parameters amount and fee are expressed in TRTL, not 0.01 TRTL
+func SendFusionTransaction(threshold int, mixin int, addresses []string, destinationAddress string, rpcPassword string) (transactionHash string, err error) {
+
+	threshold *= 100 // expressed in hundredth of TRTL
+
+	args := make(map[string]interface{})
+	args["threshold"] = threshold
+	args["anonymity"] = mixin
+	args["addresses"] = addresses
+	args["destinationAddress"] = destinationAddress
+
+	payload := rpcPayloadSendFusionTransaction(0, rpcPassword, args)
+
+	responseMap, err := httpRequest(payload)
+	if err != nil {
+		return "", errors.Wrap(err, "httpRequest failed")
+	}
+
+	responseError := responseMap["error"]
+	if responseError != nil {
+		return "", errors.Wrap(errors.New(responseError.(map[string]interface{})["message"].(string)), "response with error")
+	}
+	return responseMap["result"].(map[string]interface{})["transactionHash"].(string), nil
+}
+
 func httpRequest(payload rpcPayload) (responseMap map[string]interface{}, err error) {
 
 	payloadjson, err := json.Marshal(payload)

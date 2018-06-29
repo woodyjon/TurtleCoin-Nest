@@ -955,6 +955,7 @@ Rectangle {
         }
 
         function transferConfirmed() {
+            rectangleMainWallet.startWaiting();
             QmlBridge.clickedButtonSend(transferRecipient, transferAmount, transferPaymentID, transferFee);
         }   
     }
@@ -1184,6 +1185,43 @@ Rectangle {
         id: infoDialog
     }
 
+    Dialog {
+        id: dialogFusion
+        title: "Wallet must be optimized"
+        standardButtons: StandardButton.Yes | StandardButton.No
+        width: 650
+        height: 150
+
+        Text {
+            id: textDescriptionDialogFusion
+            text: "Transaction size is too big.\nA transaction must be sent from your address to itself for optimizing your wallet (fusion transaction)."
+            font.family: "Arial"
+        }
+
+        Text {
+            text: "Would you like to send a fusion transaction? (you might have to do it multiple times)"
+            font.family: "Arial"
+            font.bold: true
+            anchors.top: textDescriptionDialogFusion.bottom
+            anchors.topMargin: 10
+        }
+
+        function show() {
+            dialogFusion.open();
+        }
+
+        onYes: {
+            rectangleMainWallet.startWaiting();
+            QmlBridge.optimizeWalletWithFusion();
+        }
+    }
+
+    BusyIndicator {
+        id: busyIndicatorSendTransaction
+        anchors.centerIn: parent
+        running: false
+    }
+
     Connections {
         target: QmlBridge
 
@@ -1227,6 +1265,14 @@ Rectangle {
             textInputTransferAmount.clear();
             rectangleTransfer.transferAmount = "";
         }
+
+        onAskForFusion: {
+            dialogFusion.show();
+        }
+
+        onFinishedSendingTransaction: {
+            rectangleMainWallet.stopWaiting();
+        }
     }
 
     function clearData() {
@@ -1242,6 +1288,16 @@ Rectangle {
 
     function hide() {
         walletScreen.state = ""
+    }
+
+    function startWaiting() {
+        busyIndicatorSendTransaction.running = true;
+        rectangleMainWallet.enabled = false;
+    }
+
+    function stopWaiting() {
+        busyIndicatorSendTransaction.running = false;
+        rectangleMainWallet.enabled = true;
     }
 
     states: State {
