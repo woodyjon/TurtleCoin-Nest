@@ -955,6 +955,7 @@ Rectangle {
         }
 
         function transferConfirmed() {
+            rectangleMainWallet.startWaiting();
             QmlBridge.clickedButtonSend(transferRecipient, transferAmount, transferPaymentID, transferFee);
         }   
     }
@@ -1210,8 +1211,15 @@ Rectangle {
         }
 
         onYes: {
+            rectangleMainWallet.startWaiting();
             QmlBridge.optimizeWalletWithFusion();
         }
+    }
+
+    BusyIndicator {
+        id: busyIndicatorSendTransaction
+        anchors.centerIn: parent
+        running: false
     }
 
     Connections {
@@ -1261,6 +1269,10 @@ Rectangle {
         onAskForFusion: {
             dialogFusion.show();
         }
+
+        onFinishedSendingTransaction: {
+            rectangleMainWallet.stopWaiting();
+        }
     }
 
     function clearData() {
@@ -1276,6 +1288,16 @@ Rectangle {
 
     function hide() {
         walletScreen.state = ""
+    }
+
+    function startWaiting() {
+        busyIndicatorSendTransaction.running = true;
+        rectangleMainWallet.enabled = false;
+    }
+
+    function stopWaiting() {
+        busyIndicatorSendTransaction.running = false;
+        rectangleMainWallet.enabled = true;
     }
 
     states: State {

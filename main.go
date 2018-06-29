@@ -84,6 +84,7 @@ type QmlBridge struct {
 	_ func()                            `signal:"displayMainWalletScreen"`
 	_ func()                            `signal:"finishedLoadingWalletd"`
 	_ func()                            `signal:"finishedCreatingWallet"`
+	_ func()                            `signal:"finishedSendingTransaction"`
 	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
 	_ func(walletLocation string)       `signal:"displayWalletCreationLocation"`
 	_ func(useRemote bool,
@@ -274,7 +275,9 @@ func connectQMLToGOFunctions() {
 	})
 
 	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) {
-		transfer(transferAddress, transferAmount, transferPaymentID, transferFee)
+		go func() {
+			transfer(transferAddress, transferAmount, transferPaymentID, transferFee)
+		}()
 	})
 
 	qmlBridge.ConnectGetTransferAmountUSD(func(amountTRTL string) string {
@@ -361,7 +364,9 @@ func connectQMLToGOFunctions() {
 	})
 
 	qmlBridge.ConnectOptimizeWalletWithFusion(func() {
-		optimizeWalletWithFusion()
+		go func() {
+			optimizeWalletWithFusion()
+		}()
 	})
 }
 
@@ -493,33 +498,47 @@ func getAndDisplayListTransactions(forceFullUpdate bool) {
 	}
 }
 
-func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) bool {
+func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) {
 
 	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  fee: ", transferFee)
 
 	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee)
 	if err != nil {
 		log.Warn("error transfer: ", err)
+		qmlBridge.FinishedSendingTransaction()
 		if strings.Contains(err.Error(), "Transaction size is too big") {
 			qmlBridge.AskForFusion()
 		} else {
 			qmlBridge.DisplayErrorDialog("Error transfer.", err.Error())
 		}
-		return false
+		return
 	}
 
 	log.Info("succes transfer: ", transactionID)
 
 	getAndDisplayBalances()
 	qmlBridge.ClearTransferAmount()
+	qmlBridge.FinishedSendingTransaction()
 	qmlBridge.DisplayPopup("TRTLs sent successfully", 4000)
-
-	return true
 }
 
 func optimizeWalletWithFusion() {
 
-	walletdmanager.OptimizeWalletWithFusion()
+	transactionID, err := walletdmanager.OptimizeWalletWithFusion()
+	if err != nil {
+		log.Warn("error fusion transaction: ", err)
+		qmlBridge.FinishedSendingTransaction()
+		qmlBridge.DisplayErrorDialog("Error sending fusion transaction.", err.Error())
+
+		return
+	}
+
+	log.Info("succes fusion: ", transactionID)
+
+	getAndDisplayBalances()
+	qmlBridge.ClearTransferAmount()
+	qmlBridge.FinishedSendingTransaction()
+	qmlBridge.DisplayPopup("Success fusion", 4000)
 }
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {

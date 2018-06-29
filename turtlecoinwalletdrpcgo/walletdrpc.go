@@ -41,8 +41,6 @@ func RequestBalance(rpcPassword string) (availableBalance float64, lockedBalance
 		return 0, 0, 0, errors.Wrap(err, "httpRequest failed")
 	}
 
-	log.Debug("RequestBalance responseMap: ", responseMap)
-
 	availableBalance = responseMap["result"].(map[string]interface{})["availableBalance"].(float64) / 100
 	lockedBalance = responseMap["result"].(map[string]interface{})["lockedAmount"].(float64) / 100
 	totalBalance = availableBalance + lockedBalance
@@ -153,8 +151,6 @@ func SendTransaction(addressRecipient string, amount float64, paymentID string, 
 		return "", errors.Wrap(err, "httpRequest failed")
 	}
 
-	log.Debug("sendTransaction responseMap: ", responseMap)
-
 	responseError := responseMap["error"]
 	if responseError != nil {
 		return "", errors.Wrap(errors.New(responseError.(map[string]interface{})["message"].(string)), "response with error")
@@ -247,8 +243,6 @@ func EstimateFusion(threshold int, addresses []string, rpcPassword string) (fusi
 		return 0, 0, errors.Wrap(err, "httpRequest failed")
 	}
 
-	log.Debug("estimateFusion responseMap: ", responseMap)
-
 	fusionReadyCount = int(responseMap["result"].(map[string]interface{})["fusionReadyCount"].(float64))
 	totalOutputCount = int(responseMap["result"].(map[string]interface{})["totalOutputCount"].(float64))
 
@@ -274,8 +268,6 @@ func SendFusionTransaction(threshold int, mixin int, addresses []string, destina
 	if err != nil {
 		return "", errors.Wrap(err, "httpRequest failed")
 	}
-
-	log.Debug("sendFusionTransaction responseMap: ", responseMap)
 
 	responseError := responseMap["error"]
 	if responseError != nil {
