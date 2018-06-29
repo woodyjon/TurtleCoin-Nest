@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/atotto/clipboard"
@@ -70,6 +71,7 @@ type QmlBridge struct {
 	_ func(errorText string,
 		errorInformativeText string) `signal:"displayErrorDialog"`
 	_ func() `signal:"clearTransferAmount"`
+	_ func() `signal:"askForFusion"`
 	_ func() `signal:"clearListTransactions"`
 	_ func(filename string,
 		privateViewKey string,
@@ -493,7 +495,11 @@ func transfer(transferAddress string, transferAmount string, transferPaymentID s
 	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee)
 	if err != nil {
 		log.Warn("error transfer: ", err)
-		qmlBridge.DisplayErrorDialog("Error transfer.", err.Error())
+		if strings.Contains(err.Error(), "Transaction size is too big") {
+			qmlBridge.AskForFusion()
+		} else {
+			qmlBridge.DisplayErrorDialog("Error transfer.", err.Error())
+		}
 		return false
 	}
 

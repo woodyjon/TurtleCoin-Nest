@@ -41,6 +41,8 @@ func RequestBalance(rpcPassword string) (availableBalance float64, lockedBalance
 		return 0, 0, 0, errors.Wrap(err, "httpRequest failed")
 	}
 
+	log.Debug("RequestBalance responseMap: ", responseMap)
+
 	availableBalance = responseMap["result"].(map[string]interface{})["availableBalance"].(float64) / 100
 	lockedBalance = responseMap["result"].(map[string]interface{})["lockedAmount"].(float64) / 100
 	totalBalance = availableBalance + lockedBalance
@@ -151,6 +153,8 @@ func SendTransaction(addressRecipient string, amount float64, paymentID string, 
 		return "", errors.Wrap(err, "httpRequest failed")
 	}
 
+	log.Debug("sendTransaction responseMap: ", responseMap)
+
 	responseError := responseMap["error"]
 	if responseError != nil {
 		return "", errors.Wrap(errors.New(responseError.(map[string]interface{})["message"].(string)), "response with error")
@@ -223,6 +227,30 @@ func SaveWallet(rpcPassword string) (err error) {
 	}
 
 	return nil
+}
+
+// EstimateFusion counts the number of unspent outputs of the specified addresses and returns how many of those outputs can be optimized. This method is used to understand if a fusion transaction can be created. If fusionReadyCount returns a value = 0, then a fusion transaction cannot be created.
+// threshold is the value that determines which outputs will be optimized. Only the outputs, lesser than the threshold value, will be included into a fusion transaction (in atomic unit).
+// fusionReadyCount is the number of outputs that can be optimized.
+// totalOutputCount is the total number of unspent outputs of the specified addresses.
+func EstimateFusion(threshold int, addresses []string, rpcPassword string) (fusionReadyCount int, totalOutputCount int, err error) {
+
+	args := make(map[string]interface{})
+	args["threshold"] = threshold
+	args["addresses"] = addresses
+	payload := rpcPayloadEstimateFusion(0, rpcPassword, args)
+
+	responseMap, err := httpRequest(payload)
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "httpRequest failed")
+	}
+
+	log.Debug("estimateFusion responseMap: ", responseMap)
+
+	fusionReadyCount = int(responseMap["result"].(map[string]interface{})["fusionReadyCount"].(float64))
+	totalOutputCount = int(responseMap["result"].(map[string]interface{})["totalOutputCount"].(float64))
+
+	return fusionReadyCount, totalOutputCount, nil
 }
 
 func httpRequest(payload rpcPayload) (responseMap map[string]interface{}, err error) {

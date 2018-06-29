@@ -1184,6 +1184,27 @@ Rectangle {
         id: infoDialog
     }
 
+    Dialog {
+        id: dialogFusion
+        title: "Wallet must be optimized"
+        standardButtons: StandardButton.Yes | StandardButton.No
+        width: 650
+
+        Text {
+            text: "Transaction size is too big.\nA transaction must be sent from your address to itself for optimizing your wallet (fusion transaction).\nWould you like to send a fusion transaction? (you might have to do it multiple times)"
+            font.family: "Arial"
+            font.bold: true
+        }
+
+        function show() {
+            dialogFusion.open();
+        }
+
+        onYes: {
+            QmlBridge.log("yes");
+        }
+    }
+
     Connections {
         target: QmlBridge
 
@@ -1226,6 +1247,10 @@ Rectangle {
         onClearTransferAmount: {
             textInputTransferAmount.clear();
             rectangleTransfer.transferAmount = "";
+        }
+
+        onAskForFusion: {
+            dialogFusion.show();
         }
     }
 

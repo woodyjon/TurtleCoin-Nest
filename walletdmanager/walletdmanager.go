@@ -169,12 +169,32 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("your available balance is insufficient")
 	}
 
-	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, DefaultTransferMixin, rpcPassword)
+	fusionReadyCount, _, err := turtlecoinwalletdrpcgo.EstimateFusion(int(WalletAvailableBalance)+1, []string{WalletAddress}, rpcPassword)
+	log.Debug("fusionReadyCount: ", fusionReadyCount)
+	log.Debug("err: ", err)
+
+	// for i := 1; i <= 40; i++ {
+	// 	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, 40, rpcPassword)
+	// 	if err != nil {
+	// 		log.Error("error sending transaction. err: ", err)
+	// 		return "", err
+	// 	}
+	// }
+	// return "", nil
+
+	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, 40, rpcPassword)
 	if err != nil {
 		log.Error("error sending transaction. err: ", err)
 		return "", err
 	}
 	return transactionHash, nil
+
+	// transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, DefaultTransferMixin, rpcPassword)
+	// if err != nil {
+	// 	log.Error("error sending transaction. err: ", err)
+	// 	return "", err
+	// }
+	// return transactionHash, nil
 }
 
 // GetPrivateKeys provides the private view and spend keys of the current wallet, and the mnemonic seed if the wallet is deterministic
