@@ -136,6 +136,7 @@ type QmlBridge struct {
 	_ func() string            `slot:"getVersion"`
 	_ func() string            `slot:"getNewVersion"`
 	_ func() string            `slot:"getNewVersionURL"`
+	_ func()                   `slot:"optimizeWalletWithFusion"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -358,6 +359,10 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectGetNewVersionURL(func() string {
 		return urlNewVersion
 	})
+
+	qmlBridge.ConnectOptimizeWalletWithFusion(func() {
+		optimizeWalletWithFusion()
+	})
 }
 
 func startDisplayWalletInfo() {
@@ -510,6 +515,11 @@ func transfer(transferAddress string, transferAmount string, transferPaymentID s
 	qmlBridge.DisplayPopup("TRTLs sent successfully", 4000)
 
 	return true
+}
+
+func optimizeWalletWithFusion() {
+
+	walletdmanager.OptimizeWalletWithFusion()
 }
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {

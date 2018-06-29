@@ -4,7 +4,6 @@ package walletdmanager
 import (
 	"TurtleCoin-Nest/turtlecoinwalletdrpcgo"
 	"bufio"
-	"errors"
 	"io"
 	"math/rand"
 	"os"
@@ -16,9 +15,9 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/mitchellh/go-ps"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -169,9 +168,10 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("your available balance is insufficient")
 	}
 
-	fusionReadyCount, _, err := turtlecoinwalletdrpcgo.EstimateFusion(int(WalletAvailableBalance)+1, []string{WalletAddress}, rpcPassword)
-	log.Debug("fusionReadyCount: ", fusionReadyCount)
-	log.Debug("err: ", err)
+	largestFusionReadyCount, smallestOptimizedThreshold, err := getOptimisedFusionParameters()
+	if err == nil {
+		log.Debug("fusionReadyCount: ", largestFusionReadyCount, " threshold: ", smallestOptimizedThreshold)
+	}
 
 	// for i := 1; i <= 40; i++ {
 	// 	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, 40, rpcPassword)
@@ -195,6 +195,50 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 	// 	return "", err
 	// }
 	// return transactionHash, nil
+}
+
+// OptimizeWalletWithFusion sends a fusion transaction to optimize the wallet
+func OptimizeWalletWithFusion() (transactionHash string, err error) {
+
+	largestFusionReadyCount, smallestOptimizedThreshold, err := getOptimisedFusionParameters()
+	if err != nil {
+		return "", errors.Wrap(err, "getOptimisedFusionParameters failed")
+	}
+	log.Debug("fusionReadyCount: ", largestFusionReadyCount, " threshold: ", smallestOptimizedThreshold)
+
+	transactionHash, err = turtlecoinwalletdrpcgo.SendFusionTransaction(smallestOptimizedThreshold, DefaultTransferMixin, []string{WalletAddress}, WalletAddress, rpcPassword)
+	if err != nil {
+		log.Error("error sending fusion transaction. err: ", err)
+		return "", errors.Wrap(err, "sending fusion transaction failed")
+	}
+
+	return transactionHash, nil
+}
+
+func getOptimisedFusionParameters() (largestFusionReadyCount int, smallestOptimizedThreshold int, err error) {
+
+	threshold := int(WalletAvailableBalance) + 1
+
+	largestFusionReadyCount = -1
+	smallestOptimizedThreshold = threshold
+
+	for {
+		fusionReadyCount, _, err := turtlecoinwalletdrpcgo.EstimateFusion(threshold, []string{WalletAddress}, rpcPassword)
+		if err != nil {
+			log.Error("error estimating fusion. err: ", err)
+			return 0, 0, err
+		}
+
+		if fusionReadyCount < largestFusionReadyCount {
+			break
+		}
+
+		largestFusionReadyCount = fusionReadyCount
+		smallestOptimizedThreshold = threshold
+		threshold /= 2
+	}
+
+	return
 }
 
 // GetPrivateKeys provides the private view and spend keys of the current wallet, and the mnemonic seed if the wallet is deterministic
