@@ -4,7 +4,6 @@ package walletdmanager
 import (
 	"TurtleCoin-Nest/turtlecoinwalletdrpcgo"
 	"bufio"
-	"errors"
 	"io"
 	"math/rand"
 	"os"
@@ -16,9 +15,9 @@ import (
 	"syscall"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/mitchellh/go-ps"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -133,7 +132,7 @@ func RequestListTransactions() (transfers []turtlecoinwalletdrpcgo.Transfer, err
 }
 
 // SendTransaction makes a transfer with the provided information
-func SendTransaction(transferAddress string, transferAmountString string, transferPaymentID string, transferFeeString string, transferMixinString string) (transactionHash string, err error) {
+func SendTransaction(transferAddress string, transferAmountString string, transferPaymentID string, transferFeeString string) (transactionHash string, err error) {
 
 	if !WalletdSynced {
 		return "", errors.New("wallet and/or blockchain not fully synced yet")
@@ -169,43 +168,79 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("your available balance is insufficient")
 	}
 
-	transferMixin, err := strconv.ParseInt(transferMixinString, 0, 0)
-	if err != nil {
-		return "", errors.New("mixin is invalid")
-	}
-
-	if transferMixin < 0 {
-		return "", errors.New("mixin should be positive")
-	}
-
-	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, int(transferMixin), rpcPassword)
+	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, DefaultTransferMixin, rpcPassword)
 	if err != nil {
 		log.Error("error sending transaction. err: ", err)
-		errorMessage := err.Error()
-		if errorMessage == "Wrong amount" {
-			errorMessage += "\nYou sometimes need to send a small amount less than your full balance to get the transfer to succeed. This is possibly due to dust in your wallet that is unable to be sent without a mixin of 0 (a mixin of 0 is possible but might compromise privacy.)"
-		}
-		return "", errors.New(errorMessage)
+		return "", err
 	}
 	return transactionHash, nil
 }
 
-// GetPrivateViewKeyAndSpendKey provides the private view and spend keys of the current wallet
-func GetPrivateViewKeyAndSpendKey() (privateViewKey string, privateSpendKey string, err error) {
+// OptimizeWalletWithFusion sends a fusion transaction to optimize the wallet
+func OptimizeWalletWithFusion() (transactionHash string, err error) {
+
+	_, smallestOptimizedThreshold, err := getOptimisedFusionParameters()
+	if err != nil {
+		return "", errors.Wrap(err, "getOptimisedFusionParameters failed")
+	}
+
+	transactionHash, err = turtlecoinwalletdrpcgo.SendFusionTransaction(smallestOptimizedThreshold, DefaultTransferMixin, []string{WalletAddress}, WalletAddress, rpcPassword)
+	if err != nil {
+		log.Error("error sending fusion transaction. err: ", err)
+		return "", errors.Wrap(err, "sending fusion transaction failed")
+	}
+
+	return transactionHash, nil
+}
+
+func getOptimisedFusionParameters() (largestFusionReadyCount int, smallestOptimizedThreshold int, err error) {
+
+	threshold := int(WalletAvailableBalance) + 1
+
+	largestFusionReadyCount = -1
+	smallestOptimizedThreshold = threshold
+
+	for {
+		fusionReadyCount, _, err := turtlecoinwalletdrpcgo.EstimateFusion(threshold, []string{WalletAddress}, rpcPassword)
+		if err != nil {
+			log.Error("error estimating fusion. err: ", err)
+			return 0, 0, err
+		}
+
+		if fusionReadyCount < largestFusionReadyCount {
+			break
+		}
+
+		largestFusionReadyCount = fusionReadyCount
+		smallestOptimizedThreshold = threshold
+		threshold /= 2
+	}
+
+	return
+}
+
+// GetPrivateKeys provides the private view and spend keys of the current wallet, and the mnemonic seed if the wallet is deterministic
+func GetPrivateKeys() (isDeterministicWallet bool, mnemonicSeed string, privateViewKey string, privateSpendKey string, err error) {
+
+	isDeterministicWallet, mnemonicSeed, err = turtlecoinwalletdrpcgo.GetMnemonicSeed(WalletAddress, rpcPassword)
+	if err != nil {
+		log.Error("error requesting mnemonic seed. err: ", err)
+		return false, "", "", "", err
+	}
 
 	privateViewKey, err = turtlecoinwalletdrpcgo.GetViewKey(rpcPassword)
 	if err != nil {
 		log.Error("error requesting view key. err: ", err)
-		return "", "", err
+		return false, "", "", "", err
 	}
 
 	privateSpendKey, _, err = turtlecoinwalletdrpcgo.GetSpendKeys(WalletAddress, rpcPassword)
 	if err != nil {
 		log.Error("error requesting spend keys. err: ", err)
-		return "", "", err
+		return false, "", "", "", err
 	}
 
-	return privateViewKey, privateSpendKey, nil
+	return isDeterministicWallet, mnemonicSeed, privateViewKey, privateSpendKey, nil
 }
 
 // SaveWallet saves the sync status of the wallet. To be done regularly so when walletd crashes, sync is not lost
@@ -452,13 +487,14 @@ func killWalletd() {
 	}
 }
 
-// CreateWallet calls walletd to create a new wallet. If privateViewKey and privateSpendKey are empty strings, a new wallet will be generated. If they are not empty, a wallet will be generated from those keys (import)
+// CreateWallet calls walletd to create a new wallet. If privateViewKey, privateSpendKey and mnemonicSeed are empty strings, a new wallet will be generated. If they are not empty, a wallet will be generated from those keys or from the seed (import)
 // walletFilename is the filename chosen by the user. The created wallet file will be located in the same folder as walletd.
 // walletPassword is the password of the new wallet.
 // walletPasswordConfirmation is the repeat of the password for confirmation that the password was correctly entered.
 // privateViewKey is the private view key of the wallet.
 // privateSpendKey is the private spend key of the wallet.
-func CreateWallet(walletFilename string, walletPassword string, walletPasswordConfirmation string, privateViewKey string, privateSpendKey string) (err error) {
+// mnemonicSeed is the mnemonic seed for generating the wallet
+func CreateWallet(walletFilename string, walletPassword string, walletPasswordConfirmation string, privateViewKey string, privateSpendKey string, mnemonicSeed string) (err error) {
 
 	if WalletdOpenAndRunning {
 		return errors.New("walletd is already running. It should be stopped before being able to generate a new wallet")
@@ -530,12 +566,15 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 	}
 	defer walletdCurrentSessionLogFile.Close()
 
-	if privateViewKey == "" && privateSpendKey == "" {
+	if privateViewKey == "" && privateSpendKey == "" && mnemonicSeed == "" {
 		// generate new wallet
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
-	} else {
+	} else if mnemonicSeed == "" {
 		// import wallet from private view and spend keys
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--view-key", privateViewKey, "--spend-key", privateSpendKey, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
+	} else {
+		// import wallet from seed
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--mnemonic-seed", mnemonicSeed, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
 	}
 
 	hideCmdWindowIfNeeded(cmdWalletd)

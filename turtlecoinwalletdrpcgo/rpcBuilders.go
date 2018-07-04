@@ -71,6 +71,18 @@ func rpcPayloadGetSpendKeys(
 		params)
 }
 
+func rpcPayloadGetMnemonicSeed(
+	id int,
+	rpcPassword string,
+	params map[string]interface{}) rpcPayload {
+
+	return buildRPCPayload(
+		"getMnemonicSeed",
+		id,
+		rpcPassword,
+		params)
+}
+
 func rpcPayloadGetStatus(
 	id int,
 	rpcPassword string,

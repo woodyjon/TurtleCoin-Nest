@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/atotto/clipboard"
@@ -43,6 +44,8 @@ var (
 	remoteDaemonPort            = defaultRemoteDaemonPort
 	limitDisplayedTransactions  = true
 	countConnectionProblem      = 0
+	newVersionAvailable         = ""
+	urlNewVersion               = ""
 )
 
 // QmlBridge is the bridge between qml and go
@@ -68,15 +71,20 @@ type QmlBridge struct {
 	_ func(errorText string,
 		errorInformativeText string) `signal:"displayErrorDialog"`
 	_ func() `signal:"clearTransferAmount"`
+	_ func() `signal:"askForFusion"`
 	_ func() `signal:"clearListTransactions"`
 	_ func(filename string,
 		privateViewKey string,
 		privateSpendKey string,
 		walletAddress string) `signal:"displayPrivateKeys"`
+	_ func(filename string,
+		mnemonicSeed string,
+		walletAddress string) `signal:"displaySeed"`
 	_ func()                            `signal:"displayOpenWalletScreen"`
 	_ func()                            `signal:"displayMainWalletScreen"`
 	_ func()                            `signal:"finishedLoadingWalletd"`
 	_ func()                            `signal:"finishedCreatingWallet"`
+	_ func()                            `signal:"finishedSendingTransaction"`
 	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
 	_ func(walletLocation string)       `signal:"displayWalletCreationLocation"`
 	_ func(useRemote bool,
@@ -87,8 +95,9 @@ type QmlBridge struct {
 	_ func(remoteNodeAddress string,
 		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
 	_ func(fullBalance string)              `signal:"displayFullBalanceInTransferAmount"`
-	_ func(fee string, mixin string)        `signal:"displayDefaultFeeAndMixin"`
+	_ func(fee string)                      `signal:"displayDefaultFee"`
 	_ func(index int, confirmations string) `signal:"updateConfirmationsOfTransaction"`
+	_ func()                                `signal:"displayInfoDialog"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -101,8 +110,7 @@ type QmlBridge struct {
 	_ func(transferAddress string,
 		transferAmount string,
 		transferPaymentID string,
-		transferFee string,
-		transferMixin string) `slot:"clickedButtonSend"`
+		transferFee string) `slot:"clickedButtonSend"`
 	_ func()                                           `slot:"clickedButtonBackupWallet"`
 	_ func()                                           `slot:"clickedCloseWallet"`
 	_ func(pathToWallet string, passwordWallet string) `slot:"clickedButtonOpen"`
@@ -113,6 +121,7 @@ type QmlBridge struct {
 		passwordWallet string,
 		privateViewKey string,
 		privateSpendKey string,
+		mnemonicSeed string,
 		confirmPasswordWallet string) `slot:"clickedButtonImport"`
 	_ func(remote bool)              `slot:"choseRemote"`
 	_ func(amountTRTL string) string `slot:"getTransferAmountUSD"`
@@ -123,9 +132,12 @@ type QmlBridge struct {
 		daemonPort string) `slot:"saveRemoteDaemonInfo"`
 	_ func()                   `slot:"resetRemoteDaemonInfo"`
 	_ func(transferFee string) `slot:"getFullBalanceAndDisplayInTransferAmount"`
-	_ func()                   `slot:"getDefaultFeeAndMixinAndDisplay"`
+	_ func()                   `slot:"getDefaultFeeAndDisplay"`
 	_ func(limit bool)         `slot:"limitDisplayTransactions"`
 	_ func() string            `slot:"getVersion"`
+	_ func() string            `slot:"getNewVersion"`
+	_ func() string            `slot:"getNewVersionURL"`
+	_ func()                   `slot:"optimizeWalletWithFusion"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -209,6 +221,13 @@ func main() {
 
 	getAndDisplayStartInfoFromDB()
 
+	go func() {
+		newVersionAvailable, urlNewVersion = checkIfNewReleaseAvailableOnGithub(versionNest)
+		if newVersionAvailable != "" {
+			qmlBridge.DisplayInfoDialog()
+		}
+	}()
+
 	gui.QGuiApplication_Exec()
 
 	log.Info("Application closed")
@@ -255,8 +274,10 @@ func connectQMLToGOFunctions() {
 		}
 	})
 
-	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string, transferFee string, transferMixin string) {
-		transfer(transferAddress, transferAmount, transferPaymentID, transferFee, transferMixin)
+	qmlBridge.ConnectClickedButtonSend(func(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) {
+		go func() {
+			transfer(transferAddress, transferAmount, transferPaymentID, transferFee)
+		}()
 	})
 
 	qmlBridge.ConnectGetTransferAmountUSD(func(amountTRTL string) string {
@@ -280,9 +301,9 @@ func connectQMLToGOFunctions() {
 		}()
 	})
 
-	qmlBridge.ConnectClickedButtonImport(func(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string, confirmPasswordWallet string) {
+	qmlBridge.ConnectClickedButtonImport(func(filenameWallet string, passwordWallet string, privateViewKey string, privateSpendKey string, mnemonicSeed string, confirmPasswordWallet string) {
 		go func() {
-			importWalletWithWalletInfo(filenameWallet, passwordWallet, confirmPasswordWallet, privateViewKey, privateSpendKey)
+			importWalletWithWalletInfo(filenameWallet, passwordWallet, confirmPasswordWallet, privateViewKey, privateSpendKey, mnemonicSeed)
 		}()
 	})
 
@@ -321,8 +342,8 @@ func connectQMLToGOFunctions() {
 		getFullBalanceAndDisplayInTransferAmount(transferFee)
 	})
 
-	qmlBridge.ConnectGetDefaultFeeAndMixinAndDisplay(func() {
-		getDefaultFeeAndMixinAndDisplay()
+	qmlBridge.ConnectGetDefaultFeeAndDisplay(func() {
+		getDefaultFeeAndDisplay()
 	})
 
 	qmlBridge.ConnectLimitDisplayTransactions(func(limit bool) {
@@ -333,6 +354,20 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectGetVersion(func() string {
 		return versionNest
 	})
+
+	qmlBridge.ConnectGetNewVersion(func() string {
+		return newVersionAvailable
+	})
+
+	qmlBridge.ConnectGetNewVersionURL(func() string {
+		return urlNewVersion
+	})
+
+	qmlBridge.ConnectOptimizeWalletWithFusion(func() {
+		go func() {
+			optimizeWalletWithFusion()
+		}()
+	})
 }
 
 func startDisplayWalletInfo() {
@@ -341,7 +376,7 @@ func startDisplayWalletInfo() {
 	getAndDisplayAddress()
 	getAndDisplayListTransactions(true)
 	getAndDisplayConnectionInfo()
-	getDefaultFeeAndMixinAndDisplay()
+	getDefaultFeeAndDisplay()
 
 	go func() {
 		tickerRefreshWalletData = time.NewTicker(time.Second * 30)
@@ -463,24 +498,47 @@ func getAndDisplayListTransactions(forceFullUpdate bool) {
 	}
 }
 
-func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string, transferMixin string) bool {
+func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) {
 
-	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  fee: ", transferFee, "  mixin: ", transferMixin)
+	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  fee: ", transferFee)
 
-	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, transferMixin)
+	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee)
 	if err != nil {
 		log.Warn("error transfer: ", err)
-		qmlBridge.DisplayErrorDialog("Error transfer.", err.Error())
-		return false
+		qmlBridge.FinishedSendingTransaction()
+		if strings.Contains(err.Error(), "Transaction size is too big") {
+			qmlBridge.AskForFusion()
+		} else {
+			qmlBridge.DisplayErrorDialog("Error transfer.", err.Error())
+		}
+		return
 	}
 
 	log.Info("succes transfer: ", transactionID)
 
 	getAndDisplayBalances()
 	qmlBridge.ClearTransferAmount()
+	qmlBridge.FinishedSendingTransaction()
 	qmlBridge.DisplayPopup("TRTLs sent successfully", 4000)
+}
 
-	return true
+func optimizeWalletWithFusion() {
+
+	transactionID, err := walletdmanager.OptimizeWalletWithFusion()
+	if err != nil {
+		log.Warn("error fusion transaction: ", err)
+		qmlBridge.FinishedSendingTransaction()
+		qmlBridge.DisplayErrorDialog("Error sending fusion transaction.", err.Error())
+
+		return
+	}
+
+	log.Info("succes fusion: ", transactionID)
+
+	getAndDisplayBalances()
+	qmlBridge.ClearTransferAmount()
+	qmlBridge.FinishedSendingTransaction()
+	qmlBridge.DisplayPopup("Success fusion", 4000)
 }
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {
@@ -504,7 +562,7 @@ func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool 
 
 func createWalletWithWalletInfo(filenameWallet string, passwordWallet string, confirmPasswordWallet string) bool {
 
-	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, confirmPasswordWallet, "", "")
+	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, confirmPasswordWallet, "", "", "")
 	if err != nil {
 		log.Warn("error creating wallet. error: ", err)
 		qmlBridge.FinishedCreatingWallet()
@@ -520,9 +578,9 @@ func createWalletWithWalletInfo(filenameWallet string, passwordWallet string, co
 	return true
 }
 
-func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, confirmPasswordWallet string, privateViewKey string, privateSpendKey string) bool {
+func importWalletWithWalletInfo(filenameWallet string, passwordWallet string, confirmPasswordWallet string, privateViewKey string, privateSpendKey string, mnemonicSeed string) bool {
 
-	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, confirmPasswordWallet, privateViewKey, privateSpendKey)
+	err := walletdmanager.CreateWallet(filenameWallet, passwordWallet, confirmPasswordWallet, privateViewKey, privateSpendKey, mnemonicSeed)
 	if err != nil {
 		log.Warn("error importing wallet. error: ", err)
 		qmlBridge.FinishedCreatingWallet()
@@ -557,13 +615,20 @@ func closeWallet() {
 
 func showWalletPrivateInfo() {
 
-	privateViewKey, privateSpendKey, err := walletdmanager.GetPrivateViewKeyAndSpendKey()
+	isDeterministicWallet, mnemonicSeed, privateViewKey, privateSpendKey, err := walletdmanager.GetPrivateKeys()
 	if err != nil {
-		log.Error("Error getting view and spend key: ", err)
+		log.Error("Error getting private keys: ", err)
 	} else {
-		qmlBridge.DisplayPrivateKeys(walletdmanager.WalletFilename, privateViewKey, privateSpendKey, walletdmanager.WalletAddress)
+		stringBackupKeys = "Wallet: " + walletdmanager.WalletFilename + "\n\nAddress: " + walletdmanager.WalletAddress + "\n\n"
+		if isDeterministicWallet {
+			qmlBridge.DisplaySeed(walletdmanager.WalletFilename, mnemonicSeed, walletdmanager.WalletAddress)
 
-		stringBackupKeys = "Wallet: " + walletdmanager.WalletFilename + "\nAddress: " + walletdmanager.WalletAddress + "\nPrivate view key: " + privateViewKey + "\nPrivate spend key: " + privateSpendKey
+			stringBackupKeys += "Seed: " + mnemonicSeed
+		} else {
+			qmlBridge.DisplayPrivateKeys(walletdmanager.WalletFilename, privateViewKey, privateSpendKey, walletdmanager.WalletAddress)
+
+			stringBackupKeys += "Private view key: " + privateViewKey + "\n\nPrivate spend key: " + privateSpendKey
+		}
 	}
 }
 
@@ -576,9 +641,9 @@ func getFullBalanceAndDisplayInTransferAmount(transferFee string) {
 	qmlBridge.DisplayFullBalanceInTransferAmount(humanize.FtoaWithDigits(availableBalance, 2))
 }
 
-func getDefaultFeeAndMixinAndDisplay() {
+func getDefaultFeeAndDisplay() {
 
-	qmlBridge.DisplayDefaultFeeAndMixin(humanize.FtoaWithDigits(walletdmanager.DefaultTransferFee, 2), humanize.FormatInteger("#.", walletdmanager.DefaultTransferMixin))
+	qmlBridge.DisplayDefaultFee(humanize.FtoaWithDigits(walletdmanager.DefaultTransferFee, 2))
 }
 
 func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
