@@ -4,16 +4,19 @@ Action | Result
 ---|---
 Open wallet by clicking on the "Open" button | busy indicator for a few seconds then wallet opens and display balance, etc..., sync is ok
 Open wallet by typing return key while in password field | busy indicator for a few seconds then wallet opens and display balance, etc..., sync is ok
-Click on button to backup keys | backup keys are displayed (check the window is large enough)
+Click on button to backup keys with old wallet | backup private keys are displayed (check the window is large enough)
+Click on button to backup keys with HD wallet | backup seed is displayed
 Click on button to copy keys to clipboard | Keys are copied to clipboard
 Click create wallet | dialog to confirm the password
 Click create wallet and enter wrong password confirmation | error
 Create wallet | busy indicator for a few seconds, then the wallet should be created in app folder and wallet open and display backup keys
 Create wallet with name already exist in folder | error: same filename already exist
 Open wallet -> Close wallet | Wallet closes
+Import wallet, switch between seed and keys | proper fields should be enabled
 Import wallet from keys | dialog to confirm the password
 Import wallet from keys and enter wrong password confirmation | error
 Import wallet from keys | wallet created in app folder. Check backup keys, address, balance.
+Import wallet from seed | wallet created in app folder. Check backup seed, address, balance.
 Open existing wallet -> close Nest -> reopen Nest | path to previously opened wallet should appear. Test opening it again without changing path. 
 Button copy address | Pop up "Copied!" and address should be copied to clipboard.
 Button copy tr. id | Pop up "Copied!" and tr. id should be copied to clipboard.
@@ -54,6 +57,9 @@ Click "?" to open Info screen from main screen | info dialog opens, check versio
 Click "?" to open Info screen from wallet screen | info dialog opens
 Open info dialog, click link to chat | browser opens on chat url
 Open info dialog, click copy donation address | donation address copied to clipboard
+Mac only: open Nest on retina screen | resolution is retina
+Open Nest and new version available | displayed at start in info screen
+If send transaction with size too large, proposed to do fusion -> click fusion | fusion transaction is made
 
 ## Check in the code
 

@@ -1,3 +1,50 @@
+# Releases
+
+## 0.30
+
+### Release notes
+
+- Backup new wallets with seed (25 words) and import wallet from seed.
+- Possibility to optimize the wallet with a fusion transaction when too many inputs (solves the "transaction is too big" error).
+- Mixin is set to 7 (in line with new protocol rules).
+- Message when new version of Nest is available.
+- Retina resolution on macs retina.
+- uses walletd 0.6.3.
+- Local blockchain option is still unavailable (due to a bug in walletd). Only connection option is via remote node. Use the CLI if you need to sync locally. Sorry for the inconvenience. We are working on bringing it back.
+
+### Sha256
+
+TurtleCoin-Nest-0.30-Windows.zip:
+`4b48a21840821af92b7ce758361e9c426ffdf6b3b757c2b9ff74f0d36e8f9bf3`
+
+TurtleCoin-Nest-0.30-Mac.zip:
+`36c63e9807dc900076a04f27cc76ee8c412be4bc4beeef93f0d0ab9a44e1840d`
+
+TurtleCoin-Nest-0.30-Linux.tar.gz:
+`564dcb179fd1beea7d25f69d3671db55a0a18fad661642d38ce8cc2b3412030c`
+
+## 0.23
+
+### Release notes
+
+- IMPORTANT: Local blockchain option is temporarily unavailable (due to a bug in walletd). Only connection option is via remote node. Use the CLI if you need to sync locally. Sorry for the inconvenience. We are working on bringing it back.
+- uses walletd 0.6.2 (which incorporates bug fixes that were causing crashes of Nest).
+- info page with Nest version.
+- keeps status of wallet sync even if walletd crashes.
+- default mixin changed to 7.
+- various other improvements and bug fixes.
+
+### Sha256
+
+TurtleCoin-Nest-0.23-Windows.zip:
+`2be201454c84838e849fb726c2b14775c9c37dac1c387efcfaa2dc16deed9ef4`
+
+TurtleCoin-Nest-0.23-Mac.zip:
+`42c121876fdc9c79872f932fa1f704bfdca8bde269c53d0c478aa4327b318b9a`
+
+TurtleCoin-Nest-0.23-Linux.tar.gz:
+`da4ce5bf9c7d14f5a191a971e89e08e1ab3b36a57091cf84b38960d200a7f312`
+
 ## 0.22
 
 ### Release notes
