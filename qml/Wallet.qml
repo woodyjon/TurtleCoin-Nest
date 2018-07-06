@@ -635,6 +635,8 @@ Rectangle {
 
                 onTextChanged: {
                     buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != ""
+                    /* Disable payment ID input if integrated address */
+                    textInputTransferPaymentID.enabled = textInputTransferAmount.text.length != 236
                 }
             }
         }
@@ -948,7 +950,15 @@ Rectangle {
             onClicked: {
                 rectangleTransfer.transferRecipient = textInputTransferAddress.text
                 rectangleTransfer.transferAmount = textInputTransferAmount.text
-                rectangleTransfer.transferPaymentID = textInputTransferPaymentID.text
+                if (textInputTransferPaymentID.enabled)
+                {
+                    rectangleTransfer.transferPaymentID = textInputTransferPaymentID.text
+                }
+                /* Don't add the payment ID if integrated address */
+                else
+                {
+                    rectangleTransfer.transferPaymentID = "";
+                }
                 rectangleTransfer.transferFee = textInputTransferFee.text
                 dialogConfirmTransfer.show(rectangleTransfer.transferRecipient, rectangleTransfer.transferAmount + " TRTL + " + rectangleTransfer.transferFee + " TRTL (fee)", rectangleTransfer.transferPaymentID);
             }
