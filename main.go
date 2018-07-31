@@ -314,7 +314,7 @@ func connectQMLToGOFunctions() {
 	})
 
 	qmlBridge.ConnectChoseRemote(func(remote bool) {
-		// useRemoteNode = remote
+		useRemoteNode = remote
 		recordUseRemoteToDB(useRemoteNode)
 	})
 
@@ -731,35 +731,33 @@ func recordPathWalletToDB(path string) {
 
 func getUseRemoteFromDB() bool {
 
-	return true
+	rows, err := db.Query("SELECT useRemote FROM remoteNode ORDER BY id DESC LIMIT 1")
+	if err != nil {
+		log.Fatal("error querying useRemote from remoteNode table. err: ", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		useRemote := true
+		err = rows.Scan(&useRemote)
+		if err != nil {
+			log.Fatal("error reading item from remoteNode table. err: ", err)
+		}
+		useRemoteNode = useRemote
+	}
 
-	// rows, err := db.Query("SELECT useRemote FROM remoteNode ORDER BY id DESC LIMIT 1")
-	// if err != nil {
-	// 	log.Fatal("error querying useRemote from remoteNode table. err: ", err)
-	// }
-	// defer rows.Close()
-	// for rows.Next() {
-	// 	useRemote := true
-	// 	err = rows.Scan(&useRemote)
-	// 	if err != nil {
-	// 		log.Fatal("error reading item from remoteNode table. err: ", err)
-	// 	}
-	// 	useRemoteNode = useRemote
-	// }
-
-	// return useRemoteNode
+	return useRemoteNode
 }
 
 func recordUseRemoteToDB(useRemote bool) {
 
-	// stmt, err := db.Prepare(`INSERT INTO remoteNode(useRemote) VALUES(?)`)
-	// if err != nil {
-	// 	log.Fatal("error preparing to insert useRemoteNode into db. err: ", err)
-	// }
-	// _, err = stmt.Exec(useRemote)
-	// if err != nil {
-	// 	log.Fatal("error inserting useRemoteNode into db. err: ", err)
-	// }
+	stmt, err := db.Prepare(`INSERT INTO remoteNode(useRemote) VALUES(?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert useRemoteNode into db. err: ", err)
+	}
+	_, err = stmt.Exec(useRemote)
+	if err != nil {
+		log.Fatal("error inserting useRemoteNode into db. err: ", err)
+	}
 }
 
 func getRemoteDaemonInfoFromDB() (daemonAddress string, daemonPort string) {
