@@ -6,9 +6,9 @@ const (
 	// DefaultTransferMixin is the default mixin
 	DefaultTransferMixin = 7
 
-	logWalletdCurrentSessionFilename = "walletdCurrentSession.log"
-	logWalletdAllSessionsFilename    = "walletd.log"
+	logWalletdCurrentSessionFilename = "serviceCurrentSession.log"
+	logWalletdAllSessionsFilename    = "service.log"
 	walletdLogLevel                  = "3" // should be at least 3 as I use some logs messages to confirm creation of wallet
-	walletdCommandName               = "walletd"
+	walletdCommandName               = "service"
 	turtlecoindCommandName           = "TurtleCoind"
 )
