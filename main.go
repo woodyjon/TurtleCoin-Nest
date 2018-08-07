@@ -235,6 +235,7 @@ func main() {
 	log.Info("Application closed")
 
 	walletdmanager.GracefullyQuitWalletd()
+	walletdmanager.GracefullyQuitTurtleCoind()
 }
 
 func connectQMLToGOFunctions() {
