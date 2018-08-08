@@ -22,7 +22,7 @@ Button copy address | Pop up "Copied!" and address should be copied to clipboard
 Button copy tr. id | Pop up "Copied!" and tr. id should be copied to clipboard.
 Button explore transaction | Trtl explorer opens in default browser with the right transacton.
 Receive trtl | Balance updates automatically and new confirmed transaction added to list previous transactions
-Send TRTL, address diff. than 99 chars or 236 chars | error: address invalid
+Send TRTL, address diff. than 99 chars or 187 chars | error: address invalid
 Send TRTL, address not start by TRTL | error: address invalid
 Send TRTL, amount is 0 or less | error: amount should be greater than 0
 Send TRTL, amount is not a number | error: amount invalid
