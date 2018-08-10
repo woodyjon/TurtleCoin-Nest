@@ -47,3 +47,4 @@ moc.h
 *windows_386.go
 settings.db
 \.vs/
+.DS_Store
