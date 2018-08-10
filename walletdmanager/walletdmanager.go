@@ -33,7 +33,8 @@ var (
 	// will be set to a random string when starting walletd
 	rpcPassword = ""
 
-	cmdWalletd *exec.Cmd
+	cmdWalletd     *exec.Cmd
+	cmdTurtleCoind *exec.Cmd
 
 	// WalletdOpenAndRunning is true when walletd is running with a wallet open
 	WalletdOpenAndRunning = false
@@ -261,8 +262,8 @@ func SaveWallet() (err error) {
 // useRemoteNode is true if remote node, false if local
 func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, daemonAddress string, daemonPort string) (err error) {
 
-	if isWalletdRunning(useRemoteNode) {
-		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
+	if isWalletdRunning() {
+		errorMessage := "Walletd is already running in the background.\nPlease close it via "
 
 		if isPlatformWindows {
 			errorMessage += "the task manager"
@@ -278,7 +279,10 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 
 	pathToLogWalletdCurrentSession := logWalletdCurrentSessionFilename
 	pathToLogWalletdAllSessions := logWalletdAllSessionsFilename
+	pathToLogTurtleCoindCurrentSession := logTurtleCoindCurrentSessionFilename
+	pathToLogTurtleCoindAllSessions := logTurtleCoindAllSessionsFilename
 	pathToWalletd := "./" + walletdCommandName
+	pathToTurtleCoind := "./" + turtlecoindCommandName
 
 	WalletFilename = filepath.Base(walletPath)
 	pathToWallet := filepath.Clean(walletPath)
@@ -297,6 +301,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 	if isPlatformDarwin {
 		pathToAppContents := filepath.Dir(pathToAppDirectory)
 		pathToWalletd = pathToAppContents + "/" + walletdCommandName
+		pathToTurtleCoind = pathToAppContents + "/" + turtlecoindCommandName
 
 		usr, err := user.Current()
 		if err != nil {
@@ -307,6 +312,8 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 
 		pathToLogWalletdCurrentSession = pathToAppLibDir + "/" + logWalletdCurrentSessionFilename
 		pathToLogWalletdAllSessions = pathToAppLibDir + "/" + logWalletdAllSessionsFilename
+		pathToLogTurtleCoindCurrentSession = pathToAppLibDir + "/" + logTurtleCoindCurrentSessionFilename
+		pathToLogTurtleCoindAllSessions = pathToAppLibDir + "/" + logTurtleCoindAllSessionsFilename
 
 		if pathToWallet == WalletFilename {
 			// if comes from createWallet, so it is not a full path, just a filename
@@ -314,8 +321,11 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		}
 	} else if isPlatformLinux {
 		pathToWalletd = pathToAppDirectory + "/" + walletdCommandName
+		pathToTurtleCoind = pathToAppDirectory + "/" + turtlecoindCommandName
 		pathToLogWalletdCurrentSession = pathToAppDirectory + "/" + logWalletdCurrentSessionFilename
 		pathToLogWalletdAllSessions = pathToAppDirectory + "/" + logWalletdAllSessionsFilename
+		pathToLogTurtleCoindCurrentSession = pathToAppDirectory + "/" + logTurtleCoindCurrentSessionFilename
+		pathToLogTurtleCoindAllSessions = pathToAppDirectory + "/" + logTurtleCoindAllSessionsFilename
 		if pathToWallet == WalletFilename {
 			// if comes from createWallet, so it is not a full path, just a filename
 			pathToWallet = pathToAppDirectory + "/" + pathToWallet
@@ -331,13 +341,64 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 
 	rpcPassword = randStringBytesMaskImprSrc(20)
 
+	var turtleCoindCurrentSessionLogFile *os.File
+
 	if useRemoteNode {
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--daemon-address", daemonAddress, "--daemon-port", daemonPort, "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
 	} else {
-		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--local", "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "--rpc-password", rpcPassword)
 	}
-
 	hideCmdWindowIfNeeded(cmdWalletd)
+
+	if !useRemoteNode && !isTurtleCoindRunning() {
+
+		turtleCoindCurrentSessionLogFile, err = os.Create(pathToLogTurtleCoindCurrentSession)
+		if err != nil {
+			log.Error(err)
+		}
+		defer turtleCoindCurrentSessionLogFile.Close()
+
+		cmdTurtleCoind = exec.Command(pathToTurtleCoind, "--log-file", pathToLogTurtleCoindCurrentSession)
+		hideCmdWindowIfNeeded(cmdTurtleCoind)
+
+		turtleCoindAllSessionsLogFile, err := os.Create(pathToLogTurtleCoindAllSessions)
+		if err != nil {
+			log.Error(err)
+		}
+		cmdTurtleCoind.Stdout = turtleCoindAllSessionsLogFile
+		defer turtleCoindAllSessionsLogFile.Close()
+
+		err = cmdTurtleCoind.Start()
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+
+		log.Info("Opening TurtleCoind and waiting for it to be ready.")
+
+		readerTurtleCoindLog := bufio.NewReader(turtleCoindCurrentSessionLogFile)
+
+		for {
+			line, err := readerTurtleCoindLog.ReadString('\n')
+			if err != nil {
+				if err != io.EOF {
+					log.Error("Failed reading TurtleCoind log file line by line: ", err)
+				}
+			}
+			if strings.Contains(line, "Imported block with index") {
+				log.Info("TurtleCoind importing blocks: ", line)
+			}
+			if strings.Contains(line, "Core rpc server started ok") {
+				log.Info("TurtleCoind ready (rpc server started ok).")
+				break
+			}
+			if strings.Contains(line, "Node stopped.") {
+				errorMessage := "Error TurtleCoind: 'Node stopped'"
+				log.Error(errorMessage)
+				return errors.New(errorMessage)
+			}
+		}
+	}
 
 	// setup all sessions log file
 	walletdAllSessionsLogFile, err := os.OpenFile(pathToLogWalletdAllSessions, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0600)
@@ -353,19 +414,21 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		return err
 	}
 
+	log.Info("Opening Walletd and waiting for it to be ready.")
+
 	timesCheckLog := 0
 	timeBetweenChecks := 100 * time.Millisecond
 	maxWaitingTime := 15 * time.Second
 	successLaunchingWalletd := false
 	var listWalletdErrors []string
 
-	readerLog := bufio.NewReader(walletdCurrentSessionLogFile)
+	readerWalletdLog := bufio.NewReader(walletdCurrentSessionLogFile)
 
 	for !successLaunchingWalletd && time.Duration(timesCheckLog)*timeBetweenChecks < maxWaitingTime {
 		timesCheckLog++
 		time.Sleep(timeBetweenChecks)
 		for {
-			line, err := readerLog.ReadString('\n')
+			line, err := readerWalletdLog.ReadString('\n')
 			if err != nil {
 				if err != io.EOF {
 					log.Error("Failed reading log file line by line: ", err)
@@ -374,6 +437,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 			}
 			if strings.Contains(line, "Wallet loading is finished.") {
 				successLaunchingWalletd = true
+				log.Info("Walletd ready ('Wallet loading is finished.').")
 				break
 			}
 			if strings.Contains(line, "Imported block with index") {
@@ -487,6 +551,45 @@ func killWalletd() {
 	}
 }
 
+// GracefullyQuitTurtleCoind stops the TurtleCoind daemon
+func GracefullyQuitTurtleCoind() {
+
+	if cmdTurtleCoind != nil {
+		var err error
+
+		if isPlatformWindows {
+			// because syscall.SIGTERM does not work in windows. We have to kill TurtleCoind.
+
+			err = cmdTurtleCoind.Process.Kill()
+			if err != nil {
+				log.Error("failed to kill TurtleCoind: " + err.Error())
+			} else {
+				log.Info("TurtleCoind killed without error")
+			}
+		} else {
+			_ = cmdTurtleCoind.Process.Signal(syscall.SIGTERM)
+			done := make(chan error, 1)
+			go func() {
+				done <- cmdTurtleCoind.Wait()
+			}()
+			select {
+			case <-time.After(5 * time.Second):
+				if err := cmdTurtleCoind.Process.Kill(); err != nil {
+					log.Warning("failed to kill TurtleCoind: " + err.Error())
+				}
+				log.Info("TurtleCoind killed as stopping process timed out")
+			case err := <-done:
+				if err != nil {
+					log.Warning("TurtleCoind finished with error: " + err.Error())
+				}
+				log.Info("TurtleCoind killed without error")
+			}
+		}
+	}
+
+	cmdTurtleCoind = nil
+}
+
 // CreateWallet calls walletd to create a new wallet. If privateViewKey, privateSpendKey and mnemonicSeed are empty strings, a new wallet will be generated. If they are not empty, a wallet will be generated from those keys or from the seed (import)
 // walletFilename is the filename chosen by the user. The created wallet file will be located in the same folder as walletd.
 // walletPassword is the password of the new wallet.
@@ -504,8 +607,8 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 		return errors.New("you should avoid spaces and most special characters in the filename")
 	}
 
-	if isWalletdRunning(true) {
-		errorMessage := "Walletd or TurtleCoind is already running in the background.\nPlease close it via "
+	if isWalletdRunning() {
+		errorMessage := "Walletd is already running in the background.\nPlease close it via "
 
 		if isPlatformWindows {
 			errorMessage += "the task manager"
@@ -600,13 +703,13 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 	maxWaitingTime := 5 * time.Second
 	var listWalletdErrors []string
 
-	readerLog := bufio.NewReader(walletdCurrentSessionLogFile)
+	readerWalletdLog := bufio.NewReader(walletdCurrentSessionLogFile)
 
 	for !successCreatingWallet && time.Duration(timesCheckLog)*timeBetweenChecks < maxWaitingTime {
 		timesCheckLog++
 		time.Sleep(timeBetweenChecks)
 		for {
-			line, err := readerLog.ReadString('\n')
+			line, err := readerWalletdLog.ReadString('\n')
 			if err != nil {
 				if err != io.EOF {
 					log.Error("Failed reading log file line by line: ", err)
@@ -721,12 +824,9 @@ func findProcess(key string) (int, string, error) {
 	return pid, pname, err
 }
 
-func isWalletdRunning(turtlecoindAllowed bool) bool {
+func isWalletdRunning() bool {
 
 	if _, _, err := findProcess(walletdCommandName); err == nil {
-		return true
-	}
-	if _, _, err := findProcess(turtlecoindCommandName); err == nil && !turtlecoindAllowed {
 		return true
 	}
 
@@ -734,7 +834,19 @@ func isWalletdRunning(turtlecoindAllowed bool) bool {
 		if _, _, err := findProcess(walletdCommandName + ".exe"); err == nil {
 			return true
 		}
-		if _, _, err := findProcess(turtlecoindCommandName + ".exe"); err == nil && !turtlecoindAllowed {
+	}
+
+	return false
+}
+
+func isTurtleCoindRunning() bool {
+
+	if _, _, err := findProcess(turtlecoindCommandName); err == nil {
+		return true
+	}
+
+	if isPlatformWindows {
+		if _, _, err := findProcess(turtlecoindCommandName + ".exe"); err == nil {
 			return true
 		}
 	}

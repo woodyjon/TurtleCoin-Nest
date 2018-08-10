@@ -41,6 +41,10 @@ func RequestBalance(rpcPassword string) (availableBalance float64, lockedBalance
 		return 0, 0, 0, errors.Wrap(err, "httpRequest failed")
 	}
 
+	if responseMap["result"] == nil {
+		return 0, 0, 0, errors.Wrap(err, "getBalance result is nil")
+	}
+
 	availableBalance = responseMap["result"].(map[string]interface{})["availableBalance"].(float64) / 100
 	lockedBalance = responseMap["result"].(map[string]interface{})["lockedAmount"].(float64) / 100
 	totalBalance = availableBalance + lockedBalance

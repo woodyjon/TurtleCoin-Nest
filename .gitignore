@@ -31,6 +31,7 @@ linux/
 otherInfos/
 releases/
 oldScreenshots/
+core/
 rcc_cgo_linux_linux_amd64.go
 rcc.cpp
 rcc.qrc
@@ -44,6 +45,6 @@ moc.h
 *windows_386.go
 *darwin_amd64.go
 *windows_386.go
-walletd
 settings.db
 \.vs/
+.DS_Store
