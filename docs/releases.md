@@ -1,5 +1,28 @@
 # Releases
 
+## 0.31
+
+### Release notes
+
+- Possibility to use local blockchain is re-enabled.
+- Possibility to send to integrated addresses
+- Fixed resolution on high res screens on Windows
+- Added scrollbar when window is smaller than nominal height
+- Uses turtle-service and TurtleCoind 0.7.0.
+
+Regarding the local blockchain option: TurtleCoind will be launched in the background if you did not launch it manually. Some difficulties can arise, please check the different log files to understand the problem (especially TurtleCoind-session.log) or ask some help in the discord. You will also avoid issues if you launch TurtleCoind manually before launching Nest (and potentially wait for sync). Please tell us if you have issues so we can improve for the next release. 
+
+### Sha256
+
+TurtleCoin-Nest-0.31-Windows.zip:
+`e3f6ad0f377528fd3e28d30a9ae9a8db69229f5ffd00a272993808db25ee49d6`
+
+TurtleCoin-Nest-0.31-Mac.zip:
+`f2325823c268be8b8bc3feeaece0f4d141a13e80a2cbbfe49b55420afa0baa98`
+
+TurtleCoin-Nest-0.31-Linux.tar.xz:
+`2613315b14aff93de5935a51aeaf71f1e99602043596df14e8e93c464f45df9c`
+
 ## 0.30
 
 ### Release notes
