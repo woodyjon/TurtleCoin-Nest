@@ -636,7 +636,7 @@ Rectangle {
                 onTextChanged: {
                     buttonSend.enabled = textInputTransferAmount.text != "" && textInputTransferAddress.text != ""
                     /* Disable payment ID input if integrated address */
-                    textInputTransferPaymentID.enabled = textInputTransferAddress.text.length != 236
+                    textInputTransferPaymentID.enabled = textInputTransferAddress.text.length != 187
                 }
             }
         }
