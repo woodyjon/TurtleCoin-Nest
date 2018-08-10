@@ -31,7 +31,9 @@ Send TRTL, small valid amount | dialog for confirming transfer. After confirmati
 Send TRTL, invalid payment id | error: wrong payment id format
 Send TRTL, valid payment id | popup TRTL sent. amount is received on the other end with correct payment id
 Send TRTL, valid integrated address | popup TRTL sent. amount is received on the other end with correct payment id from integrated address
-select the option local blockchain, restart | local blockchain should still be selected
+Select the option local blockchain, restart | local blockchain should still be selected
+Open wallet with local blockchain selected and TurtleCoind started before | TurtleCoind should not be started automatically and should not close after wallet is closed
+Open wallet with local blockchain selected and TurtleCoind not started before | TurtleCoind should start automatically and should close after Nest is closed
 Test using the wallet with local blockchain selected | 
 Test using the wallet with remote node selected |
 Reduce window height and test scrolling |
