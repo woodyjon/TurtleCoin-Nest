@@ -200,7 +200,10 @@ func main() {
 	}
 	walletdmanager.Setup(platform)
 
-	core.QCoreApplication_SetAttribute(core.Qt__AA_EnableHighDpiScaling, true) // for scaling on windows high res screens
+	if isPlatformWindows {
+		// for scaling on windows high res screens
+		core.QCoreApplication_SetAttribute(core.Qt__AA_EnableHighDpiScaling, true)
+	}
 
 	app := gui.NewQGuiApplication(len(os.Args), os.Args)
 	app.SetWindowIcon(gui.NewQIcon5("qrc:/qml/images/icon.png"))

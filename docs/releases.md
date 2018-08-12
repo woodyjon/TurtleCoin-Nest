@@ -21,7 +21,7 @@ TurtleCoin-Nest-0.31-Mac.zip:
 `f2325823c268be8b8bc3feeaece0f4d141a13e80a2cbbfe49b55420afa0baa98`
 
 TurtleCoin-Nest-0.31-Linux.tar.gz:
-`2d47fdbca7fd0dd05a3d60702c9536f16018681847ff74003a5509c391e8a821`
+`cf24f364a5abba8d6464e4e48d9700a7705d2c84163436818844ea5edfb1f223`
 
 ## 0.30
 
