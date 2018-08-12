@@ -592,7 +592,7 @@ Rectangle {
         Text {
             id: textTransferAddrDescr
             color: "#ffffff"
-            text: "Recipient address"
+            text: "Recipient address (or integrated address)"
             anchors.top: textTransferTitle.bottom
             anchors.topMargin: 34
             anchors.left: parent.left
