@@ -551,13 +551,13 @@ func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool 
 
 	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode, remoteDaemonAddress, remoteDaemonPort)
 	if err != nil {
-		log.Warn("error starting walletd with provided wallet info. error: ", err)
+		log.Warn("error starting turtle-service with provided wallet info. error: ", err)
 		qmlBridge.FinishedLoadingWalletd()
 		qmlBridge.DisplayErrorDialog("Error opening wallet.", err.Error())
 		return false
 	}
 
-	log.Info("success starting walletd")
+	log.Info("success starting turtle-service")
 
 	qmlBridge.FinishedLoadingWalletd()
 	startDisplayWalletInfo()

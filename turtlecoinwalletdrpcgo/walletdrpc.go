@@ -1,4 +1,4 @@
-// Package turtlecoinwalletdrpcgo handles the the rpc connection between your app and walletd
+// Package turtlecoinwalletdrpcgo handles the the rpc connection between your app and turtle-service
 package turtlecoinwalletdrpcgo
 
 import (
@@ -112,7 +112,7 @@ func RequestListTransactions(blockCount int, firstBlockIndex int, addresses []st
 	return transfers, nil
 }
 
-// RequestStatus requests walletd connection and sync status
+// RequestStatus requests turtle-service connection and sync status
 func RequestStatus(rpcPassword string) (blockCount int, knownBlockCount int, peerCount int, err error) {
 
 	args := make(map[string]interface{})

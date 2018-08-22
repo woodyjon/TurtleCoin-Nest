@@ -45,7 +45,7 @@ Display in USD enabled -> Open a wallet| Balance is displayed in USD (under TRTL
 Display in USD enabled -> type an amount to be transfered| Value is displayed in USD
 Settings: change remote node address and port -> click save -> close and reopen Nest | new address in remote node radio button and in settings
 Settings: click remote node reset to default -> close and reopen Nest | default address in remote node radio button and in settings
-Win only: open a wallet | no black window (walletd) should open next to the nest window
+Win only: open a wallet | no black window (turtle-service) should open next to the nest window
 Win & Mac only: check executable file | its icon is the nest icon
 Win & Mac only: launch nest | icon in taskbar should be nest icon
 Launch on a small screen or resolution (800 x 600) | possibility to click full screen and to scroll in the full window

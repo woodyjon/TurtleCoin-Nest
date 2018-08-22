@@ -30,13 +30,13 @@ var (
 	// WalletFilename is the filename of the opened wallet
 	WalletFilename = ""
 
-	// will be set to a random string when starting walletd
+	// will be set to a random string when starting turtle-service
 	rpcPassword = ""
 
 	cmdWalletd     *exec.Cmd
 	cmdTurtleCoind *exec.Cmd
 
-	// WalletdOpenAndRunning is true when walletd is running with a wallet open
+	// WalletdOpenAndRunning is true when turtle-service is running with a wallet open
 	WalletdOpenAndRunning = false
 
 	// WalletdSynced is true when wallet is synced and transfer is allowed
@@ -244,7 +244,7 @@ func GetPrivateKeys() (isDeterministicWallet bool, mnemonicSeed string, privateV
 	return isDeterministicWallet, mnemonicSeed, privateViewKey, privateSpendKey, nil
 }
 
-// SaveWallet saves the sync status of the wallet. To be done regularly so when walletd crashes, sync is not lost
+// SaveWallet saves the sync status of the wallet. To be done regularly so when turtle-service crashes, sync is not lost
 func SaveWallet() (err error) {
 
 	err = turtlecoinwalletdrpcgo.SaveWallet(rpcPassword)
@@ -256,14 +256,14 @@ func SaveWallet() (err error) {
 	return nil
 }
 
-// StartWalletd starts the walletd daemon with the set wallet info
+// StartWalletd starts the turtle-service daemon with the set wallet info
 // walletPath is the full path to the wallet
 // walletPassword is the wallet password
 // useRemoteNode is true if remote node, false if local
 func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, daemonAddress string, daemonPort string) (err error) {
 
 	if isWalletdRunning() {
-		errorMessage := "Walletd is already running in the background.\nPlease close it via "
+		errorMessage := "turtle-service is already running in the background.\nPlease close it via "
 
 		if isPlatformWindows {
 			errorMessage += "the task manager"
@@ -414,7 +414,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		return err
 	}
 
-	log.Info("Opening Walletd and waiting for it to be ready.")
+	log.Info("Opening turtle-service and waiting for it to be ready.")
 
 	timesCheckLog := 0
 	timeBetweenChecks := 100 * time.Millisecond
@@ -437,7 +437,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 			}
 			if strings.Contains(line, "Wallet loading is finished.") {
 				successLaunchingWalletd = true
-				log.Info("Walletd ready ('Wallet loading is finished.').")
+				log.Info("turtle-service ready ('Wallet loading is finished.').")
 				break
 			}
 			if strings.Contains(line, "Imported block with index") {
@@ -451,7 +451,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 						errorMessage = errorMessage + line
 					}
 				} else {
-					errorMessage = "walletd stopped with unknown error"
+					errorMessage = "turtle-service stopped with unknown error"
 				}
 
 				killWalletd()
@@ -469,7 +469,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 	_, _, _, err = turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
 	if err != nil {
 		killWalletd()
-		return errors.New("error communicating with walletd via rpc")
+		return errors.New("error communicating with turtle-service via rpc")
 	}
 
 	WalletdOpenAndRunning = true
@@ -492,9 +492,9 @@ func GracefullyQuitWalletd() {
 
 			err = cmdWalletd.Process.Kill()
 			if err != nil {
-				log.Error("failed to kill walletd: " + err.Error())
+				log.Error("failed to kill turtle-service: " + err.Error())
 			} else {
-				log.Info("walletd killed without error")
+				log.Info("turtle-service killed without error")
 			}
 		} else {
 			_ = cmdWalletd.Process.Signal(syscall.SIGTERM)
@@ -505,14 +505,14 @@ func GracefullyQuitWalletd() {
 			select {
 			case <-time.After(5 * time.Second):
 				if err := cmdWalletd.Process.Kill(); err != nil {
-					log.Warning("failed to kill walletd: " + err.Error())
+					log.Warning("failed to kill turtle-service: " + err.Error())
 				}
-				log.Info("Walletd killed as stopping process timed out")
+				log.Info("turtle-service killed as stopping process timed out")
 			case err := <-done:
 				if err != nil {
-					log.Warning("Walletd finished with error: " + err.Error())
+					log.Warning("turtle-service finished with error: " + err.Error())
 				}
-				log.Info("Walletd killed without error")
+				log.Info("turtle-service killed without error")
 			}
 		}
 	}
@@ -538,14 +538,14 @@ func killWalletd() {
 			select {
 			case <-time.After(500 * time.Millisecond):
 				if err := cmdWalletd.Process.Kill(); err != nil {
-					log.Warning("failed to kill walletd: " + err.Error())
+					log.Warning("failed to kill turtle-service: " + err.Error())
 				}
-				log.Info("Walletd killed as stopping process timed out")
+				log.Info("turtle-service killed as stopping process timed out")
 			case err := <-done:
 				if err != nil {
-					log.Warning("Walletd finished with error: " + err.Error())
+					log.Warning("turtle-service finished with error: " + err.Error())
 				}
-				log.Info("Walletd killed without error")
+				log.Info("turtle-service killed without error")
 			}
 		}
 	}
@@ -590,8 +590,8 @@ func GracefullyQuitTurtleCoind() {
 	cmdTurtleCoind = nil
 }
 
-// CreateWallet calls walletd to create a new wallet. If privateViewKey, privateSpendKey and mnemonicSeed are empty strings, a new wallet will be generated. If they are not empty, a wallet will be generated from those keys or from the seed (import)
-// walletFilename is the filename chosen by the user. The created wallet file will be located in the same folder as walletd.
+// CreateWallet calls turtle-service to create a new wallet. If privateViewKey, privateSpendKey and mnemonicSeed are empty strings, a new wallet will be generated. If they are not empty, a wallet will be generated from those keys or from the seed (import)
+// walletFilename is the filename chosen by the user. The created wallet file will be located in the same folder as turtle-service.
 // walletPassword is the password of the new wallet.
 // walletPasswordConfirmation is the repeat of the password for confirmation that the password was correctly entered.
 // privateViewKey is the private view key of the wallet.
@@ -600,7 +600,7 @@ func GracefullyQuitTurtleCoind() {
 func CreateWallet(walletFilename string, walletPassword string, walletPasswordConfirmation string, privateViewKey string, privateSpendKey string, mnemonicSeed string) (err error) {
 
 	if WalletdOpenAndRunning {
-		return errors.New("walletd is already running. It should be stopped before being able to generate a new wallet")
+		return errors.New("turtle-service is already running. It should be stopped before being able to generate a new wallet")
 	}
 
 	if strings.Contains(walletFilename, "/") || strings.Contains(walletFilename, " ") || strings.Contains(walletFilename, ":") {
@@ -608,7 +608,7 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 	}
 
 	if isWalletdRunning() {
-		errorMessage := "Walletd is already running in the background.\nPlease close it via "
+		errorMessage := "turtle-service is already running in the background.\nPlease close it via "
 
 		if isPlatformWindows {
 			errorMessage += "the task manager"
@@ -728,7 +728,7 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 						errorMessage = errorMessage + line
 					}
 				} else {
-					errorMessage = "walletd stopped with unknown error"
+					errorMessage = "turtle-service stopped with unknown error"
 				}
 
 				killWalletd()
