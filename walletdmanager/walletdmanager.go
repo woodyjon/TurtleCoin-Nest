@@ -45,6 +45,8 @@ var (
 	isPlatformDarwin  = false
 	isPlatformLinux   = true
 	isPlatformWindows = false
+
+	nodeFee float64
 )
 
 // Setup sets up some settings. It must be called at least once at the beginning of your program.
@@ -472,6 +474,11 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		return errors.New("error communicating with turtle-service via rpc")
 	}
 
+	nodeFee, err = RequestFeeinfo()
+	if err != nil {
+		log.Warning("Error getting node fee from turtle-service. err: ", err.Error())
+	}
+
 	WalletdOpenAndRunning = true
 
 	// time.Sleep(5 * time.Second)
@@ -777,6 +784,23 @@ func RequestConnectionInfo() (syncing string, blockCount int, knownBlockCount in
 	}
 
 	return syncing, blockCount, knownBlockCount, peerCount, nil
+}
+
+// RequestFeeinfo provides the additional fee requested by the remote node for each transaction
+func RequestFeeinfo() (nodeFee float64, err error) {
+
+	_, nodeFee, _, err = turtlecoinwalletdrpcgo.Feeinfo(rpcPassword)
+	if err != nil {
+		return 0, err
+	}
+
+	return nodeFee, nil
+}
+
+// GetNodeFee returns the value of the node fee
+func GetNodeFee() float64 {
+
+	return nodeFee
 }
 
 // generate a random string with n characters. from https://stackoverflow.com/a/31832326/1668837

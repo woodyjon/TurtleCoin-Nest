@@ -96,6 +96,7 @@ type QmlBridge struct {
 		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
 	_ func(fullBalance string)              `signal:"displayFullBalanceInTransferAmount"`
 	_ func(fee string)                      `signal:"displayDefaultFee"`
+	_ func(nodeFee string)                  `signal:"displayNodeFee"`
 	_ func(index int, confirmations string) `signal:"updateConfirmationsOfTransaction"`
 	_ func()                                `signal:"displayInfoDialog"`
 
@@ -348,10 +349,6 @@ func connectQMLToGOFunctions() {
 		getFullBalanceAndDisplayInTransferAmount(transferFee)
 	})
 
-	qmlBridge.ConnectGetDefaultFeeAndDisplay(func() {
-		getDefaultFeeAndDisplay()
-	})
-
 	qmlBridge.ConnectLimitDisplayTransactions(func(limit bool) {
 		limitDisplayedTransactions = limit
 		getAndDisplayListTransactions(true)
@@ -383,6 +380,7 @@ func startDisplayWalletInfo() {
 	getAndDisplayListTransactions(true)
 	getAndDisplayConnectionInfo()
 	getDefaultFeeAndDisplay()
+	getNodeFeeAndDisplay()
 
 	go func() {
 		tickerRefreshWalletData = time.NewTicker(time.Second * 30)
@@ -650,6 +648,11 @@ func getFullBalanceAndDisplayInTransferAmount(transferFee string) {
 func getDefaultFeeAndDisplay() {
 
 	qmlBridge.DisplayDefaultFee(humanize.FtoaWithDigits(walletdmanager.DefaultTransferFee, 2))
+}
+
+func getNodeFeeAndDisplay() {
+
+	qmlBridge.DisplayNodeFee(humanize.FtoaWithDigits(walletdmanager.GetNodeFee(), 2))
 }
 
 func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
