@@ -574,6 +574,7 @@ Rectangle {
         property var transferAmount: ""
         property var transferPaymentID: ""
         property var transferFee: ""
+        property var nodeFeeValue: "0"
 
         Text {
             id: textTransferTitle
@@ -592,7 +593,7 @@ Rectangle {
         Text {
             id: textTransferAddrDescr
             color: "#ffffff"
-            text: "Recipient address"
+            text: "Recipient address (or integrated address)"
             anchors.top: textTransferTitle.bottom
             anchors.topMargin: 34
             anchors.left: parent.left
@@ -816,7 +817,7 @@ Rectangle {
         Text {
             id: textTransferFeeDescr
             color: "#ffffff"
-            text: "Fee"
+            text: "Network fee"
             anchors.top: rectangleTextInputTransferPaymentID.bottom
             anchors.topMargin: 13
             anchors.left: textTransferAddrDescr.left
@@ -873,50 +874,59 @@ Rectangle {
         }
 
         Text {
-            id: textTransferFeeDefaultDescr
-            color: "#999999"
-            text: "It is advised not to modify"
+            id: textNodeFeeTitle
+            color: "#ffffff"
+            text: "Node fee"
             anchors.top: textTransferFeeDescr.top
             anchors.topMargin: 0
-            anchors.left: textTransferFeeUnit.right
-            anchors.leftMargin: 30
-            font.pixelSize: 12
+            anchors.left: textTransferFeeDescr.right
+            anchors.leftMargin: 80
+            verticalAlignment: Text.AlignBottom
+            font.pixelSize: 14
+            horizontalAlignment: Text.AlignLeft
+            font.bold: true
             font.family: "Arial"
         }
 
-        Button {
-            id: buttonFeeDefaultValues
-            text: "default value"
-            // anchors.horizontalCenter: textTransferFeeDefaultDescr.horizontalCenter
-            anchors.left: textTransferFeeDefaultDescr.left
+        Text {
+            id: textNodeFeeDescr
+            color: "#999999"
+            text: "The node you connect\nto charges a fee of:"
+            anchors.right: parent.right
+            anchors.rightMargin: 5
+            anchors.top: textNodeFeeTitle.bottom
+            anchors.topMargin: 4
+            anchors.left: textNodeFeeTitle.left
             anchors.leftMargin: 0
-            anchors.top: textTransferFeeDefaultDescr.bottom
-            anchors.topMargin: 8
-            height: 25
-            enabled: true
+            font.pixelSize: 12
+            horizontalAlignment: Text.AlignLeft
+            font.family: "Arial"
+        }
 
-            contentItem: Text {
-                text: buttonFeeDefaultValues.text
-                font.pixelSize: 12
-                font.family: "Arial"
-                font.bold: true
-                opacity: enabled ? 1.0 : 0.3
-                color: buttonFeeDefaultValues.down ? "#dddddd" : "#ffffff"
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-            }
+        Text {
+            id: textNodeFeeValue
+            color: "#cfcfcf"
+            text: rectangleTransfer.nodeFeeValue
+            font.pixelSize: 14
+            font.family: "Arial"
+            font.bold: true
+            anchors.bottom: textTransferFeeUnit.bottom
+            anchors.bottomMargin: 0
+            anchors.right: textNodeFeeUnit.left
+            anchors.rightMargin: 7
+        }
 
-            background: Rectangle {
-                implicitWidth: 100
-                height: buttonFeeDefaultValues.height
-                opacity: enabled ? 1 : 0.3
-                radius: 6
-                color: buttonFeeDefaultValues.down ? "#383838" : "#444444"
-            }
-
-            onClicked: {
-                QmlBridge.getDefaultFeeAndDisplay();
-            }
+        Text {
+            id: textNodeFeeUnit
+            color: "#999999"
+            text: "TRTL / tr."
+            font.pixelSize: 14
+            font.family: "Arial"
+            font.bold: true
+            anchors.bottom: textNodeFeeValue.bottom
+            anchors.topMargin: 0
+            anchors.right: parent.right
+            anchors.rightMargin: 10
         }
 
         Button {
@@ -960,7 +970,7 @@ Rectangle {
                     rectangleTransfer.transferPaymentID = "";
                 }
                 rectangleTransfer.transferFee = textInputTransferFee.text
-                dialogConfirmTransfer.show(rectangleTransfer.transferRecipient, rectangleTransfer.transferAmount + " TRTL + " + rectangleTransfer.transferFee + " TRTL (fee)", rectangleTransfer.transferPaymentID);
+                dialogConfirmTransfer.show(rectangleTransfer.transferRecipient, rectangleTransfer.transferAmount + " TRTL + " + rectangleTransfer.transferFee + " (fee) + " + rectangleTransfer.nodeFeeValue + " (node fee)", rectangleTransfer.transferPaymentID);
             }
         }
 
@@ -1269,6 +1279,10 @@ Rectangle {
 
         onDisplayDefaultFee: {
             textInputTransferFee.text = fee;
+        }
+
+        onDisplayNodeFee: {
+            rectangleTransfer.nodeFeeValue = nodeFee;
         }
 
         onClearTransferAmount: {

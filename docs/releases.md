@@ -1,5 +1,24 @@
 # Releases
 
+## 0.32
+
+### Release notes
+
+- Compatibility with new fees from remote nodes (if you connect to a remote node, the node can charge you a fee per transaction, as a compensation for their running costs).
+- Compatibility with core 0.8.0
+- Uses turtle-service and TurtleCoind 0.8.0.
+
+### Sha256
+
+TurtleCoin-Nest-0.32-Windows.zip:
+`0957dfcd42aa4fa3332d4419c888144cbf0fc0cd8f3ce4b3b2954e2d57dc9858`
+
+TurtleCoin-Nest-0.32-Mac.zip:
+`a84eb3d5e56e3bcae27c6688ba070a6a7393a4141b1aa7eb1217cc4082e7957e`
+
+TurtleCoin-Nest-0.32-Linux.tar.gz:
+`910cc9e8abc8cf55af43c908d9a456c88c659e03c3fda4679b08c78b9e094ca4`
+
 ## 0.31
 
 ### Release notes
@@ -20,8 +39,8 @@ TurtleCoin-Nest-0.31-Windows.zip:
 TurtleCoin-Nest-0.31-Mac.zip:
 `f2325823c268be8b8bc3feeaece0f4d141a13e80a2cbbfe49b55420afa0baa98`
 
-TurtleCoin-Nest-0.31-Linux.tar.xz:
-`2613315b14aff93de5935a51aeaf71f1e99602043596df14e8e93c464f45df9c`
+TurtleCoin-Nest-0.31-Linux.tar.gz:
+`cf24f364a5abba8d6464e4e48d9700a7705d2c84163436818844ea5edfb1f223`
 
 ## 0.30
 

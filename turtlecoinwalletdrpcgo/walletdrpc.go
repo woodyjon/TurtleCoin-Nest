@@ -1,4 +1,4 @@
-// Package turtlecoinwalletdrpcgo handles the the rpc connection between your app and walletd
+// Package turtlecoinwalletdrpcgo handles the the rpc connection between your app and turtle-service
 package turtlecoinwalletdrpcgo
 
 import (
@@ -112,7 +112,7 @@ func RequestListTransactions(blockCount int, firstBlockIndex int, addresses []st
 	return transfers, nil
 }
 
-// RequestStatus requests walletd connection and sync status
+// RequestStatus requests turtle-service connection and sync status
 func RequestStatus(rpcPassword string) (blockCount int, knownBlockCount int, peerCount int, err error) {
 
 	args := make(map[string]interface{})
@@ -278,6 +278,54 @@ func SendFusionTransaction(threshold int, mixin int, addresses []string, destina
 		return "", errors.Wrap(errors.New(responseError.(map[string]interface{})["message"].(string)), "response with error")
 	}
 	return responseMap["result"].(map[string]interface{})["transactionHash"].(string), nil
+}
+
+// Feeinfo returns info on the fee requested by the remote node for every transactions
+// returned fee is expressed in TRTL, not in 0.01 TRTL
+func Feeinfo(rpcPassword string) (address string, fee float64, status string, err error) {
+
+	args := make(map[string]interface{})
+
+	payload := rpcPayloadFeeinfo(0, rpcPassword, args)
+
+	responseMap, err := httpRequest(payload)
+	if err != nil {
+		return "", 0, "", errors.Wrap(err, "httpRequest failed")
+	}
+
+	responseError := responseMap["error"]
+	if responseError != nil {
+		return "", 0, "", errors.Wrap(errors.New(responseError.(map[string]interface{})["message"].(string)), "response with error")
+	}
+
+	result := responseMap["result"]
+
+	if result == nil {
+		return "", 0, "", errors.New("result from feeinfo request is nil")
+	}
+
+	resultAddress := result.(map[string]interface{})["address"]
+	if resultAddress != nil {
+		address = resultAddress.(string)
+	} else {
+		address = ""
+	}
+
+	resultAmount := result.(map[string]interface{})["amount"]
+	if resultAmount != nil {
+		fee = resultAmount.(float64) / 100
+	} else {
+		fee = 0
+	}
+
+	resultStatus := result.(map[string]interface{})["status"]
+	if resultStatus != nil {
+		status = resultStatus.(string)
+	} else {
+		status = ""
+	}
+
+	return address, fee, status, nil
 }
 
 func httpRequest(payload rpcPayload) (responseMap map[string]interface{}, err error) {

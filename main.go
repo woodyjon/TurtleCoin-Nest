@@ -96,6 +96,7 @@ type QmlBridge struct {
 		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
 	_ func(fullBalance string)              `signal:"displayFullBalanceInTransferAmount"`
 	_ func(fee string)                      `signal:"displayDefaultFee"`
+	_ func(nodeFee string)                  `signal:"displayNodeFee"`
 	_ func(index int, confirmations string) `signal:"updateConfirmationsOfTransaction"`
 	_ func()                                `signal:"displayInfoDialog"`
 
@@ -200,7 +201,10 @@ func main() {
 	}
 	walletdmanager.Setup(platform)
 
-	core.QCoreApplication_SetAttribute(core.Qt__AA_EnableHighDpiScaling, true) // for scaling on windows high res screens
+	if isPlatformWindows {
+		// for scaling on windows high res screens
+		core.QCoreApplication_SetAttribute(core.Qt__AA_EnableHighDpiScaling, true)
+	}
 
 	app := gui.NewQGuiApplication(len(os.Args), os.Args)
 	app.SetWindowIcon(gui.NewQIcon5("qrc:/qml/images/icon.png"))
@@ -345,10 +349,6 @@ func connectQMLToGOFunctions() {
 		getFullBalanceAndDisplayInTransferAmount(transferFee)
 	})
 
-	qmlBridge.ConnectGetDefaultFeeAndDisplay(func() {
-		getDefaultFeeAndDisplay()
-	})
-
 	qmlBridge.ConnectLimitDisplayTransactions(func(limit bool) {
 		limitDisplayedTransactions = limit
 		getAndDisplayListTransactions(true)
@@ -380,6 +380,7 @@ func startDisplayWalletInfo() {
 	getAndDisplayListTransactions(true)
 	getAndDisplayConnectionInfo()
 	getDefaultFeeAndDisplay()
+	getNodeFeeAndDisplay()
 
 	go func() {
 		tickerRefreshWalletData = time.NewTicker(time.Second * 30)
@@ -503,7 +504,7 @@ func getAndDisplayListTransactions(forceFullUpdate bool) {
 
 func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) {
 
-	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  fee: ", transferFee)
+	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  network fee: ", transferFee, "  node fee: ", walletdmanager.GetNodeFee())
 
 	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee)
 	if err != nil {
@@ -517,7 +518,7 @@ func transfer(transferAddress string, transferAmount string, transferPaymentID s
 		return
 	}
 
-	log.Info("succes transfer: ", transactionID)
+	log.Info("success transfer: ", transactionID)
 
 	getAndDisplayBalances()
 	qmlBridge.ClearTransferAmount()
@@ -548,13 +549,13 @@ func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool 
 
 	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode, remoteDaemonAddress, remoteDaemonPort)
 	if err != nil {
-		log.Warn("error starting walletd with provided wallet info. error: ", err)
+		log.Warn("error starting turtle-service with provided wallet info. error: ", err)
 		qmlBridge.FinishedLoadingWalletd()
 		qmlBridge.DisplayErrorDialog("Error opening wallet.", err.Error())
 		return false
 	}
 
-	log.Info("success starting walletd")
+	log.Info("success starting turtle-service")
 
 	qmlBridge.FinishedLoadingWalletd()
 	startDisplayWalletInfo()
@@ -647,6 +648,11 @@ func getFullBalanceAndDisplayInTransferAmount(transferFee string) {
 func getDefaultFeeAndDisplay() {
 
 	qmlBridge.DisplayDefaultFee(humanize.FtoaWithDigits(walletdmanager.DefaultTransferFee, 2))
+}
+
+func getNodeFeeAndDisplay() {
+
+	qmlBridge.DisplayNodeFee(humanize.FtoaWithDigits(walletdmanager.GetNodeFee(), 2))
 }
 
 func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
