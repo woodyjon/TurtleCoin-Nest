@@ -1,6 +1,6 @@
 # TurtleCoin Nest
 
-The universal GUI wallet for TurtleCoin
+The universal desktop GUI wallet for TurtleCoin
 
 ![Logo](/turtlecoinnestlogo.png)
 
