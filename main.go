@@ -504,7 +504,7 @@ func getAndDisplayListTransactions(forceFullUpdate bool) {
 
 func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) {
 
-	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  fee: ", transferFee)
+	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  network fee: ", transferFee, "  node fee: ", walletdmanager.GetNodeFee())
 
 	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee)
 	if err != nil {
@@ -518,7 +518,7 @@ func transfer(transferAddress string, transferAmount string, transferPaymentID s
 		return
 	}
 
-	log.Info("succes transfer: ", transactionID)
+	log.Info("success transfer: ", transactionID)
 
 	getAndDisplayBalances()
 	qmlBridge.ClearTransferAmount()

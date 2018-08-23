@@ -891,7 +891,7 @@ Rectangle {
         Text {
             id: textNodeFeeDescr
             color: "#999999"
-            text: "The node you connect to charges a fee of"
+            text: "The node you connect\nto charges a fee of:"
             anchors.right: parent.right
             anchors.rightMargin: 5
             anchors.top: textNodeFeeTitle.bottom
@@ -910,23 +910,23 @@ Rectangle {
             font.pixelSize: 14
             font.family: "Arial"
             font.bold: true
-            anchors.top: textNodeFeeDescr.bottom
-            anchors.topMargin: 5
-            anchors.left: textNodeFeeDescr.left
-            anchors.leftMargin: 0
+            anchors.bottom: textTransferFeeUnit.bottom
+            anchors.bottomMargin: 0
+            anchors.right: textNodeFeeUnit.left
+            anchors.rightMargin: 7
         }
 
         Text {
             id: textNodeFeeUnit
             color: "#999999"
-            text: "TRTL / tx"
+            text: "TRTL / tr."
             font.pixelSize: 14
             font.family: "Arial"
             font.bold: true
             anchors.bottom: textNodeFeeValue.bottom
             anchors.topMargin: 0
-            anchors.left: textNodeFeeValue.right
-            anchors.leftMargin: 10
+            anchors.right: parent.right
+            anchors.rightMargin: 10
         }
 
         Button {
@@ -970,7 +970,7 @@ Rectangle {
                     rectangleTransfer.transferPaymentID = "";
                 }
                 rectangleTransfer.transferFee = textInputTransferFee.text
-                dialogConfirmTransfer.show(rectangleTransfer.transferRecipient, rectangleTransfer.transferAmount + " TRTL + " + rectangleTransfer.transferFee + " TRTL (fee)", rectangleTransfer.transferPaymentID);
+                dialogConfirmTransfer.show(rectangleTransfer.transferRecipient, rectangleTransfer.transferAmount + " TRTL + " + rectangleTransfer.transferFee + " (fee) + " + rectangleTransfer.nodeFeeValue + " (node fee)", rectangleTransfer.transferPaymentID);
             }
         }
 

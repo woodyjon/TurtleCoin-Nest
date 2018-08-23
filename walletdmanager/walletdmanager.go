@@ -98,7 +98,7 @@ func RequestAvailableBalanceToBeSpent(transferFeeString string) (availableBalanc
 		return 0, errors.New("fee should be positive")
 	}
 
-	availableBalance -= transferFee
+	availableBalance = availableBalance - transferFee - nodeFee
 	if availableBalance < 0 {
 		availableBalance = 0
 	}
@@ -167,7 +167,7 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("fee should be positive")
 	}
 
-	if transferAmount+transferFee > WalletAvailableBalance {
+	if transferAmount+transferFee+nodeFee > WalletAvailableBalance {
 		return "", errors.New("your available balance is insufficient")
 	}
 
