@@ -171,7 +171,7 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("your available balance is insufficient")
 	}
 
-	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, DefaultTransferMixin, rpcPassword)
+	transactionHash, err = turtlecoinwalletdrpcgo.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee, rpcPassword)
 	if err != nil {
 		log.Error("error sending transaction. err: ", err)
 		return "", err
@@ -187,7 +187,7 @@ func OptimizeWalletWithFusion() (transactionHash string, err error) {
 		return "", errors.Wrap(err, "getOptimisedFusionParameters failed")
 	}
 
-	transactionHash, err = turtlecoinwalletdrpcgo.SendFusionTransaction(smallestOptimizedThreshold, DefaultTransferMixin, []string{WalletAddress}, WalletAddress, rpcPassword)
+	transactionHash, err = turtlecoinwalletdrpcgo.SendFusionTransaction(smallestOptimizedThreshold, []string{WalletAddress}, WalletAddress, rpcPassword)
 	if err != nil {
 		log.Error("error sending fusion transaction. err: ", err)
 		return "", errors.Wrap(err, "sending fusion transaction failed")
