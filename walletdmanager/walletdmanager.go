@@ -604,7 +604,7 @@ func GracefullyQuitTurtleCoind() {
 // privateViewKey is the private view key of the wallet.
 // privateSpendKey is the private spend key of the wallet.
 // mnemonicSeed is the mnemonic seed for generating the wallet
-func CreateWallet(walletFilename string, walletPassword string, walletPasswordConfirmation string, privateViewKey string, privateSpendKey string, mnemonicSeed string) (err error) {
+func CreateWallet(walletFilename string, walletPassword string, walletPasswordConfirmation string, privateViewKey string, privateSpendKey string, mnemonicSeed string, scanHeight string) (err error) {
 
 	if WalletdOpenAndRunning {
 		return errors.New("turtle-service is already running. It should be stopped before being able to generate a new wallet")
@@ -676,15 +676,19 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 	}
 	defer walletdCurrentSessionLogFile.Close()
 
+	if scanHeight == "" {
+		scanHeight = "0"
+	}
+
 	if privateViewKey == "" && privateSpendKey == "" && mnemonicSeed == "" {
 		// generate new wallet
 		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
 	} else if mnemonicSeed == "" {
 		// import wallet from private view and spend keys
-		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--view-key", privateViewKey, "--spend-key", privateSpendKey, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--view-key", privateViewKey, "--spend-key", privateSpendKey, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "--scan-height", scanHeight, "-g")
 	} else {
 		// import wallet from seed
-		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--mnemonic-seed", mnemonicSeed, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "-g")
+		cmdWalletd = exec.Command(pathToWalletd, "-w", pathToWallet, "-p", walletPassword, "--mnemonic-seed", mnemonicSeed, "-l", pathToLogWalletdCurrentSession, "--log-level", walletdLogLevel, "--scan-height", scanHeight, "-g")
 	}
 
 	hideCmdWindowIfNeeded(cmdWalletd)
