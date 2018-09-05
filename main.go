@@ -99,6 +99,10 @@ type QmlBridge struct {
 	_ func(nodeFee string)                  `signal:"displayNodeFee"`
 	_ func(index int, confirmations string) `signal:"updateConfirmationsOfTransaction"`
 	_ func()                                `signal:"displayInfoDialog"`
+	_ func(dbID int,
+		name string,
+		address string,
+		paymentID string) `signal:"addSavedAddressToList"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -139,6 +143,11 @@ type QmlBridge struct {
 	_ func() string            `slot:"getNewVersion"`
 	_ func() string            `slot:"getNewVersionURL"`
 	_ func()                   `slot:"optimizeWalletWithFusion"`
+	_ func(name string,
+		address string,
+		paymentID string) `slot:"saveAddress"`
+	_ func()         `slot:"fillListSavedAddresses"`
+	_ func(dbID int) `slot:"deleteSavedAddress"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -370,6 +379,18 @@ func connectQMLToGOFunctions() {
 		go func() {
 			optimizeWalletWithFusion()
 		}()
+	})
+
+	qmlBridge.ConnectSaveAddress(func(name string, address string, paymentID string) {
+		saveAddress(name, address, paymentID)
+	})
+
+	qmlBridge.ConnectFillListSavedAddresses(func() {
+		getSavedAddressesFromDBAndDisplay()
+	})
+
+	qmlBridge.ConnectDeleteSavedAddress(func(dbID int) {
+		deleteSavedAddressFromDB(dbID)
 	})
 }
 
@@ -670,6 +691,16 @@ func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
 	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB(), remoteNodeDescr)
 }
 
+func saveAddress(name string, address string, paymentID string) {
+
+	if name == "" || address == "" {
+		qmlBridge.DisplayErrorDialog("Address not saved", "The address field and the name cannot be empty")
+	} else {
+		recordSavedAddressToDB(name, address, paymentID)
+		qmlBridge.DisplayPopup("Saved!", 1500)
+	}
+}
+
 func setupDB(pathToDB string) {
 
 	var err error
@@ -696,6 +727,11 @@ func setupDB(pathToDB string) {
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNodeInfo (id INTEGER PRIMARY KEY AUTOINCREMENT, address VARCHAR(64), port VARCHAR(64))")
 	if err != nil {
 		log.Fatal("error creating table remoteNodeInfo. err: ", err)
+	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS savedAddresses (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(64), address VARCHAR(64), paymentID VARCHAR(64))")
+	if err != nil {
+		log.Fatal("error creating table savedAddresses. err: ", err)
 	}
 }
 
@@ -834,6 +870,51 @@ func recordDisplayConversionToDB(displayConversion bool) {
 	_, err = stmt.Exec(displayConversion)
 	if err != nil {
 		log.Fatal("error inserting displayFiat into db. err: ", err)
+	}
+}
+
+func getSavedAddressesFromDBAndDisplay() {
+
+	rows, err := db.Query("SELECT id, name, address, paymentID FROM savedAddresses ORDER BY id ASC")
+	if err != nil {
+		log.Fatal("error querying saved addresses from savedAddresses table. err: ", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		dbID := 0
+		name := ""
+		address := ""
+		paymentID := ""
+		err = rows.Scan(&dbID, &name, &address, &paymentID)
+		if err != nil {
+			log.Fatal("error reading item from savedAddresses table. err: ", err)
+		}
+		qmlBridge.AddSavedAddressToList(dbID, name, address, paymentID)
+	}
+}
+
+func recordSavedAddressToDB(name string, address string, paymentID string) {
+
+	stmt, err := db.Prepare(`INSERT INTO savedAddresses(name,address,paymentID) VALUES(?,?,?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert saved address into db. err: ", err)
+	}
+	_, err = stmt.Exec(name, address, paymentID)
+	if err != nil {
+		log.Fatal("error inserting saved address into db. err: ", err)
+	}
+}
+
+func deleteSavedAddressFromDB(dbID int) {
+
+	stmt, err := db.Prepare("delete from savedAddresses where id=?")
+	if err != nil {
+		log.Fatal("error preparing to delete saved address from db. err: ", err)
+	}
+
+	_, err = stmt.Exec(dbID)
+	if err != nil {
+		log.Fatal("error deleting saved address from db. err: ", err)
 	}
 }
 
