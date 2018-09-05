@@ -29,7 +29,7 @@ Item {
             anchors.leftMargin: 10
             anchors.top: parent.top
             anchors.topMargin: 5
-            anchors.right: parent.right
+            anchors.right: buttonDeleteSavedAddress.left
             anchors.rightMargin: 5
             font.family: "Arial"
             font.bold: true
@@ -90,8 +90,45 @@ Item {
             font.pixelSize: 13
         }
 
+        Rectangle {
+            id: buttonDeleteSavedAddress
+            width: 17
+            height: 17
+            anchors.top: parent.top
+            anchors.topMargin: 5
+            anchors.right: parent.right
+            anchors.rightMargin: 5
+            color: "transparent"
+            Image {
+                id: imageButtonDeleteSavedAddress
+                anchors.fill: parent
+                fillMode: Image.PreserveAspectFit
+                source: "images/close.svg"
+                antialiasing: true
+            }
+            ColorOverlay {
+                anchors.fill: imageButtonDeleteSavedAddress
+                source:imageButtonDeleteSavedAddress
+                color:"white"
+                antialiasing: true
+            }
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    clickedDeleteSavedAddress(dbID);
+                }
+            }
+        }
+
         MouseArea {
-            anchors.fill: parent
+            anchors.top: parent.top
+            anchors.topMargin: 0
+            anchors.left: parent.left
+            anchors.leftMargin: 0
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 0
+            anchors.right: buttonDeleteSavedAddress.left
+            anchors.rightMargin: 5
             onClicked: {
                 clickedSavedAddress(savedAddressAddressValue, savedAddressPaymentIDValue);
             }

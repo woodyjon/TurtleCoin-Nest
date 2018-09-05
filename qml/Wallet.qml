@@ -1382,6 +1382,13 @@ Rectangle {
                     
                     dialogListAddresses.close();
                 }
+
+                function clickedDeleteSavedAddress(dbID) {
+                    QmlBridge.deleteSavedAddress(dbID)
+
+                    modelListViewAddresses.clear();
+                    QmlBridge.fillListSavedAddresses();
+                }
             }
         }
 

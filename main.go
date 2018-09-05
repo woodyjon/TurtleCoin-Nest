@@ -146,7 +146,8 @@ type QmlBridge struct {
 	_ func(name string,
 		address string,
 		paymentID string) `slot:"saveAddress"`
-	_ func() `slot:"fillListSavedAddresses"`
+	_ func()         `slot:"fillListSavedAddresses"`
+	_ func(dbID int) `slot:"deleteSavedAddress"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -386,6 +387,10 @@ func connectQMLToGOFunctions() {
 
 	qmlBridge.ConnectFillListSavedAddresses(func() {
 		getSavedAddressesFromDBAndDisplay()
+	})
+
+	qmlBridge.ConnectDeleteSavedAddress(func(dbID int) {
+		deleteSavedAddressFromDB(dbID)
 	})
 }
 
@@ -893,6 +898,19 @@ func recordSavedAddressToDB(name string, address string, paymentID string) {
 	_, err = stmt.Exec(name, address, paymentID)
 	if err != nil {
 		log.Fatal("error inserting saved address into db. err: ", err)
+	}
+}
+
+func deleteSavedAddressFromDB(dbID int) {
+
+	stmt, err := db.Prepare("delete from savedAddresses where id=?")
+	if err != nil {
+		log.Fatal("error preparing to delete saved address from db. err: ", err)
+	}
+
+	_, err = stmt.Exec(dbID)
+	if err != nil {
+		log.Fatal("error deleting saved address from db. err: ", err)
 	}
 }
 
