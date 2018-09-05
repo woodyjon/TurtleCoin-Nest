@@ -394,6 +394,7 @@ func startDisplayWalletInfo() {
 		tickerRefreshConnectionInfo = time.NewTicker(time.Second * 15)
 		for range tickerRefreshConnectionInfo.C {
 			getAndDisplayConnectionInfo()
+			getNodeFeeAndDisplay()
 		}
 	}()
 
