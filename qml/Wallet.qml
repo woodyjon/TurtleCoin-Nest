@@ -1047,7 +1047,7 @@ Rectangle {
         }
 
         function enteredNameAddress(nameAddress) {
-            QmlBridge.log(nameAddress);
+            QmlBridge.saveAddress(nameAddress, textInputTransferAddress.text, textInputTransferPaymentID.text);
         }
     }
 

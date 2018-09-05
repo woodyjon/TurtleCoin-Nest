@@ -139,6 +139,9 @@ type QmlBridge struct {
 	_ func() string            `slot:"getNewVersion"`
 	_ func() string            `slot:"getNewVersionURL"`
 	_ func()                   `slot:"optimizeWalletWithFusion"`
+	_ func(name string,
+		address string,
+		paymentID string) `slot:"saveAddress"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -370,6 +373,10 @@ func connectQMLToGOFunctions() {
 		go func() {
 			optimizeWalletWithFusion()
 		}()
+	})
+
+	qmlBridge.ConnectSaveAddress(func(name string, address string, paymentID string) {
+		saveAddress(name, address, paymentID)
 	})
 }
 
@@ -666,6 +673,18 @@ func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
 	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB(), remoteNodeDescr)
 }
 
+func saveAddress(name string, address string, paymentID string) {
+
+	if name == "" || address == "" {
+		qmlBridge.DisplayErrorDialog("Address not saved", "The address field and the name cannot be empty")
+	} else {
+		recordSavedAddressToDB(name, address, paymentID)
+		qmlBridge.DisplayPopup("Saved!", 1500)
+	}
+
+	getSavedAddressesFromDB()
+}
+
 func setupDB(pathToDB string) {
 
 	var err error
@@ -692,6 +711,11 @@ func setupDB(pathToDB string) {
 	_, err = db.Exec("CREATE TABLE IF NOT EXISTS remoteNodeInfo (id INTEGER PRIMARY KEY AUTOINCREMENT, address VARCHAR(64), port VARCHAR(64))")
 	if err != nil {
 		log.Fatal("error creating table remoteNodeInfo. err: ", err)
+	}
+
+	_, err = db.Exec("CREATE TABLE IF NOT EXISTS savedAddresses (id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR(64), address VARCHAR(64), paymentID VARCHAR(64))")
+	if err != nil {
+		log.Fatal("error creating table savedAddresses. err: ", err)
 	}
 }
 
@@ -830,6 +854,37 @@ func recordDisplayConversionToDB(displayConversion bool) {
 	_, err = stmt.Exec(displayConversion)
 	if err != nil {
 		log.Fatal("error inserting displayFiat into db. err: ", err)
+	}
+}
+
+func getSavedAddressesFromDB() {
+
+	rows, err := db.Query("SELECT name, address, paymentID FROM savedAddresses ORDER BY id ASC")
+	if err != nil {
+		log.Fatal("error querying saved addresses from savedAddresses table. err: ", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		name := ""
+		address := ""
+		paymentID := ""
+		err = rows.Scan(&name, &address, &paymentID)
+		if err != nil {
+			log.Fatal("error reading item from savedAddresses table. err: ", err)
+		}
+		log.Debug("saved address: name: ", name, " address: ", address, " paymentID: ", paymentID)
+	}
+}
+
+func recordSavedAddressToDB(name string, address string, paymentID string) {
+
+	stmt, err := db.Prepare(`INSERT INTO savedAddresses(name,address,paymentID) VALUES(?,?,?)`)
+	if err != nil {
+		log.Fatal("error preparing to insert saved address into db. err: ", err)
+	}
+	_, err = stmt.Exec(name, address, paymentID)
+	if err != nil {
+		log.Fatal("error inserting saved address into db. err: ", err)
 	}
 }
 
