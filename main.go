@@ -505,7 +505,7 @@ func getAndDisplayListTransactions(forceFullUpdate bool) {
 
 func transfer(transferAddress string, transferAmount string, transferPaymentID string, transferFee string) {
 
-	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  network fee: ", transferFee, "  node fee: ", walletdmanager.GetNodeFee())
+	log.Info("SEND: to: ", transferAddress, "  amount: ", transferAmount, "  payment ID: ", transferPaymentID, "  network fee: ", transferFee, "  node fee: ", walletdmanager.NodeFee)
 
 	transactionID, err := walletdmanager.SendTransaction(transferAddress, transferAmount, transferPaymentID, transferFee)
 	if err != nil {
@@ -653,7 +653,8 @@ func getDefaultFeeAndDisplay() {
 
 func getNodeFeeAndDisplay() {
 
-	qmlBridge.DisplayNodeFee(humanize.FtoaWithDigits(walletdmanager.GetNodeFee(), 2))
+	nodeFee, _ := walletdmanager.RequestFeeinfo()
+	qmlBridge.DisplayNodeFee(humanize.FtoaWithDigits(nodeFee, 2))
 }
 
 func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {

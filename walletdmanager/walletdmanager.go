@@ -46,7 +46,8 @@ var (
 	isPlatformLinux   = true
 	isPlatformWindows = false
 
-	nodeFee float64
+	// fee to be paid to node per transaction
+	NodeFee float64
 )
 
 // Setup sets up some settings. It must be called at least once at the beginning of your program.
@@ -98,7 +99,7 @@ func RequestAvailableBalanceToBeSpent(transferFeeString string) (availableBalanc
 		return 0, errors.New("fee should be positive")
 	}
 
-	availableBalance = availableBalance - transferFee - nodeFee
+	availableBalance = availableBalance - transferFee - NodeFee
 	if availableBalance < 0 {
 		availableBalance = 0
 	}
@@ -167,7 +168,7 @@ func SendTransaction(transferAddress string, transferAmountString string, transf
 		return "", errors.New("fee should be positive")
 	}
 
-	if transferAmount+transferFee+nodeFee > WalletAvailableBalance {
+	if transferAmount+transferFee+NodeFee > WalletAvailableBalance {
 		return "", errors.New("your available balance is insufficient")
 	}
 
@@ -472,11 +473,6 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 	if err != nil {
 		killWalletd()
 		return errors.New("error communicating with turtle-service via rpc")
-	}
-
-	nodeFee, err = RequestFeeinfo()
-	if err != nil {
-		log.Warning("Error getting node fee from turtle-service. err: ", err.Error())
 	}
 
 	WalletdOpenAndRunning = true
@@ -794,13 +790,9 @@ func RequestFeeinfo() (nodeFee float64, err error) {
 		return 0, err
 	}
 
+	NodeFee = nodeFee
+
 	return nodeFee, nil
-}
-
-// GetNodeFee returns the value of the node fee
-func GetNodeFee() float64 {
-
-	return nodeFee
 }
 
 // generate a random string with n characters. from https://stackoverflow.com/a/31832326/1668837
