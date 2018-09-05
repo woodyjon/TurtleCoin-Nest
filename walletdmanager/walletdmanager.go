@@ -676,7 +676,8 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 	}
 	defer walletdCurrentSessionLogFile.Close()
 
-	if scanHeight == "" {
+	_, err = strconv.ParseUint(scanHeight, 10, 64)
+	if err != nil || scanHeight == "" {
 		scanHeight = "0"
 	}
 
