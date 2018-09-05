@@ -297,7 +297,6 @@ func Feeinfo(rpcPassword string) (address string, fee float64, status string, er
 	}
 
 	result := responseMap["result"]
-
 	if result == nil {
 		return "", 0, "", errors.New("result from feeinfo request is nil")
 	}
@@ -314,6 +313,10 @@ func Feeinfo(rpcPassword string) (address string, fee float64, status string, er
 		fee = resultAmount.(float64) / 100
 	} else {
 		fee = 0
+	}
+
+	if address == "" && fee > 0 {
+		return "", 0, "", errors.New("fee info is not valid")
 	}
 
 	resultStatus := result.(map[string]interface{})["status"]

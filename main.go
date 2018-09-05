@@ -653,8 +653,12 @@ func getDefaultFeeAndDisplay() {
 
 func getNodeFeeAndDisplay() {
 
-	nodeFee, _ := walletdmanager.RequestFeeinfo()
-	qmlBridge.DisplayNodeFee(humanize.FtoaWithDigits(nodeFee, 2))
+	nodeFee, err := walletdmanager.RequestFeeinfo()
+	if err != nil {
+		qmlBridge.DisplayNodeFee("-")
+	} else {
+		qmlBridge.DisplayNodeFee(humanize.FtoaWithDigits(nodeFee, 2))
+	}
 }
 
 func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
