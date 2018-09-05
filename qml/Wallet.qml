@@ -672,7 +672,7 @@ Rectangle {
             }
 
             onClicked: {
-                QmlBridge.log("clicked addresses");
+                dialogListAddresses.show();
             }
         }
 
@@ -1353,6 +1353,85 @@ Rectangle {
 
         onAccepted: {
             rectangleTransfer.enteredNameAddress(textInputNameAddress.text)
+        }
+    }
+
+    Dialog {
+        id: dialogListAddresses
+        title: "Your saved addresses"
+        standardButtons: StandardButton.Cancel
+        width: 400
+        height: 500
+
+        Component {
+            id: delegateListViewAddresses
+            ItemListAddress {
+                id: itemListAddress
+                anchors.left: parent.left
+                anchors.leftMargin: 0
+                anchors.right: parent.right
+                anchors.rightMargin: 0
+                height: 80
+
+                function clickedSavedAddress(address, paymentID) {
+                    
+                    textInputTransferAddress.text = address;
+                    textInputTransferAddress.cursorPosition = 0;
+                    textInputTransferPaymentID.text = paymentID;
+                    textInputTransferPaymentID.cursorPosition = 0;
+                    
+                    dialogListAddresses.close();
+                }
+            }
+        }
+
+        ListModel {
+            id: modelListViewAddresses
+        }
+
+        Rectangle {
+            id: rectangleListAddresses
+            anchors.fill: parent
+
+            ListView {
+                id: listViewAddresses
+                model: modelListViewAddresses
+                delegate: delegateListViewAddresses
+                clip: true
+                boundsBehavior: Flickable.DragAndOvershootBounds
+                ScrollBar.vertical: ScrollBar {
+                    width: 7
+                    anchors.right: parent.right
+                    anchors.rightMargin: 0
+                    policy: ScrollBar.AlwaysOn
+                }
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 10
+                anchors.right: parent.right
+                anchors.rightMargin: 4
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.top: parent.top
+                anchors.topMargin: 10
+
+                Connections {
+                    target: QmlBridge
+                    onAddSavedAddressToList: {
+                        modelListViewAddresses.append({
+                            savedAddressIDValue: dbID,
+                            savedAddressNameValue: name,
+                            savedAddressAddressValue: address,
+                            savedAddressPaymentIDValue: paymentID
+                        })
+                    }
+                }
+            }
+        }
+
+        function show() {
+            modelListViewAddresses.clear();
+            QmlBridge.fillListSavedAddresses();
+            dialogListAddresses.open();
         }
     }
 

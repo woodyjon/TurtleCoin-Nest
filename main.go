@@ -99,6 +99,10 @@ type QmlBridge struct {
 	_ func(nodeFee string)                  `signal:"displayNodeFee"`
 	_ func(index int, confirmations string) `signal:"updateConfirmationsOfTransaction"`
 	_ func()                                `signal:"displayInfoDialog"`
+	_ func(dbID int,
+		name string,
+		address string,
+		paymentID string) `signal:"addSavedAddressToList"`
 
 	// qml to go
 	_ func(msg string)           `slot:"log"`
@@ -142,6 +146,7 @@ type QmlBridge struct {
 	_ func(name string,
 		address string,
 		paymentID string) `slot:"saveAddress"`
+	_ func() `slot:"fillListSavedAddresses"`
 
 	_ func(object *core.QObject) `slot:"registerToGo"`
 	_ func(objectName string)    `slot:"deregisterToGo"`
@@ -377,6 +382,10 @@ func connectQMLToGOFunctions() {
 
 	qmlBridge.ConnectSaveAddress(func(name string, address string, paymentID string) {
 		saveAddress(name, address, paymentID)
+	})
+
+	qmlBridge.ConnectFillListSavedAddresses(func() {
+		getSavedAddressesFromDBAndDisplay()
 	})
 }
 
@@ -681,8 +690,6 @@ func saveAddress(name string, address string, paymentID string) {
 		recordSavedAddressToDB(name, address, paymentID)
 		qmlBridge.DisplayPopup("Saved!", 1500)
 	}
-
-	getSavedAddressesFromDB()
 }
 
 func setupDB(pathToDB string) {
@@ -857,22 +864,23 @@ func recordDisplayConversionToDB(displayConversion bool) {
 	}
 }
 
-func getSavedAddressesFromDB() {
+func getSavedAddressesFromDBAndDisplay() {
 
-	rows, err := db.Query("SELECT name, address, paymentID FROM savedAddresses ORDER BY id ASC")
+	rows, err := db.Query("SELECT id, name, address, paymentID FROM savedAddresses ORDER BY id ASC")
 	if err != nil {
 		log.Fatal("error querying saved addresses from savedAddresses table. err: ", err)
 	}
 	defer rows.Close()
 	for rows.Next() {
+		dbID := 0
 		name := ""
 		address := ""
 		paymentID := ""
-		err = rows.Scan(&name, &address, &paymentID)
+		err = rows.Scan(&dbID, &name, &address, &paymentID)
 		if err != nil {
 			log.Fatal("error reading item from savedAddresses table. err: ", err)
 		}
-		log.Debug("saved address: name: ", name, " address: ", address, " paymentID: ", paymentID)
+		qmlBridge.AddSavedAddressToList(dbID, name, address, paymentID)
 	}
 }
 
