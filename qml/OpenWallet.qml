@@ -893,7 +893,7 @@ Rectangle {
         Text {
             id: textImportWalletScanHeightDescr
             color: "#ffffff"
-            text: "Choose a starting scan height"
+            text: "Starting scan height (optional)"
             horizontalAlignment: Text.AlignLeft
             verticalAlignment: Text.AlignBottom
             font.pixelSize: 14
@@ -919,7 +919,7 @@ Rectangle {
                 id: textInputImportWalletScanHeight
                 anchors.fill: parent
                 color: "#cfcfcf"
-                text: ""
+                text: "0"
                 rightPadding: 5
                 leftPadding: 5
                 selectionColor: "#eeeeee"
@@ -937,7 +937,7 @@ Rectangle {
         Text {
             id: textImportWalletScanHeightExtraDescr
             color: "#999999"
-            text: "Enter the approximate height you created your wallet at. Defaults to 0. Massively speeds up wallet sync"
+            text: "Enter the approximate height (block number) you created your wallet at. Massively speeds up wallet sync. Leave 0 if unsure."
             anchors.top: rectangleTextInputImportWalletScanHeight.bottom
             anchors.topMargin: 8
             anchors.left: rectangleTextInputImportWalletScanHeight.left
