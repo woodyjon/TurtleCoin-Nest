@@ -1,5 +1,24 @@
 # Releases
 
+## 0.34
+
+### Release notes
+
+- Address directory (save the addresses you use often).
+- Choose a block height (scan height) for importing a wallet.
+- Includes TurtleCoin core 0.8.3 (turtle-service and TurtleCoind).
+
+### Sha256
+
+TurtleCoin-Nest-0.34-Windows.zip:
+`968c38f4eb6d8b985d0133489bd43e8397a406a076c9e267225fd20fe97c90f7`
+
+TurtleCoin-Nest-0.34-Mac.zip:
+`8b13f32e587d46ff1565d4e62fe391d9aec6adb09172bff80e522111b208f201`
+
+TurtleCoin-Nest-0.34-Linux.tar.gz:
+`53e5ab1da58a267d100ad362bd80eb1bd37b77200e8949e6cb339a678a39ba00`
+
 ## 0.32
 
 ### Release notes
