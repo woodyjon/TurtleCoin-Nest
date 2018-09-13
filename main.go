@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
 	"os/exec"
@@ -34,6 +35,7 @@ var (
 	transfers                   []turtlecoinwalletdrpcgo.Transfer
 	tickerRefreshWalletData     *time.Ticker
 	tickerRefreshConnectionInfo *time.Ticker
+	tickerRefreshNodeFeeInfo    *time.Ticker
 	tickerSaveWallet            *time.Ticker
 	db                          *sql.DB
 	useRemoteNode               = true
@@ -66,8 +68,8 @@ type QmlBridge struct {
 		confirmations string,
 		time string,
 		number string) `signal:"addTransactionToList"`
-	_ func(text string, time int)                       `signal:"displayPopup"`
-	_ func(syncing string, blocks string, peers string) `signal:"displaySyncingInfo"`
+	_ func(text string, time int)              `signal:"displayPopup"`
+	_ func(syncing string, syncingInfo string) `signal:"displaySyncingInfo"`
 	_ func(errorText string,
 		errorInformativeText string) `signal:"displayErrorDialog"`
 	_ func() `signal:"clearTransferAmount"`
@@ -413,9 +415,15 @@ func startDisplayWalletInfo() {
 	}()
 
 	go func() {
-		tickerRefreshConnectionInfo = time.NewTicker(time.Second * 15)
+		tickerRefreshConnectionInfo = time.NewTicker(time.Second * 5)
 		for range tickerRefreshConnectionInfo.C {
 			getAndDisplayConnectionInfo()
+		}
+	}()
+
+	go func() {
+		tickerRefreshNodeFeeInfo = time.NewTicker(time.Second * 15)
+		for range tickerRefreshNodeFeeInfo.C {
 			getNodeFeeAndDisplay()
 		}
 	}()
@@ -449,14 +457,36 @@ func getAndDisplayAddress() {
 
 func getAndDisplayConnectionInfo() {
 
-	syncing, blockCount, knownBlockCount, peers, err := walletdmanager.RequestConnectionInfo()
+	syncing, walletBlockCount, knownBlockCount, localDaemonBlockCount, peers, err := walletdmanager.RequestConnectionInfo()
 	if err != nil {
 		log.Info("error getting connection info: ", err)
 		return
 	}
 
-	blocks := strconv.Itoa(blockCount) + " / " + strconv.Itoa(knownBlockCount)
-	qmlBridge.DisplaySyncingInfo(syncing, blocks, strconv.Itoa(peers))
+	walletBlockCountString := humanize.FormatInteger("#,###.", walletBlockCount)
+	// add percentage info if not synced
+	if walletBlockCount > 1 && knownBlockCount-walletBlockCount > 2 {
+		percentageSync := int(math.Floor(100 * (float64(walletBlockCount) / float64(knownBlockCount))))
+		walletBlockCountString += " (" + humanize.FormatInteger("#,###.", percentageSync) + "%)"
+	}
+
+	localDaemonBlockCountString := "..."
+	if localDaemonBlockCount > 1 {
+		localDaemonBlockCountString = humanize.FormatInteger("#,###.", localDaemonBlockCount)
+		// add percentage info if not synced
+		if knownBlockCount-localDaemonBlockCount > 2 {
+			percentageSync := int(math.Floor(100 * (float64(localDaemonBlockCount) / float64(knownBlockCount))))
+			localDaemonBlockCountString += " (" + humanize.FormatInteger("#,###.", percentageSync) + "%)"
+		}
+	}
+
+	knownBlockCountString := "..."
+	if knownBlockCount > 1 {
+		knownBlockCountString = humanize.FormatInteger("#,###.", knownBlockCount)
+	}
+
+	syncingInfo := "wallet: " + walletBlockCountString + " - node: " + localDaemonBlockCountString + "  (" + knownBlockCountString + " blocks - " + strconv.Itoa(peers) + " peers)"
+	qmlBridge.DisplaySyncingInfo(syncing, syncingInfo)
 
 	// when not connected to remote node, the knownBlockCount stays at 1. So inform users if there seems to be a connection problem
 	if useRemoteNode {
@@ -626,6 +656,7 @@ func closeWallet() {
 
 	tickerRefreshWalletData.Stop()
 	tickerRefreshConnectionInfo.Stop()
+	tickerRefreshNodeFeeInfo.Stop()
 	tickerSaveWallet.Stop()
 
 	stringBackupKeys = ""

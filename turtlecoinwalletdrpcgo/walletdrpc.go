@@ -113,21 +113,22 @@ func RequestListTransactions(blockCount int, firstBlockIndex int, addresses []st
 }
 
 // RequestStatus requests turtle-service connection and sync status
-func RequestStatus(rpcPassword string) (blockCount int, knownBlockCount int, peerCount int, err error) {
+func RequestStatus(rpcPassword string) (walletBlockCount int, knownBlockCount int, localDaemonBlockCount int, peerCount int, err error) {
 
 	args := make(map[string]interface{})
 	payload := rpcPayloadGetStatus(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
 	if err != nil {
-		return 0, 0, 0, errors.Wrap(err, "httpRequest failed")
+		return 0, 0, 0, 0, errors.Wrap(err, "httpRequest failed")
 	}
 
-	blockCount = int(responseMap["result"].(map[string]interface{})["blockCount"].(float64))
+	walletBlockCount = int(responseMap["result"].(map[string]interface{})["blockCount"].(float64))
 	knownBlockCount = int(responseMap["result"].(map[string]interface{})["knownBlockCount"].(float64))
+	localDaemonBlockCount = int(responseMap["result"].(map[string]interface{})["localDaemonBlockCount"].(float64))
 	peerCount = int(responseMap["result"].(map[string]interface{})["peerCount"].(float64))
 
-	return blockCount, knownBlockCount, peerCount, nil
+	return walletBlockCount, knownBlockCount, localDaemonBlockCount, peerCount, nil
 }
 
 // SendTransaction makes a transfer with the provided information.

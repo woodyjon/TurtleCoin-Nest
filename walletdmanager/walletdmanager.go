@@ -122,7 +122,7 @@ func RequestAddress() (address string, err error) {
 // RequestListTransactions provides the list of transactions of current wallet
 func RequestListTransactions() (transfers []turtlecoinwalletdrpcgo.Transfer, err error) {
 
-	walletBlockCount, _, _, err := turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
+	walletBlockCount, _, _, _, err := turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
 	if err != nil {
 		log.Error("error getting block count: ", err)
 		return nil, err
@@ -469,7 +469,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 	}
 
 	// check rpc connection with walletd
-	_, _, _, err = turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
+	_, _, _, _, err = turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
 	if err != nil {
 		killWalletd()
 		return errors.New("error communicating with turtle-service via rpc")
@@ -764,27 +764,27 @@ func CreateWallet(walletFilename string, walletPassword string, walletPasswordCo
 }
 
 // RequestConnectionInfo provides the blockchain sync status and the number of connected peers
-func RequestConnectionInfo() (syncing string, blockCount int, knownBlockCount int, peerCount int, err error) {
+func RequestConnectionInfo() (syncing string, walletBlockCount int, knownBlockCount int, localDaemonBlockCount int, peerCount int, err error) {
 
-	blockCount, knownBlockCount, peerCount, err = turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
+	walletBlockCount, knownBlockCount, localDaemonBlockCount, peerCount, err = turtlecoinwalletdrpcgo.RequestStatus(rpcPassword)
 	if err != nil {
-		return "", 0, 0, 0, err
+		return "", 0, 0, 0, 0, err
 	}
 
-	stringWait := " (No transfers allowed until synced)"
+	stringWait := " (No transfers allowed)"
 	if knownBlockCount == 0 {
 		WalletdSynced = false
 		syncing = "Getting block count..." + stringWait
-	} else if blockCount < knownBlockCount-1 || blockCount > knownBlockCount+10 {
+	} else if walletBlockCount < knownBlockCount-1 || walletBlockCount > knownBlockCount+10 {
 		// second condition handles cases when knownBlockCount is off and smaller than the blockCount
 		WalletdSynced = false
-		syncing = "Wallet syncing..." + stringWait
+		syncing = "Syncing..." + stringWait
 	} else {
 		WalletdSynced = true
-		syncing = "Wallet synced"
+		syncing = "Synced"
 	}
 
-	return syncing, blockCount, knownBlockCount, peerCount, nil
+	return syncing, walletBlockCount, knownBlockCount, localDaemonBlockCount, peerCount, nil
 }
 
 // RequestFeeinfo provides the additional fee requested by the remote node for each transaction

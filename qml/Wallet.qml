@@ -1061,9 +1061,9 @@ Rectangle {
         height: 20
 
         Text {
-            id: textConnectionInfoPeersDescr
-            color: "#cccccc"
-            text: "connected peers"
+            id: textConnectionInfo
+            color: "#ffffff"
+            text: ""
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
             anchors.verticalCenter: parent.verticalCenter
@@ -1073,53 +1073,15 @@ Rectangle {
         }
 
         Text {
-            id: textConnectionInfoPeers
-            color: "#ffffff"
-            text: "0"
-            font.bold: true
-            font.pixelSize: 13
-            horizontalAlignment: Text.AlignRight
-            anchors.verticalCenter: parent.verticalCenter
-            font.family: "Arial"
-            anchors.right: textConnectionInfoPeersDescr.left
-            anchors.rightMargin: 5
-        }
-
-        Text {
-            id: textConnectionInfoBlocksDescr
-            color: "#cccccc"
-            text: "synced blocks"
-            font.pixelSize: 13
-            horizontalAlignment: Text.AlignRight
-            anchors.verticalCenter: parent.verticalCenter
-            font.family: "Arial"
-            anchors.right: textConnectionInfoPeers.left
-            anchors.rightMargin: 15
-        }
-
-        Text {
-            id: textConnectionInfoBlocks
-            color: "#ffffff"
-            text: "0/0"
-            font.bold: true
-            font.pixelSize: 13
-            horizontalAlignment: Text.AlignRight
-            anchors.verticalCenter: parent.verticalCenter
-            font.family: "Arial"
-            anchors.right: textConnectionInfoBlocksDescr.left
-            anchors.rightMargin: 5
-        }
-
-        Text {
             id: textConnectionInfoSync
             color: "#ffffff"
-            text: "Blockchain syncing..."
+            text: "Syncing..."
             font.bold: true
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
             anchors.verticalCenter: parent.verticalCenter
             font.family: "Arial"
-            anchors.right: textConnectionInfoBlocks.left
+            anchors.right: textConnectionInfo.left
             anchors.rightMargin: 20
         }
     }
@@ -1461,8 +1423,7 @@ Rectangle {
 
         onDisplaySyncingInfo: {
             textConnectionInfoSync.text = syncing;
-            textConnectionInfoBlocks.text = blocks;
-            textConnectionInfoPeers.text = peers;
+            textConnectionInfo.text = syncingInfo;
         }
 
         onDisplayTotalBalance: {
