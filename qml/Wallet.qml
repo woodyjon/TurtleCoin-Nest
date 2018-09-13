@@ -16,7 +16,7 @@ Rectangle {
     visible: false
 
     Rectangle {
-        id: buttonClose
+        id: buttonBack
         width: 33
         height: 33
         anchors.top: parent.top
@@ -25,15 +25,15 @@ Rectangle {
         anchors.leftMargin: 15
         color: "transparent"
         Image {
-            id: imageButtonClose
+            id: imageButtonBack
             anchors.fill: parent
             fillMode: Image.PreserveAspectFit
-            source: "images/close.svg"
+            source: "images/back.svg"
             antialiasing: true
         }
         ColorOverlay {
-            anchors.fill: imageButtonClose
-            source:imageButtonClose
+            anchors.fill: imageButtonBack
+            source:imageButtonBack
             color:"white"
             antialiasing: true
         }
