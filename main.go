@@ -39,6 +39,7 @@ var (
 	tickerSaveWallet            *time.Ticker
 	db                          *sql.DB
 	useRemoteNode               = true
+	useCheckpoints              = false
 	displayFiatConversion       = false
 	stringBackupKeys            = ""
 	rateUSDTRTL                 float64 // USD value for 1 TRTL
@@ -136,6 +137,7 @@ type QmlBridge struct {
 	_ func()                         `slot:"clickedCloseSettings"`
 	_ func()                         `slot:"clickedSettingsButton"`
 	_ func(displayFiat bool)         `slot:"choseDisplayFiat"`
+	_ func(checkpoints bool)         `slot:"choseCheckpoints"`
 	_ func(daemonAddress string,
 		daemonPort string) `slot:"saveRemoteDaemonInfo"`
 	_ func()                   `slot:"resetRemoteDaemonInfo"`
@@ -346,6 +348,10 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectChoseDisplayFiat(func(displayFiat bool) {
 		displayFiatConversion = displayFiat
 		recordDisplayConversionToDB(displayFiat)
+	})
+
+	qmlBridge.ConnectChoseCheckpoints(func(checkpoints bool) {
+		useCheckpoints = checkpoints
 	})
 
 	qmlBridge.ConnectSaveRemoteDaemonInfo(func(daemonAddress string, daemonPort string) {
@@ -600,7 +606,7 @@ func optimizeWalletWithFusion() {
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {
 
-	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode, remoteDaemonAddress, remoteDaemonPort)
+	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode, useCheckpoints, remoteDaemonAddress, remoteDaemonPort)
 	if err != nil {
 		log.Warn("error starting turtle-service with provided wallet info. error: ", err)
 		qmlBridge.FinishedLoadingWalletd()

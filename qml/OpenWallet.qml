@@ -57,6 +57,30 @@ Rectangle {
                 onClicked: QmlBridge.choseRemote(true)
             }
         }
+
+        OldControls.CheckBox {
+            id: checkBoxCheckpoints
+            text: "(       checkpoints)"
+            checked: false
+            anchors.top: parent.top
+            anchors.topMargin: 0
+            anchors.left: parent.left
+            anchors.leftMargin: 170
+
+            style: CheckBoxStyle {
+                label: Text {
+                    color: "#ffffff"
+                    font.pixelSize: 14
+                    font.family: "Arial"
+                    text: control.text
+                    leftPadding: -29
+                }
+            }
+
+            onClicked: {
+                QmlBridge.choseCheckpoints(checkBoxCheckpoints.checked);
+            }
+        }
     }
 
     Rectangle {

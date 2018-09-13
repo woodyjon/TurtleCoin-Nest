@@ -263,7 +263,8 @@ func SaveWallet() (err error) {
 // walletPath is the full path to the wallet
 // walletPassword is the wallet password
 // useRemoteNode is true if remote node, false if local
-func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, daemonAddress string, daemonPort string) (err error) {
+// useCheckpoints is true if TurtleCoind should be run with "--load-checkpoints"
+func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, useCheckpoints bool, daemonAddress string, daemonPort string) (err error) {
 
 	if isWalletdRunning() {
 		errorMessage := "turtle-service is already running in the background.\nPlease close it via "
@@ -286,6 +287,8 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 	pathToLogTurtleCoindAllSessions := logTurtleCoindAllSessionsFilename
 	pathToWalletd := "./" + walletdCommandName
 	pathToTurtleCoind := "./" + turtlecoindCommandName
+	checkpointsCSVFile := "checkpoints.csv"
+	pathToCheckpointsCSV := "./" + checkpointsCSVFile
 
 	WalletFilename = filepath.Base(walletPath)
 	pathToWallet := filepath.Clean(walletPath)
@@ -305,6 +308,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		pathToAppContents := filepath.Dir(pathToAppDirectory)
 		pathToWalletd = pathToAppContents + "/" + walletdCommandName
 		pathToTurtleCoind = pathToAppContents + "/" + turtlecoindCommandName
+		pathToCheckpointsCSV = pathToAppContents + "/" + checkpointsCSVFile
 
 		usr, err := user.Current()
 		if err != nil {
@@ -325,6 +329,7 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 	} else if isPlatformLinux {
 		pathToWalletd = pathToAppDirectory + "/" + walletdCommandName
 		pathToTurtleCoind = pathToAppDirectory + "/" + turtlecoindCommandName
+		pathToCheckpointsCSV = pathToAppDirectory + "/" + checkpointsCSVFile
 		pathToLogWalletdCurrentSession = pathToAppDirectory + "/" + logWalletdCurrentSessionFilename
 		pathToLogWalletdAllSessions = pathToAppDirectory + "/" + logWalletdAllSessionsFilename
 		pathToLogTurtleCoindCurrentSession = pathToAppDirectory + "/" + logTurtleCoindCurrentSessionFilename
@@ -361,7 +366,11 @@ func StartWalletd(walletPath string, walletPassword string, useRemoteNode bool, 
 		}
 		defer turtleCoindCurrentSessionLogFile.Close()
 
-		cmdTurtleCoind = exec.Command(pathToTurtleCoind, "--log-file", pathToLogTurtleCoindCurrentSession)
+		if useCheckpoints {
+			cmdTurtleCoind = exec.Command(pathToTurtleCoind, "--load-checkpoints", pathToCheckpointsCSV, "--log-file", pathToLogTurtleCoindCurrentSession)
+		} else {
+			cmdTurtleCoind = exec.Command(pathToTurtleCoind, "--log-file", pathToLogTurtleCoindCurrentSession)
+		}
 		hideCmdWindowIfNeeded(cmdTurtleCoind)
 
 		turtleCoindAllSessionsLogFile, err := os.Create(pathToLogTurtleCoindAllSessions)

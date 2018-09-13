@@ -68,3 +68,5 @@ If send transaction with size too large, proposed to do fusion -> click fusion |
 
 - Version number
 - No log.Debug remaining
+- TurtleCoind and turtle-service included in the bundle
+- latest checkpoint csv included in the bundle (same location as TurtleCoind)
