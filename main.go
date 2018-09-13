@@ -39,7 +39,7 @@ var (
 	tickerSaveWallet            *time.Ticker
 	db                          *sql.DB
 	useRemoteNode               = true
-	useCheckpoints              = false
+	useCheckpoints              = true
 	displayFiatConversion       = false
 	stringBackupKeys            = ""
 	rateUSDTRTL                 float64 // USD value for 1 TRTL

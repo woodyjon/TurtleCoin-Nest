@@ -61,7 +61,7 @@ Rectangle {
         OldControls.CheckBox {
             id: checkBoxCheckpoints
             text: "(       checkpoints)"
-            checked: false
+            checked: true
             anchors.top: parent.top
             anchors.topMargin: 0
             anchors.left: parent.left
