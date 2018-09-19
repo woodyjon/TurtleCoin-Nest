@@ -285,7 +285,7 @@ func Feeinfo(rpcPassword string) (address string, fee float64, status string, er
 
 	args := make(map[string]interface{})
 
-	payload := rpcPayloadFeeinfo(0, rpcPassword, args)
+	payload := rpcPayloadGetFeeinfo(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
 	if err != nil {
