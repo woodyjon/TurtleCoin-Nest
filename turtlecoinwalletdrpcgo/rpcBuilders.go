@@ -287,7 +287,7 @@ func rpcPayloadEstimateFusion(
 		params)
 }
 
-func rpcPayloadFeeinfo(
+func rpcPayloadGetFeeinfo(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
