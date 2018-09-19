@@ -293,7 +293,7 @@ func rpcPayloadFeeinfo(
 	params map[string]interface{}) rpcPayload {
 
 	return buildRPCPayload(
-		"feeinfo",
+		"getFeeInfo",
 		id,
 		rpcPassword,
 		params)
