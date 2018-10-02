@@ -799,7 +799,7 @@ func RequestConnectionInfo() (syncing string, walletBlockCount int, knownBlockCo
 // RequestFeeinfo provides the additional fee requested by the remote node for each transaction
 func RequestFeeinfo() (nodeFee float64, err error) {
 
-	_, nodeFee, _, err = turtlecoinwalletdrpcgo.Feeinfo(rpcPassword)
+	_, nodeFee, _, err = turtlecoinwalletdrpcgo.GetFeeInfo(rpcPassword)
 	if err != nil {
 		return 0, err
 	}

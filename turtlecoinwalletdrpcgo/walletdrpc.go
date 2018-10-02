@@ -279,9 +279,9 @@ func SendFusionTransaction(threshold int, addresses []string, destinationAddress
 	return responseMap["result"].(map[string]interface{})["transactionHash"].(string), nil
 }
 
-// Feeinfo returns info on the fee requested by the remote node for every transactions
+// GetFeeInfo returns info on the fee requested by the remote node for every transactions
 // returned fee is expressed in TRTL, not in 0.01 TRTL
-func Feeinfo(rpcPassword string) (address string, fee float64, status string, err error) {
+func GetFeeInfo(rpcPassword string) (address string, fee float64, status string, err error) {
 
 	args := make(map[string]interface{})
 
