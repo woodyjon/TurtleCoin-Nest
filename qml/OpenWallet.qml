@@ -98,13 +98,13 @@ Rectangle {
                     currentIndex: 0
                     implicitWidth: 300
                     implicitHeight: 30
-                    font.pixelSize: 14
-                    font.family: "Arial"
                     textRole: "text"
 
                     contentItem: Text {
                         text: parent.displayText
                         color: "#cfcfcf"
+                        font.pixelSize: 14
+                        font.family: "Arial"
                         verticalAlignment: Text.AlignVCenter
                         leftPadding: 10
                         elide: Text.ElideRight
