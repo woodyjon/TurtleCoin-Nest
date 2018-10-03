@@ -40,7 +40,7 @@ Rectangle {
         height: 74
 
         ColumnLayout {
-            spacing: 15
+            spacing: 10
            
             OldControls.ExclusiveGroup { id: tabPositionGroup }
             
@@ -88,30 +88,31 @@ Rectangle {
                     onClicked: QmlBridge.choseRemote(true)
                 }
 
-                MyComboBox {
+                ComboBox {
                     id: comboBoxRemoteNodes
+                    currentIndex: 0
                     implicitWidth: 300
                     font.pixelSize: 14
-                    sizeToContents: false
-                    model: [ "public.turtlenode.io", "public.turtlenode.net", "public.turtle-node.comhhhhhhhhhhhhhh" ]
-                    flat: true
-                        onActivated: {
-                        if(radioButtonUseRemoteNode.checked) {
-                            QmlBridge.choseRemote(true, currentText)
-                        }
+                    textRole: "text"
+                    model: ListModel {
+                        id: modelListRemoteNodes
                     }
-                    background: Rectangle {
-                        color: "#555555"
-                        radius: 3
-                    }
-                
-                    contentItem: Text {
-                        leftPadding: 5
-                        text: parent.displayText
+
+                    delegate: ItemDelegate {
+                        width: comboBoxRemoteNodes.width
+                        height: comboBoxRemoteNodes.height
+                        text: model.text
                         font.pixelSize: 14
-                        color: "#cfcfcf"
-                        verticalAlignment: Text.AlignVCenter
-                        elide: Text.ElideRight
+                        font.bold: comboBoxRemoteNodes.currentIndex === index
+                    }
+
+                    onCurrentIndexChanged: QmlBridge.log(modelListRemoteNodes.get(currentIndex).text)
+
+                    Connections {
+                        target: QmlBridge
+                        onAddRemoteNodeToList: {
+                            modelListRemoteNodes.append({text: nodeURL})
+                        }
                     }
                 }
             }

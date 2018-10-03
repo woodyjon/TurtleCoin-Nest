@@ -33,6 +33,7 @@ var (
 	// qmlObjects = make(map[string]*core.QObject)
 	qmlBridge                   *QmlBridge
 	transfers                   []turtlecoinwalletdrpcgo.Transfer
+	remoteNodes                 []node
 	tickerRefreshWalletData     *time.Ticker
 	tickerRefreshConnectionInfo *time.Ticker
 	tickerRefreshNodeFeeInfo    *time.Ticker
@@ -69,6 +70,7 @@ type QmlBridge struct {
 		confirmations string,
 		time string,
 		number string) `signal:"addTransactionToList"`
+	_ func(nodeURL string)                     `signal:"addRemoteNodeToList"`
 	_ func(text string, time int)              `signal:"displayPopup"`
 	_ func(syncing string, syncingInfo string) `signal:"displaySyncingInfo"`
 	_ func(errorText string,
@@ -239,6 +241,10 @@ func main() {
 	}
 
 	getAndDisplayStartInfoFromDB()
+
+	go func() {
+		getListRemoteNodes()
+	}()
 
 	go func() {
 		newVersionAvailable, urlNewVersion = checkIfNewReleaseAvailableOnGithub(versionNest)
@@ -988,6 +994,14 @@ func requestRateTRTL() {
 				rateUSDTRTL = resultsMap["USD"].(float64)
 			}
 		}
+	}
+}
+
+func getListRemoteNodes() {
+	remoteNodes := requestListRemoteNodes()
+
+	for _, aNode := range remoteNodes {
+		qmlBridge.AddRemoteNodeToList(aNode.URL)
 	}
 }
 
