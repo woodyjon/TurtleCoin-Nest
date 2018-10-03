@@ -112,8 +112,13 @@ Rectangle {
 
                     Connections {
                         target: QmlBridge
+                        
                         onAddRemoteNodeToList: {
                             modelListRemoteNodes.append({text: nodeURL})
+                        }
+
+                        onSetSelectedRemoteNode: {
+                            comboBoxRemoteNodes.currentIndex = index
                         }
                     }
                 }

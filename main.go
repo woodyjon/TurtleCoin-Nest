@@ -72,6 +72,7 @@ type QmlBridge struct {
 		time string,
 		number string) `signal:"addTransactionToList"`
 	_ func(nodeURL string)                     `signal:"addRemoteNodeToList"`
+	_ func(index int)                          `signal:"setSelectedRemoteNode"`
 	_ func(text string, time int)              `signal:"displayPopup"`
 	_ func(syncing string, syncingInfo string) `signal:"displaySyncingInfo"`
 	_ func(errorText string,
@@ -631,8 +632,6 @@ func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool 
 		}
 	}
 
-	log.Debug("start with node:   useRemoteNode: ", useRemoteNode, "  -  remoteDaemonAddress: ", remoteDaemonAddress, "  -  remoteDaemonPort: ", remoteDaemonPort)
-
 	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode, useCheckpoints, remoteDaemonAddress, remoteDaemonPort)
 	if err != nil {
 		log.Warn("error starting turtle-service with provided wallet info. error: ", err)
@@ -1020,9 +1019,16 @@ func requestRateTRTL() {
 func getListRemoteNodes() {
 	remoteNodes = requestListRemoteNodes()
 
-	for _, aNode := range remoteNodes {
+	for index, aNode := range remoteNodes {
 		qmlBridge.AddRemoteNodeToList(aNode.URL)
+
+		if aNode.URL == defaultRemoteDaemonAddress {
+			// select defaultRemoteDaemonAddress as default in the list
+			indexSelectedRemoteNode = index
+		}
 	}
+
+	qmlBridge.SetSelectedRemoteNode(indexSelectedRemoteNode)
 }
 
 func amountStringUSDToTRTL(amountTRTLString string) string {
