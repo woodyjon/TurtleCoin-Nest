@@ -135,8 +135,8 @@ func RequestStatus(rpcPassword string) (walletBlockCount int, knownBlockCount in
 // parameters amount and fee are expressed in TRTL, not 0.01 TRTL
 func SendTransaction(addressRecipient string, amount float64, paymentID string, fee float64, rpcPassword string) (transactionHash string, err error) {
 
-	amountInt := int(amount * 100) // expressed in hundredth of TRTL
-	feeInt := int(fee * 100)       // expressed in hundredth of TRTL
+	amountInt := uint64(amount * 100) // expressed in hundredth of TRTL
+	feeInt := uint64(fee * 100)       // expressed in hundredth of TRTL
 
 	args := make(map[string]interface{})
 	args["fee"] = feeInt
