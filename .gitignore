@@ -32,6 +32,9 @@ otherInfos/
 releases/
 oldScreenshots/
 core/
+temp/
+
+build-linux.sh
 rcc_cgo_linux_linux_amd64.go
 rcc.cpp
 rcc.qrc
