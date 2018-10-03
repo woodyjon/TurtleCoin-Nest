@@ -34,6 +34,7 @@ var (
 	qmlBridge                   *QmlBridge
 	transfers                   []turtlecoinwalletdrpcgo.Transfer
 	remoteNodes                 []node
+	indexSelectedRemoteNode     = 0
 	tickerRefreshWalletData     *time.Ticker
 	tickerRefreshConnectionInfo *time.Ticker
 	tickerRefreshNodeFeeInfo    *time.Ticker
@@ -44,8 +45,8 @@ var (
 	displayFiatConversion       = false
 	stringBackupKeys            = ""
 	rateUSDTRTL                 float64 // USD value for 1 TRTL
-	remoteDaemonAddress         = defaultRemoteDaemonAddress
-	remoteDaemonPort            = defaultRemoteDaemonPort
+	customRemoteDaemonAddress   = defaultRemoteDaemonAddress
+	customRemoteDaemonPort      = defaultRemoteDaemonPort
 	limitDisplayedTransactions  = true
 	countConnectionProblem      = 0
 	newVersionAvailable         = ""
@@ -134,6 +135,7 @@ type QmlBridge struct {
 		confirmPasswordWallet string,
 		scanHeight string) `slot:"clickedButtonImport"`
 	_ func(remote bool)              `slot:"choseRemote"`
+	_ func(index int)                `slot:"selectedRemoteNode"`
 	_ func(amountTRTL string) string `slot:"getTransferAmountUSD"`
 	_ func()                         `slot:"clickedCloseSettings"`
 	_ func()                         `slot:"clickedSettingsButton"`
@@ -340,6 +342,10 @@ func connectQMLToGOFunctions() {
 	qmlBridge.ConnectChoseRemote(func(remote bool) {
 		useRemoteNode = remote
 		recordUseRemoteToDB(useRemoteNode)
+	})
+
+	qmlBridge.ConnectSelectedRemoteNode(func(index int) {
+		indexSelectedRemoteNode = index
 	})
 
 	qmlBridge.ConnectClickedCloseSettings(func() {
@@ -611,6 +617,19 @@ func optimizeWalletWithFusion() {
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {
 
+	remoteDaemonAddress := customRemoteDaemonAddress
+	remoteDaemonPort := customRemoteDaemonPort
+
+	if useRemoteNode {
+		if indexSelectedRemoteNode+1 < len(remoteNodes) {
+			// user did not chose custom node (last item of the list is custom node)
+
+			node := remoteNodes[indexSelectedRemoteNode]
+			remoteDaemonAddress = node.URL
+			remoteDaemonPort = strconv.FormatUint(node.Port, 10)
+		}
+	}
+
 	log.Debug("start with node:   useRemoteNode: ", useRemoteNode, "  -  remoteDaemonAddress: ", remoteDaemonAddress, "  -  remoteDaemonPort: ", remoteDaemonPort)
 
 	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode, useCheckpoints, remoteDaemonAddress, remoteDaemonPort)
@@ -729,9 +748,9 @@ func getNodeFeeAndDisplay() {
 
 func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
 
-	remoteDaemonAddress = daemonAddress
-	remoteDaemonPort = daemonPort
-	recordRemoteDaemonInfoToDB(remoteDaemonAddress, remoteDaemonPort)
+	customRemoteDaemonAddress = daemonAddress
+	customRemoteDaemonPort = daemonPort
+	recordRemoteDaemonInfoToDB(customRemoteDaemonAddress, customRemoteDaemonPort)
 	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
 }
 
@@ -782,10 +801,10 @@ func setupDB(pathToDB string) {
 func getAndDisplayStartInfoFromDB() {
 
 	qmlBridge.DisplayPathToPreviousWallet(getPathWalletFromDB())
-	remoteDaemonAddress, remoteDaemonPort = getRemoteDaemonInfoFromDB()
+	customRemoteDaemonAddress, customRemoteDaemonPort = getRemoteDaemonInfoFromDB()
 	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
 	qmlBridge.DisplaySettingsValues(getDisplayConversionFromDB())
-	qmlBridge.DisplaySettingsRemoteDaemonInfo(remoteDaemonAddress, remoteDaemonPort)
+	qmlBridge.DisplaySettingsRemoteDaemonInfo(customRemoteDaemonAddress, customRemoteDaemonPort)
 }
 
 func getPathWalletFromDB() string {
@@ -866,11 +885,11 @@ func getRemoteDaemonInfoFromDB() (daemonAddress string, daemonPort string) {
 		if err != nil {
 			log.Fatal("error reading item from remoteNodeInfo table. err: ", err)
 		}
-		remoteDaemonAddress = daemonAddress
-		remoteDaemonPort = daemonPort
+		customRemoteDaemonAddress = daemonAddress
+		customRemoteDaemonPort = daemonPort
 	}
 
-	return remoteDaemonAddress, remoteDaemonPort
+	return customRemoteDaemonAddress, customRemoteDaemonPort
 }
 
 func recordRemoteDaemonInfoToDB(daemonAddress string, daemonPort string) {
@@ -998,7 +1017,7 @@ func requestRateTRTL() {
 }
 
 func getListRemoteNodes() {
-	remoteNodes := requestListRemoteNodes()
+	remoteNodes = requestListRemoteNodes()
 
 	for _, aNode := range remoteNodes {
 		qmlBridge.AddRemoteNodeToList(aNode.URL)

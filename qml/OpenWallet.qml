@@ -106,7 +106,9 @@ Rectangle {
                         font.bold: comboBoxRemoteNodes.currentIndex === index
                     }
 
-                    onCurrentIndexChanged: QmlBridge.log(modelListRemoteNodes.get(currentIndex).text)
+                    onCurrentIndexChanged: {
+                        QmlBridge.selectedRemoteNode(currentIndex)
+                    }
 
                     Connections {
                         target: QmlBridge
