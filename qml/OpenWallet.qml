@@ -92,18 +92,34 @@ Rectangle {
                     id: comboBoxRemoteNodes
                     currentIndex: 0
                     implicitWidth: 300
+                    implicitHeight: 30
                     font.pixelSize: 14
+                    font.family: "Arial"
                     textRole: "text"
+
+                    contentItem: Text {
+                        text: parent.displayText
+                        color: "#cfcfcf"
+                        verticalAlignment: Text.AlignVCenter
+                        leftPadding: 10
+                        elide: Text.ElideRight
+                    }
+
+                    background: Rectangle {
+                        color: "#555555"
+                        radius: 3
+                    }
+
                     model: ListModel {
                         id: modelListRemoteNodes
                     }
 
                     delegate: ItemDelegate {
                         width: comboBoxRemoteNodes.width
-                        height: comboBoxRemoteNodes.height
                         text: model.text
                         font.pixelSize: 14
-                        font.bold: comboBoxRemoteNodes.currentIndex === index
+                        font.family: "Arial"
+                        font.bold: comboBoxRemoteNodes.currentIndex == index
                     }
 
                     onCurrentIndexChanged: {
