@@ -90,11 +90,10 @@ type QmlBridge struct {
 	_ func()                            `signal:"finishedSendingTransaction"`
 	_ func(pathToPreviousWallet string) `signal:"displayPathToPreviousWallet"`
 	_ func(walletLocation string)       `signal:"displayWalletCreationLocation"`
-	_ func(useRemote bool,
-		remoteNodeDescr string) `signal:"displayUseRemoteNode"`
-	_ func()                 `signal:"hideSettingsScreen"`
-	_ func()                 `signal:"displaySettingsScreen"`
-	_ func(displayFiat bool) `signal:"displaySettingsValues"`
+	_ func(useRemote bool)              `signal:"displayUseRemoteNode"`
+	_ func()                            `signal:"hideSettingsScreen"`
+	_ func()                            `signal:"displaySettingsScreen"`
+	_ func(displayFiat bool)            `signal:"displaySettingsValues"`
 	_ func(remoteNodeAddress string,
 		remoteNodePort string) `signal:"displaySettingsRemoteDaemonInfo"`
 	_ func(fullBalance string)              `signal:"displayFullBalanceInTransferAmount"`
@@ -606,6 +605,8 @@ func optimizeWalletWithFusion() {
 
 func startWalletWithWalletInfo(pathToWallet string, passwordWallet string) bool {
 
+	log.Debug("start with node:   useRemoteNode: ", useRemoteNode, "  -  remoteDaemonAddress: ", remoteDaemonAddress, "  -  remoteDaemonPort: ", remoteDaemonPort)
+
 	err := walletdmanager.StartWalletd(pathToWallet, passwordWallet, useRemoteNode, useCheckpoints, remoteDaemonAddress, remoteDaemonPort)
 	if err != nil {
 		log.Warn("error starting turtle-service with provided wallet info. error: ", err)
@@ -725,8 +726,7 @@ func saveRemoteDaemonInfo(daemonAddress string, daemonPort string) {
 	remoteDaemonAddress = daemonAddress
 	remoteDaemonPort = daemonPort
 	recordRemoteDaemonInfoToDB(remoteDaemonAddress, remoteDaemonPort)
-	remoteNodeDescr := "Remote node (" + remoteDaemonAddress + ")"
-	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB(), remoteNodeDescr)
+	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
 }
 
 func saveAddress(name string, address string, paymentID string) {
@@ -777,8 +777,7 @@ func getAndDisplayStartInfoFromDB() {
 
 	qmlBridge.DisplayPathToPreviousWallet(getPathWalletFromDB())
 	remoteDaemonAddress, remoteDaemonPort = getRemoteDaemonInfoFromDB()
-	remoteNodeDescr := "Remote node (" + remoteDaemonAddress + ")"
-	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB(), remoteNodeDescr)
+	qmlBridge.DisplayUseRemoteNode(getUseRemoteFromDB())
 	qmlBridge.DisplaySettingsValues(getDisplayConversionFromDB())
 	qmlBridge.DisplaySettingsRemoteDaemonInfo(remoteDaemonAddress, remoteDaemonPort)
 }
