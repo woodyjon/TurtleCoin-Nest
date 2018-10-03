@@ -112,6 +112,19 @@ Rectangle {
     }
 
     Text {
+        id: textSettingsRemoteNodeComment
+        color: "#ffffff"
+        text: "(Select \"Custom\" at the bottom of the remote nodes list.)"
+        anchors.top: textSettingsRemoteNodeDescr.bottom
+        anchors.topMargin: 10
+        anchors.left: textSettingsRemoteNodeDescr.left
+        anchors.leftMargin: 0
+        horizontalAlignment: Text.AlignLeft
+        font.family: "Arial"
+        font.pixelSize: 14
+    }
+
+    Text {
         id: textSettingsRemoteNodeAddressDescr
         color: "#ffffff"
         text: "address:"

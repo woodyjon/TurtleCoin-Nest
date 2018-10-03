@@ -515,7 +515,7 @@ func getAndDisplayConnectionInfo() {
 		}
 		if countConnectionProblem > 2 {
 			countConnectionProblem = 0
-			qmlBridge.DisplayErrorDialog("Error connecting to remote node", "Check your internet connection, the remote node address and the remote node status. If you cannot connect to a remote node, choose the \"local blockchain\" option.")
+			qmlBridge.DisplayErrorDialog("Error connecting to remote node", "Check your internet connection, the remote node address and the remote node status. If you cannot connect to the remote node, try another one or choose the \"local blockchain\" option.")
 		}
 	}
 }
