@@ -1077,6 +1077,9 @@ Rectangle {
             busyIndicator.running = true;
             QmlBridge.clickedButtonImport(textImportWalletFilename.text, textInputImportWalletPassword.text, textInputImportWalletPrivateViewKey.text, textInputImportWalletPrivateSpendKey.text, textInputImportWalletSeed.text, passwordConfirmation, textInputImportWalletScanHeight.text);
             textInputImportWalletPassword.text = "";
+            textInputImportWalletPrivateViewKey.text = "";
+            textInputImportWalletPrivateSpendKey.text = "";
+            textInputImportWalletSeed.text = "";
         }
 
         function displayOrHideSeedAndPrivateKeys(displaySeed) {
