@@ -12,7 +12,7 @@
 ### Sha256
 
 TurtleCoin-Nest-0.35-Windows.zip:
-`b6c96d03dcf1d6360bb7828fd6d54fd865ee058cddf2a9ebe46690dba8ad7ce0`
+`7c41be52bf33af36172f12f9aac9ce5d04cb4b6942dbcf24b2f6092f8964ea19`
 
 TurtleCoin-Nest-0.35-Mac.zip:
 `8ce0a26cde80fd4f12e02382257195dd43865e94adf1acd20752be0033db2623`
