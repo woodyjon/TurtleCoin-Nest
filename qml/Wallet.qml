@@ -1,3 +1,8 @@
+// Copyright (c) 2018, The TurtleCoin Developers
+//
+// Please see the included LICENSE file for more information.
+//
+
 import QtQuick.Window 2.2
 import QtQuick 2.7
 import QtQuick.Controls 2.3
@@ -16,7 +21,7 @@ Rectangle {
     visible: false
 
     Rectangle {
-        id: buttonClose
+        id: buttonBack
         width: 33
         height: 33
         anchors.top: parent.top
@@ -25,15 +30,15 @@ Rectangle {
         anchors.leftMargin: 15
         color: "transparent"
         Image {
-            id: imageButtonClose
+            id: imageButtonBack
             anchors.fill: parent
             fillMode: Image.PreserveAspectFit
-            source: "images/close.svg"
+            source: "images/back.svg"
             antialiasing: true
         }
         ColorOverlay {
-            anchors.fill: imageButtonClose
-            source:imageButtonClose
+            anchors.fill: imageButtonBack
+            source:imageButtonBack
             color:"white"
             antialiasing: true
         }
@@ -1061,9 +1066,9 @@ Rectangle {
         height: 20
 
         Text {
-            id: textConnectionInfoPeersDescr
-            color: "#cccccc"
-            text: "connected peers"
+            id: textConnectionInfo
+            color: "#ffffff"
+            text: ""
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
             anchors.verticalCenter: parent.verticalCenter
@@ -1073,53 +1078,15 @@ Rectangle {
         }
 
         Text {
-            id: textConnectionInfoPeers
-            color: "#ffffff"
-            text: "0"
-            font.bold: true
-            font.pixelSize: 13
-            horizontalAlignment: Text.AlignRight
-            anchors.verticalCenter: parent.verticalCenter
-            font.family: "Arial"
-            anchors.right: textConnectionInfoPeersDescr.left
-            anchors.rightMargin: 5
-        }
-
-        Text {
-            id: textConnectionInfoBlocksDescr
-            color: "#cccccc"
-            text: "synced blocks"
-            font.pixelSize: 13
-            horizontalAlignment: Text.AlignRight
-            anchors.verticalCenter: parent.verticalCenter
-            font.family: "Arial"
-            anchors.right: textConnectionInfoPeers.left
-            anchors.rightMargin: 15
-        }
-
-        Text {
-            id: textConnectionInfoBlocks
-            color: "#ffffff"
-            text: "0/0"
-            font.bold: true
-            font.pixelSize: 13
-            horizontalAlignment: Text.AlignRight
-            anchors.verticalCenter: parent.verticalCenter
-            font.family: "Arial"
-            anchors.right: textConnectionInfoBlocksDescr.left
-            anchors.rightMargin: 5
-        }
-
-        Text {
             id: textConnectionInfoSync
             color: "#ffffff"
-            text: "Blockchain syncing..."
+            text: "Syncing..."
             font.bold: true
             font.pixelSize: 13
             horizontalAlignment: Text.AlignRight
             anchors.verticalCenter: parent.verticalCenter
             font.family: "Arial"
-            anchors.right: textConnectionInfoBlocks.left
+            anchors.right: textConnectionInfo.left
             anchors.rightMargin: 20
         }
     }
@@ -1461,8 +1428,7 @@ Rectangle {
 
         onDisplaySyncingInfo: {
             textConnectionInfoSync.text = syncing;
-            textConnectionInfoBlocks.text = blocks;
-            textConnectionInfoPeers.text = peers;
+            textConnectionInfo.text = syncingInfo;
         }
 
         onDisplayTotalBalance: {

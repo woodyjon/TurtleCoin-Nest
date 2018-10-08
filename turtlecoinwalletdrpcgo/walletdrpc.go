@@ -1,3 +1,8 @@
+// Copyright (c) 2018, The TurtleCoin Developers
+//
+// Please see the included LICENSE file for more information.
+//
+
 // Package turtlecoinwalletdrpcgo handles the the rpc connection between your app and turtle-service
 package turtlecoinwalletdrpcgo
 
@@ -113,29 +118,30 @@ func RequestListTransactions(blockCount int, firstBlockIndex int, addresses []st
 }
 
 // RequestStatus requests turtle-service connection and sync status
-func RequestStatus(rpcPassword string) (blockCount int, knownBlockCount int, peerCount int, err error) {
+func RequestStatus(rpcPassword string) (walletBlockCount int, knownBlockCount int, localDaemonBlockCount int, peerCount int, err error) {
 
 	args := make(map[string]interface{})
 	payload := rpcPayloadGetStatus(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
 	if err != nil {
-		return 0, 0, 0, errors.Wrap(err, "httpRequest failed")
+		return 0, 0, 0, 0, errors.Wrap(err, "httpRequest failed")
 	}
 
-	blockCount = int(responseMap["result"].(map[string]interface{})["blockCount"].(float64))
+	walletBlockCount = int(responseMap["result"].(map[string]interface{})["blockCount"].(float64))
 	knownBlockCount = int(responseMap["result"].(map[string]interface{})["knownBlockCount"].(float64))
+	localDaemonBlockCount = 0 // int(responseMap["result"].(map[string]interface{})["localDaemonBlockCount"].(float64))
 	peerCount = int(responseMap["result"].(map[string]interface{})["peerCount"].(float64))
 
-	return blockCount, knownBlockCount, peerCount, nil
+	return walletBlockCount, knownBlockCount, localDaemonBlockCount, peerCount, nil
 }
 
 // SendTransaction makes a transfer with the provided information.
 // parameters amount and fee are expressed in TRTL, not 0.01 TRTL
 func SendTransaction(addressRecipient string, amount float64, paymentID string, fee float64, rpcPassword string) (transactionHash string, err error) {
 
-	amountInt := int(amount * 100) // expressed in hundredth of TRTL
-	feeInt := int(fee * 100)       // expressed in hundredth of TRTL
+	amountInt := uint64(amount * 100) // expressed in hundredth of TRTL
+	feeInt := uint64(fee * 100)       // expressed in hundredth of TRTL
 
 	args := make(map[string]interface{})
 	args["fee"] = feeInt
@@ -278,13 +284,13 @@ func SendFusionTransaction(threshold int, addresses []string, destinationAddress
 	return responseMap["result"].(map[string]interface{})["transactionHash"].(string), nil
 }
 
-// Feeinfo returns info on the fee requested by the remote node for every transactions
+// GetFeeInfo returns info on the fee requested by the remote node for every transactions
 // returned fee is expressed in TRTL, not in 0.01 TRTL
-func Feeinfo(rpcPassword string) (address string, fee float64, status string, err error) {
+func GetFeeInfo(rpcPassword string) (address string, fee float64, status string, err error) {
 
 	args := make(map[string]interface{})
 
-	payload := rpcPayloadFeeinfo(0, rpcPassword, args)
+	payload := rpcPayloadGetFeeInfo(0, rpcPassword, args)
 
 	responseMap, err := httpRequest(payload)
 	if err != nil {

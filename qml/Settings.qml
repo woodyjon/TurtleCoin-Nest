@@ -1,3 +1,8 @@
+// Copyright (c) 2018, The TurtleCoin Developers
+//
+// Please see the included LICENSE file for more information.
+//
+
 import QtQuick.Window 2.2
 import QtQuick 2.7
 import QtQuick.Controls 2.3
@@ -68,7 +73,7 @@ Rectangle {
         anchors.top: parent.top
         anchors.topMargin: 180
         anchors.left: parent.left
-        anchors.leftMargin: 130
+        anchors.leftMargin: 100
 
         style: CheckBoxStyle {
             label: Text {
@@ -101,7 +106,7 @@ Rectangle {
     Text {
         id: textSettingsRemoteNodeDescr
         color: "#ffffff"
-        text: "Remote node: "
+        text: "Custom remote node:"
         anchors.top: checkBoxUSD.bottom
         anchors.topMargin: 80
         anchors.left: checkBoxUSD.left
@@ -109,6 +114,19 @@ Rectangle {
         horizontalAlignment: Text.AlignLeft
         font.family: "Arial"
         font.pixelSize: 17
+    }
+
+    Text {
+        id: textSettingsRemoteNodeComment
+        color: "#ffffff"
+        text: "(Select \"Custom\" at the bottom of the remote nodes list.)"
+        anchors.top: textSettingsRemoteNodeDescr.bottom
+        anchors.topMargin: 10
+        anchors.left: textSettingsRemoteNodeDescr.left
+        anchors.leftMargin: 0
+        horizontalAlignment: Text.AlignLeft
+        font.family: "Arial"
+        font.pixelSize: 14
     }
 
     Text {
@@ -201,8 +219,8 @@ Rectangle {
         text: "Save"
         anchors.verticalCenterOffset: 0
         anchors.verticalCenter: textSettingsRemoteNodeDescr.verticalCenter
-        anchors.left: rectangleTextInputSettingsRemoteNodePort.right
-        anchors.leftMargin: 60
+        anchors.right: buttonResetDaemonAddress.left
+        anchors.rightMargin: 20
         height: 30
         enabled: true
 
@@ -236,8 +254,8 @@ Rectangle {
         text: "Reset to default"
         anchors.verticalCenterOffset: 0
         anchors.verticalCenter: textSettingsRemoteNodeDescr.verticalCenter
-        anchors.left: buttonSaveDaemonAddress.right
-        anchors.leftMargin: 20
+        anchors.right: parent.right
+        anchors.rightMargin: 20
         height: 30
         enabled: true
 

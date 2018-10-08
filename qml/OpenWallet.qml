@@ -1,3 +1,8 @@
+// Copyright (c) 2018, The TurtleCoin Developers
+//
+// Please see the included LICENSE file for more information.
+//
+
 import QtQuick.Window 2.2
 import QtQuick 2.7
 import QtQuick.Controls 2.3
@@ -32,29 +37,112 @@ Rectangle {
     Rectangle {
         id: rectangleRadioButtonRemote
         color: "transparent"
-        anchors.right: buttonSettings.right
-        anchors.rightMargin: 60
+        anchors.left: parent.right
+        anchors.leftMargin: -570
         anchors.top: parent.top
         anchors.topMargin: 20
         width: 400
         height: 74
 
         ColumnLayout {
+            spacing: 10
+           
             OldControls.ExclusiveGroup { id: tabPositionGroup }
-            OldControls.RadioButton {
-                id: radioButtonUseLocal
-                text: "Local blockchain"
-                exclusiveGroup: tabPositionGroup
-                style: radioButtonStyle
-                onClicked: QmlBridge.choseRemote(false)
+            
+            RowLayout {
+                spacing: 25
+
+                OldControls.RadioButton {
+                    id: radioButtonUseLocal
+                    text: "Local blockchain"
+                    exclusiveGroup: tabPositionGroup
+                    style: radioButtonStyle
+                    onClicked: QmlBridge.choseRemote(false)
+                }
+
+                OldControls.CheckBox {
+                    id: checkBoxCheckpoints
+                    text: "(       checkpoints)"
+                    checked: true
+
+                    style: CheckBoxStyle {
+                        label: Text {
+                            color: "#ffffff"
+                            font.pixelSize: 14
+                            font.family: "Arial"
+                            text: control.text
+                            leftPadding: -29
+                        }
+                    }
+
+                    onClicked: {
+                        QmlBridge.choseCheckpoints(checkBoxCheckpoints.checked);
+                    }
+                }
             }
-            OldControls.RadioButton {
-                id: radioButtonUseRemoteNode
-                text: ""
-                checked: true
-                exclusiveGroup: tabPositionGroup
-                style: radioButtonStyle
-                onClicked: QmlBridge.choseRemote(true)
+
+            RowLayout {
+                spacing: 25
+
+                OldControls.RadioButton {
+                    id: radioButtonUseRemoteNode
+                    text: "Remote node"
+                    checked: true
+                    exclusiveGroup: tabPositionGroup
+                    style: radioButtonStyle
+                    onClicked: QmlBridge.choseRemote(true)
+                }
+
+                ComboBox {
+                    id: comboBoxRemoteNodes
+                    currentIndex: 0
+                    implicitWidth: 300
+                    implicitHeight: 30
+                    textRole: "text"
+
+                    contentItem: Text {
+                        text: parent.displayText
+                        color: "#cfcfcf"
+                        font.pixelSize: 14
+                        font.family: "Arial"
+                        verticalAlignment: Text.AlignVCenter
+                        leftPadding: 10
+                        elide: Text.ElideRight
+                    }
+
+                    background: Rectangle {
+                        color: "#555555"
+                        radius: 3
+                    }
+
+                    model: ListModel {
+                        id: modelListRemoteNodes
+                    }
+
+                    delegate: ItemDelegate {
+                        width: comboBoxRemoteNodes.width
+                        text: model.text
+                        font.pixelSize: 14
+                        font.family: "Arial"
+                        font.bold: comboBoxRemoteNodes.currentIndex == index
+                    }
+
+                    onCurrentIndexChanged: {
+                        QmlBridge.selectedRemoteNode(currentIndex)
+                    }
+
+                    Connections {
+                        target: QmlBridge
+                        
+                        onAddRemoteNodeToList: {
+                            modelListRemoteNodes.append({text: nodeURL})
+                        }
+
+                        onSetSelectedRemoteNode: {
+                            comboBoxRemoteNodes.currentIndex = index
+                        }
+                    }
+                }
             }
         }
     }
@@ -994,6 +1082,9 @@ Rectangle {
             busyIndicator.running = true;
             QmlBridge.clickedButtonImport(textImportWalletFilename.text, textInputImportWalletPassword.text, textInputImportWalletPrivateViewKey.text, textInputImportWalletPrivateSpendKey.text, textInputImportWalletSeed.text, passwordConfirmation, textInputImportWalletScanHeight.text);
             textInputImportWalletPassword.text = "";
+            textInputImportWalletPrivateViewKey.text = "";
+            textInputImportWalletPrivateSpendKey.text = "";
+            textInputImportWalletSeed.text = "";
         }
 
         function displayOrHideSeedAndPrivateKeys(displaySeed) {
@@ -1123,7 +1214,6 @@ Rectangle {
         onDisplayUseRemoteNode: {
             radioButtonUseLocal.checked = !useRemote;
             radioButtonUseRemoteNode.checked = useRemote;
-            radioButtonUseRemoteNode.text = remoteNodeDescr;
         }
 
         onDisplayInfoDialog: {

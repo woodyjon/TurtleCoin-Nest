@@ -1,3 +1,8 @@
+// Copyright (c) 2018, The TurtleCoin Developers
+//
+// Please see the included LICENSE file for more information.
+//
+
 package turtlecoinwalletdrpcgo
 
 // rpcPayload is the struct with the right formatting for passing to the post request
@@ -287,13 +292,13 @@ func rpcPayloadEstimateFusion(
 		params)
 }
 
-func rpcPayloadFeeinfo(
+func rpcPayloadGetFeeInfo(
 	id int,
 	rpcPassword string,
 	params map[string]interface{}) rpcPayload {
 
 	return buildRPCPayload(
-		"feeinfo",
+		"getFeeInfo",
 		id,
 		rpcPassword,
 		params)
